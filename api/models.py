@@ -1,38 +1,131 @@
-from datetime import datetime
 from enum import Enum
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, ConfigDict, Field
 
 
-class ScrapeRequest(BaseModel):
-    start_url: HttpUrl = Field(..., description="URL to begin the crawl from")
-    max_depth: Optional[int] = Field(None, ge=0, description="Override max crawl depth")
-
-
-class ScrapeResponse(BaseModel):
-    start_url: str
-    external_hosts: List[dict]
-
-
-class JobStatus(str, Enum):
-    pending = "pending"
+class ScanStatus(str, Enum):
+    queued = "queued"
     running = "running"
-    done = "done"
+    completed = "completed"
     failed = "failed"
+    cancelled = "cancelled"
 
 
-class JobSubmissionResponse(BaseModel):
-    job_id: str
-    status: JobStatus
+class AuthMethod(str, Enum):
+    ntlm = "ntlm"
+    kerberos = "kerberos"
+    oauth2 = "oauth2"
+    basic = "basic"
+    bearer = "bearer"
+    mtls = "mtls"
+    unauthenticated = "unauthenticated"
+    unknown = "unknown"
 
 
-class JobStatusResponse(BaseModel):
-    job_id: str
-    status: JobStatus
-    submitted_at: datetime
-    started_at: Optional[datetime] = None
-    finished_at: Optional[datetime] = None
-    start_url: str
-    result: Optional[ScrapeResponse] = None
-    error: Optional[str] = None
+class Severity(str, Enum):
+    blocker = "blocker"
+    review = "review"
+    cleared = "cleared"
+
+
+class FindingEvidence(BaseModel):
+    headers_snippet: str = ""
+    status_code: int = 0
+
+
+class Finding(BaseModel):
+    model_config = ConfigDict(use_enum_values=True)
+
+    id: str
+    host: str
+    auth_method: AuthMethod
+    severity: Severity
+    request_count: int
+    first_seen_on_page: str
+    evidence: FindingEvidence
+    excluded: bool
+
+
+class ScanSummary(BaseModel):
+    model_config = ConfigDict(use_enum_values=True)
+
+    id: str
+    app_id: str
+    name: str
+    url: str
+    status: ScanStatus
+    started_at: str
+    completed_at: Optional[str] = None
+    started_by: str
+    blocker_count: int
+    finding_count: int
+
+
+class ScanDetail(ScanSummary):
+    duration_ms: Optional[int] = None
+    pages_crawled: Optional[int] = None
+    external_hosts: Optional[int] = None
+    auth_methods_identified: Optional[int] = None
+
+
+class ScanEvent(BaseModel):
+    scan_id: str
+    seq: str
+    ts: int
+    type: str
+    payload: dict = Field(default_factory=dict)
+
+
+class ExclusionChange(BaseModel):
+    id: str
+    host: str
+    before: bool
+    after: bool
+
+
+class AuthMethodChange(BaseModel):
+    model_config = ConfigDict(use_enum_values=True)
+
+    id: str
+    host: str
+    before: AuthMethod
+    after: AuthMethod
+
+
+class ScanDiff(BaseModel):
+    from_scan_id: str
+    to_scan_id: str
+    added: List[Finding]
+    removed: List[Finding]
+    exclusion_changes: List[ExclusionChange]
+    auth_method_changes: List[AuthMethodChange]
+
+
+class CreateScanRequest(BaseModel):
+    url: str
+    name: Optional[str] = None
+    max_depth: Optional[int] = Field(default=None, ge=1, le=10)
+
+
+class CreateScanResponse(BaseModel):
+    scan_id: str
+
+
+class PatchFindingRequest(BaseModel):
+    excluded: bool
+    justification: Optional[str] = None
+
+
+class SubmitScanResponse(BaseModel):
+    approval_id: str
+
+
+class CurrentUser(BaseModel):
+    username: str
+    display_name: str
+    email: str
+
+
+class ErrorResponse(BaseModel):
+    message: str

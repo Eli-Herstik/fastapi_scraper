@@ -2,4 +2,6 @@ playwright
 python-dotenv
 fastapi
 uvicorn[standard]
-motor
+sqlalchemy[asyncio]>=2.0
+aiosqlite
+sse-starlette

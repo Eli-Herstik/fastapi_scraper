@@ -78,8 +78,32 @@ def detect_idp_redirect(location: str) -> Optional[str]:
         return None
 
 
+def _format_headers_snippet(headers: Dict[str, Any] | None, limit: int = 512) -> str:
+    if not headers:
+        return ""
+    parts = [f"{k}: {v}" for k, v in headers.items()]
+    text = "\n".join(parts)
+    if len(text) > limit:
+        return text[: limit - 1] + "…"
+    return text
+
+
+def _evidence_from(req: Dict[str, Any]) -> Dict[str, Any]:
+    response = req.get('response') or {}
+    return {
+        'headers_snippet': _format_headers_snippet(req.get('headers')),
+        'status_code': int(response.get('status', 0) or 0),
+        'first_seen_on_page': req.get('source_url', '') or '',
+    }
+
+
 def aggregate_by_host(requests: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Group requests by host and pick the most specific authentication seen."""
+    """Group requests by host and pick the most specific authentication seen.
+
+    Retains a representative evidence sample (request headers, response status,
+    first source page) for the request whose authentication classification "wins"
+    so the FE can render its `evidence` block.
+    """
     result_map: Dict[str, Dict[str, Any]] = {}
     for req in requests:
         parsed_url = urlparse(req['url'])
@@ -90,14 +114,29 @@ def aggregate_by_host(requests: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         current_auth = req.get('authentication', 'None')
 
         if host not in result_map:
-            result_map[host] = {'host': host, 'authentication': current_auth}
+            entry = {
+                'host': host,
+                'authentication': current_auth,
+                'request_count': 1,
+            }
+            entry.update(_evidence_from(req))
+            result_map[host] = entry
             continue
 
-        existing_auth = result_map[host]['authentication']
+        entry = result_map[host]
+        entry['request_count'] = int(entry.get('request_count', 1)) + 1
+
+        existing_auth = entry['authentication']
         # Priority: Actual Auth > Required Auth > None
+        replaced = False
         if existing_auth in ['None', 'anonymous'] and current_auth not in ['None', 'anonymous']:
-            result_map[host]['authentication'] = current_auth
+            entry['authentication'] = current_auth
+            replaced = True
         elif "Required" in existing_auth and "OAuth" in current_auth:
-            result_map[host]['authentication'] = current_auth
+            entry['authentication'] = current_auth
+            replaced = True
+
+        if replaced:
+            entry.update(_evidence_from(req))
 
     return list(result_map.values())

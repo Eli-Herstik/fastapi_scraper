@@ -1,111 +1,139 @@
 import os
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional, Tuple
+from typing import AsyncIterator, Optional
 
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection
-from pymongo import ASCENDING, DESCENDING
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    update,
+)
+from sqlalchemy.dialects.sqlite import JSON
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
-async def connect_mongo() -> Tuple[AsyncIOMotorClient, AsyncIOMotorCollection]:
-    uri = os.environ.get("MONGO_URI", "mongodb://localhost:27017")
-    db_name = os.environ.get("MONGO_DB", "scraper")
-    coll_name = os.environ.get("MONGO_JOBS_COLLECTION", "scrape_jobs")
-    client = AsyncIOMotorClient(uri)
-    collection = client[db_name][coll_name]
-    return client, collection
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
 
 
-async def ensure_indexes(collection: AsyncIOMotorCollection) -> None:
-    await collection.create_index([("status", ASCENDING)])
-    await collection.create_index([("submitted_at", DESCENDING)])
+class Base(DeclarativeBase):
+    pass
 
 
-async def insert_pending_job(
-    collection: AsyncIOMotorCollection,
-    *,
-    job_id: str,
-    start_url: str,
-    max_depth: Optional[int],
-    submitted_at: datetime,
-) -> None:
-    await collection.insert_one(
-        {
-            "_id": job_id,
-            "job_id": job_id,
-            "status": "pending",
-            "start_url": start_url,
-            "max_depth": max_depth,
-            "submitted_at": submitted_at,
-            "started_at": None,
-            "finished_at": None,
-            "result": None,
-            "error": None,
-        }
+class AppRow(Base):
+    __tablename__ = "apps"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+
+class ScanRow(Base):
+    __tablename__ = "scans"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    app_id: Mapped[str] = mapped_column(String, ForeignKey("apps.id"), index=True, nullable=False)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    url: Mapped[str] = mapped_column(String, nullable=False)
+    status: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    started_by: Mapped[str] = mapped_column(String, nullable=False)
+    max_depth: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    pages_crawled: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    findings: Mapped[list["FindingRow"]] = relationship(
+        "FindingRow", back_populates="scan", cascade="all, delete-orphan"
     )
 
 
-async def mark_running(
-    collection: AsyncIOMotorCollection, job_id: str, started_at: datetime
-) -> None:
-    await collection.update_one(
-        {"_id": job_id},
-        {"$set": {"status": "running", "started_at": started_at}},
+class FindingRow(Base):
+    __tablename__ = "findings"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    scan_id: Mapped[str] = mapped_column(String, ForeignKey("scans.id"), index=True, nullable=False)
+    host: Mapped[str] = mapped_column(String, nullable=False)
+    auth_method: Mapped[str] = mapped_column(String, nullable=False)
+    severity: Mapped[str] = mapped_column(String, nullable=False)
+    request_count: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    first_seen_on_page: Mapped[str] = mapped_column(String, default="", nullable=False)
+    headers_snippet: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    status_code: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    excluded: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    justification: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    scan: Mapped[ScanRow] = relationship("ScanRow", back_populates="findings")
+
+
+class ApprovalRow(Base):
+    __tablename__ = "approvals"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    scan_id: Mapped[str] = mapped_column(String, ForeignKey("scans.id"), index=True, nullable=False)
+    submitted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    submitted_by: Mapped[str] = mapped_column(String, nullable=False)
+
+
+class ScanEventRow(Base):
+    __tablename__ = "scan_events"
+    __table_args__ = (
+        UniqueConstraint("scan_id", "seq", name="uq_scan_events_scan_seq"),
     )
 
-
-async def mark_done(
-    collection: AsyncIOMotorCollection,
-    job_id: str,
-    finished_at: datetime,
-    result_dict: Dict[str, Any],
-) -> None:
-    await collection.update_one(
-        {"_id": job_id},
-        {
-            "$set": {
-                "status": "done",
-                "finished_at": finished_at,
-                "result": result_dict,
-            }
-        },
-    )
+    scan_id: Mapped[str] = mapped_column(String, ForeignKey("scans.id"), primary_key=True)
+    seq: Mapped[int] = mapped_column(Integer, primary_key=True)
+    ts: Mapped[int] = mapped_column(Integer, nullable=False)
+    type: Mapped[str] = mapped_column(String, nullable=False)
+    payload: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
 
 
-async def mark_failed(
-    collection: AsyncIOMotorCollection,
-    job_id: str,
-    finished_at: datetime,
-    error_msg: str,
-) -> None:
-    await collection.update_one(
-        {"_id": job_id},
-        {
-            "$set": {
-                "status": "failed",
-                "finished_at": finished_at,
-                "error": error_msg,
-            }
-        },
-    )
+def _database_url() -> str:
+    explicit = os.environ.get("DATABASE_URL")
+    if explicit:
+        return explicit
+    path = os.environ.get("SCRAPER_SQLITE_PATH", "scraper.db")
+    return f"sqlite+aiosqlite:///{path}"
 
 
-async def get_job(
-    collection: AsyncIOMotorCollection, job_id: str
-) -> Optional[Dict[str, Any]]:
-    return await collection.find_one({"_id": job_id})
+def make_engine() -> AsyncEngine:
+    return create_async_engine(_database_url(), future=True)
 
 
-async def mark_stale_jobs_failed(
-    collection: AsyncIOMotorCollection, reason: str
-) -> int:
-    result = await collection.update_many(
-        {"status": {"$in": ["pending", "running"]}},
-        {
-            "$set": {
-                "status": "failed",
-                "error": reason,
-                "finished_at": datetime.now(timezone.utc),
-            }
-        },
-    )
-    return result.modified_count
+def make_session_factory(engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:
+    return async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+
+
+async def init_db(engine: AsyncEngine) -> None:
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+
+async def sweep_stale_scans(session_factory: async_sessionmaker[AsyncSession]) -> int:
+    """Mark any scans left in queued/running by a previous process as failed."""
+    async with session_factory() as session:
+        stmt = (
+            update(ScanRow)
+            .where(ScanRow.status.in_(["queued", "running"]))
+            .values(status="failed", completed_at=_utcnow(), error="server restarted")
+        )
+        result = await session.execute(stmt)
+        await session.commit()
+        return result.rowcount or 0
+
+
+async def get_session(
+    session_factory: async_sessionmaker[AsyncSession],
+) -> AsyncIterator[AsyncSession]:
+    async with session_factory() as session:
+        yield session

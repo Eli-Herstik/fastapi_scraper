@@ -1,7 +1,8 @@
 """Main mapping engine: orchestrates navigation, interception, and aggregation."""
+import inspect
 import logging
 import os
-from typing import Any, Dict
+from typing import Any, Awaitable, Callable, Dict, Optional, Union
 
 from playwright.async_api import Browser, BrowserContext, Page, async_playwright
 
@@ -15,11 +16,13 @@ from .network.auth_analyzer import aggregate_by_host
 
 logger = logging.getLogger(__name__)
 
+EventCallback = Callable[[str, Dict[str, Any]], Union[None, Awaitable[None]]]
+
 
 class Mapper:
     """Main mapping engine."""
 
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, on_event: Optional[EventCallback] = None):
         self.config = config
         self.interceptor = NetworkInterceptor()
         self.dom_hasher = DOMHasher()
@@ -30,6 +33,48 @@ class Mapper:
         self.page: Page = None
         self._capture: RequestCapture = None
         self._used_reused_storage: bool = False
+        self._on_event: Optional[EventCallback] = on_event
+        self._pages_visited: int = 0
+        self._announced_hosts: set[str] = set()
+
+    async def _emit(self, event_type: str, payload: Dict[str, Any]) -> None:
+        if not self._on_event:
+            return
+        try:
+            result = self._on_event(event_type, payload)
+            if inspect.isawaitable(result):
+                await result
+        except Exception as e:
+            logger.warning("on_event callback failed for %s: %s", event_type, e)
+
+    async def _record_page_visit(self, url: str, depth: int) -> None:
+        self._pages_visited += 1
+        await self._emit('page_visited', {'path': url, 'depth': depth})
+        await self._announce_new_hosts()
+        await self._emit('scan_progress', {
+            'pages': self._pages_visited,
+            'hosts': len(self._announced_hosts),
+            'blockers': 0,
+        })
+
+    async def _announce_new_hosts(self) -> None:
+        try:
+            from urllib.parse import urlparse
+            seen_now = set()
+            for req in self.interceptor.get_requests():
+                host = urlparse(req.get('url', '')).netloc
+                if host:
+                    seen_now.add(host)
+            new_hosts = seen_now - self._announced_hosts
+            for host in new_hosts:
+                self._announced_hosts.add(host)
+                await self._emit('external_host_seen', {'host': host})
+        except Exception as e:
+            logger.debug("announce_new_hosts failed: %s", e)
+
+    @property
+    def pages_crawled(self) -> int:
+        return self._pages_visited
 
     async def initialize(self) -> None:
         self.playwright = await async_playwright().start()
@@ -62,7 +107,7 @@ class Mapper:
 
         if not await self.navigator.navigate_to(self.page, self.config.start_url, 0):
             logger.error("Failed to navigate to start URL")
-            return {"external_hosts": []}
+            return {"external_hosts": [], "pages_crawled": 0}
 
         await self._ensure_authenticated(self.page)
 
@@ -71,7 +116,18 @@ class Mapper:
 
         external_hosts = aggregate_by_host(self.interceptor.get_requests())
         logger.info("Mapping complete. Found %d unique external hosts.", len(external_hosts))
-        return {"external_hosts": external_hosts}
+
+        # Emit per-host classification events for the SSE stream.
+        for entry in external_hosts:
+            host = entry.get('host', '')
+            auth_str = entry.get('authentication', '')
+            await self._emit('auth_detected', {
+                'host': host,
+                'method': auth_str,
+                'confidence': 'high' if 'Required' not in auth_str else 'medium',
+            })
+
+        return {"external_hosts": external_hosts, "pages_crawled": self._pages_visited}
 
     async def _ensure_authenticated(self, page: Page) -> None:
         cfg = self.config.login
@@ -100,6 +156,7 @@ class Mapper:
 
         base_url = page.url
         logger.info("Exploring page at depth %d: %s", depth, base_url)
+        await self._record_page_visit(base_url, depth)
 
         await self.navigator.fill_page_forms(page)
 

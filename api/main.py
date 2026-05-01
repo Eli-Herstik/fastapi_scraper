@@ -1,30 +1,20 @@
 import asyncio
 import logging
 import os
-import uuid
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
-from typing import Any, Dict
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Request, status
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-from config_loader import load_config
+from config_loader import Config, FormConfig, load_config
 
-from .db import (
-    connect_mongo,
-    ensure_indexes,
-    get_job,
-    insert_pending_job,
-    mark_stale_jobs_failed,
-)
-from .models import (
-    JobStatus,
-    JobStatusResponse,
-    JobSubmissionResponse,
-    ScrapeRequest,
-)
-from .service import run_scrape_job
+from .db import init_db, make_engine, make_session_factory, sweep_stale_scans
+from .routes_apps import router as apps_router
+from .routes_events import router as events_router
+from .routes_me import router as me_router
+from .routes_scans import router as scans_router
+from .sse import EventBus
 
 load_dotenv()
 
@@ -36,29 +26,66 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def _default_base_config() -> Config:
+    return Config(
+        start_url="https://placeholder.invalid",  # always overridden per-request
+        max_depth=3,
+        max_clicks_per_page=20,
+        wait_timeout=30000,
+        network_idle_timeout=2000,
+        http_credentials=None,
+        form_filling=FormConfig(enabled=True, fill_delay=100, defaults={}),
+        exclude_patterns=None,
+        login=None,
+    )
+
+
+def _load_base_config() -> Config:
+    config_path = os.environ.get("SCRAPER_CONFIG_PATH", "./config.json")
+    if not os.path.exists(config_path):
+        logger.info("No config file at %s; using built-in defaults", config_path)
+        return _default_base_config()
+    try:
+        return load_config(config_path)
+    except Exception as e:
+        logger.warning("Failed to load config from %s (%s); using built-in defaults", config_path, e)
+        return _default_base_config()
+
+
+def _check_single_worker() -> None:
+    """In-memory state (scan_tasks, SSE subscribers, semaphore) is per-process.
+    Refuse to start with multiple workers — silent races would corrupt state."""
+    web_concurrency = os.environ.get("WEB_CONCURRENCY")
+    if web_concurrency and web_concurrency.isdigit() and int(web_concurrency) > 1:
+        raise RuntimeError(
+            f"WEB_CONCURRENCY={web_concurrency}: this server uses in-memory state and "
+            "must run with a single worker. Run uvicorn with --workers 1."
+        )
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Single-worker deployment assumed: background scrape tasks run in-process,
-    # and orphaned pending/running rows are swept to "failed" at startup.
-    config_path = os.environ.get("SCRAPER_CONFIG_PATH", "./config.json")
-    app.state.base_config = load_config(config_path)
+    _check_single_worker()
+
+    app.state.base_config = _load_base_config()
     max_parallel = int(os.environ.get("SCRAPER_MAX_PARALLEL", "2"))
     app.state.semaphore = asyncio.Semaphore(max_parallel)
 
-    client, collection = await connect_mongo()
-    app.state.mongo_client = client
-    app.state.jobs_collection = collection
-    await ensure_indexes(collection)
+    engine = make_engine()
+    session_factory = make_session_factory(engine)
+    await init_db(engine)
+    app.state.engine = engine
+    app.state.session_factory = session_factory
 
-    stale = await mark_stale_jobs_failed(collection, reason="server restarted")
-    if stale:
-        logger.warning("Marked %d stale jobs as failed (server restarted)", stale)
+    swept = await sweep_stale_scans(session_factory)
+    if swept:
+        logger.warning("Marked %d stale scans as failed (server restarted)", swept)
 
+    app.state.event_bus = EventBus(session_factory)
     app.state.background_tasks: set[asyncio.Task] = set()
+    app.state.scan_tasks: dict[str, asyncio.Task] = {}
 
-    logger.info(
-        "Loaded base config from %s (max_parallel=%d)", config_path, max_parallel
-    )
+    logger.info("Backend ready (max_parallel=%d)", max_parallel)
     try:
         yield
     finally:
@@ -67,72 +94,35 @@ async def lifespan(app: FastAPI):
             t.cancel()
         if tasks:
             await asyncio.gather(*tasks, return_exceptions=True)
-        client.close()
+        await engine.dispose()
 
 
 app = FastAPI(
-    title="Hosts Scraper API",
-    description="Submit a start_url to crawl a site and collect external hosts.",
-    version="1.0.0",
+    title="Gatekeeper API",
+    description="Pre-exposure scanner backend for the gatekeeper UI.",
+    version="2.0.0",
     lifespan=lifespan,
 )
 
+_default_origins = "http://localhost:4200"
+_origins = [
+    o.strip()
+    for o in os.environ.get("CORS_ALLOW_ORIGINS", _default_origins).split(",")
+    if o.strip()
+]
 
-def _doc_to_status(doc: Dict[str, Any]) -> Dict[str, Any]:
-    return {
-        "job_id": doc["job_id"],
-        "status": doc["status"],
-        "submitted_at": doc["submitted_at"],
-        "started_at": doc.get("started_at"),
-        "finished_at": doc.get("finished_at"),
-        "start_url": doc["start_url"],
-        "result": doc.get("result"),
-        "error": doc.get("error"),
-    }
-
-
-@app.post(
-    "/scrape",
-    response_model=JobSubmissionResponse,
-    status_code=status.HTTP_202_ACCEPTED,
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
-async def scrape(
-    request: ScrapeRequest, http_request: Request
-) -> JobSubmissionResponse:
-    app_state = http_request.app.state
-    job_id = uuid.uuid4().hex
-    submitted_at = datetime.now(timezone.utc)
 
-    await insert_pending_job(
-        app_state.jobs_collection,
-        job_id=job_id,
-        start_url=str(request.start_url),
-        max_depth=request.max_depth,
-        submitted_at=submitted_at,
-    )
-
-    task = asyncio.create_task(
-        run_scrape_job(
-            job_id=job_id,
-            base_config=app_state.base_config,
-            request=request,
-            semaphore=app_state.semaphore,
-            collection=app_state.jobs_collection,
-        ),
-        name=f"scrape-{job_id}",
-    )
-    app_state.background_tasks.add(task)
-    task.add_done_callback(app_state.background_tasks.discard)
-
-    return JobSubmissionResponse(job_id=job_id, status=JobStatus.pending)
-
-
-@app.get("/scrape/{job_id}", response_model=JobStatusResponse)
-async def get_scrape(job_id: str, http_request: Request) -> JobStatusResponse:
-    doc = await get_job(http_request.app.state.jobs_collection, job_id)
-    if doc is None:
-        raise HTTPException(status_code=404, detail="job not found")
-    return JobStatusResponse(**_doc_to_status(doc))
+app.include_router(me_router, prefix="/api")
+app.include_router(scans_router, prefix="/api")
+app.include_router(apps_router, prefix="/api")
+app.include_router(events_router, prefix="/api")
 
 
 @app.get("/health")
