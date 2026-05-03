@@ -10,6 +10,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    event,
     update,
 )
 from sqlalchemy.dialects.sqlite import JSON
@@ -42,7 +43,9 @@ class ScanRow(Base):
     __tablename__ = "scans"
 
     id: Mapped[str] = mapped_column(String, primary_key=True)
-    app_id: Mapped[str] = mapped_column(String, ForeignKey("apps.id"), index=True, nullable=False)
+    app_id: Mapped[str] = mapped_column(
+        String, ForeignKey("apps.id", ondelete="CASCADE"), index=True, nullable=False
+    )
     name: Mapped[str] = mapped_column(String, nullable=False)
     url: Mapped[str] = mapped_column(String, nullable=False)
     status: Mapped[str] = mapped_column(String, nullable=False, index=True)
@@ -56,13 +59,21 @@ class ScanRow(Base):
     findings: Mapped[list["FindingRow"]] = relationship(
         "FindingRow", back_populates="scan", cascade="all, delete-orphan"
     )
+    approvals: Mapped[list["ApprovalRow"]] = relationship(
+        "ApprovalRow", back_populates="scan", cascade="all, delete-orphan"
+    )
+    events: Mapped[list["ScanEventRow"]] = relationship(
+        "ScanEventRow", back_populates="scan", cascade="all, delete-orphan"
+    )
 
 
 class FindingRow(Base):
     __tablename__ = "findings"
 
     id: Mapped[str] = mapped_column(String, primary_key=True)
-    scan_id: Mapped[str] = mapped_column(String, ForeignKey("scans.id"), index=True, nullable=False)
+    scan_id: Mapped[str] = mapped_column(
+        String, ForeignKey("scans.id", ondelete="CASCADE"), index=True, nullable=False
+    )
     host: Mapped[str] = mapped_column(String, nullable=False)
     auth_method: Mapped[str] = mapped_column(String, nullable=False)
     severity: Mapped[str] = mapped_column(String, nullable=False)
@@ -80,9 +91,13 @@ class ApprovalRow(Base):
     __tablename__ = "approvals"
 
     id: Mapped[str] = mapped_column(String, primary_key=True)
-    scan_id: Mapped[str] = mapped_column(String, ForeignKey("scans.id"), index=True, nullable=False)
+    scan_id: Mapped[str] = mapped_column(
+        String, ForeignKey("scans.id", ondelete="CASCADE"), index=True, nullable=False
+    )
     submitted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
     submitted_by: Mapped[str] = mapped_column(String, nullable=False)
+
+    scan: Mapped[ScanRow] = relationship("ScanRow", back_populates="approvals")
 
 
 class ScanEventRow(Base):
@@ -91,11 +106,15 @@ class ScanEventRow(Base):
         UniqueConstraint("scan_id", "seq", name="uq_scan_events_scan_seq"),
     )
 
-    scan_id: Mapped[str] = mapped_column(String, ForeignKey("scans.id"), primary_key=True)
+    scan_id: Mapped[str] = mapped_column(
+        String, ForeignKey("scans.id", ondelete="CASCADE"), primary_key=True
+    )
     seq: Mapped[int] = mapped_column(Integer, primary_key=True)
     ts: Mapped[int] = mapped_column(Integer, nullable=False)
     type: Mapped[str] = mapped_column(String, nullable=False)
     payload: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+
+    scan: Mapped[ScanRow] = relationship("ScanRow", back_populates="events")
 
 
 def _database_url() -> str:
@@ -107,7 +126,14 @@ def _database_url() -> str:
 
 
 def make_engine() -> AsyncEngine:
-    return create_async_engine(_database_url(), future=True)
+    engine = create_async_engine(_database_url(), future=True)
+    if engine.dialect.name == "sqlite":
+        @event.listens_for(engine.sync_engine, "connect")
+        def _enable_sqlite_foreign_keys(dbapi_connection, connection_record):
+            cursor = dbapi_connection.cursor()
+            cursor.execute("PRAGMA foreign_keys=ON")
+            cursor.close()
+    return engine
 
 
 def make_session_factory(engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:
