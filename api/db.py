@@ -4,6 +4,7 @@ from typing import AsyncIterator, Optional
 
 from sqlalchemy import (
     JSON,
+    BigInteger,
     Boolean,
     DateTime,
     ForeignKey,
@@ -109,7 +110,7 @@ class ScanEventRow(Base):
         String, ForeignKey("scans.id", ondelete="CASCADE"), primary_key=True
     )
     seq: Mapped[int] = mapped_column(Integer, primary_key=True)
-    ts: Mapped[int] = mapped_column(Integer, nullable=False)
+    ts: Mapped[int] = mapped_column(BigInteger, nullable=False)
     type: Mapped[str] = mapped_column(String, nullable=False)
     payload: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
 
