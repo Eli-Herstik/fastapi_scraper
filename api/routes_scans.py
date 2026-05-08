@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import List
 
-from fastapi import APIRouter, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -12,6 +12,7 @@ from .db import AppRow, FindingRow, ApprovalRow, ScanRow
 from .models import (
     CreateScanRequest,
     CreateScanResponse,
+    CurrentUser,
     Finding,
     PatchFindingRequest,
     ScanDetail,
@@ -19,14 +20,14 @@ from .models import (
     Severity,
     SubmitScanResponse,
 )
-from .routes_me import _STUB_USER
+from .security import get_current_user
 from .serialize import finding_to_schema, scan_to_detail, scan_to_summary
 from .service import run_scrape_job
 from .translate import app_id_from_url, app_name_from_url
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 
 def _session_factory(request: Request) -> async_sessionmaker[AsyncSession]:
@@ -131,7 +132,11 @@ async def list_findings(scan_id: str, request: Request) -> List[Finding]:
 
 
 @router.post("/scans", response_model=CreateScanResponse)
-async def create_scan(body: CreateScanRequest, request: Request) -> CreateScanResponse:
+async def create_scan(
+    body: CreateScanRequest,
+    request: Request,
+    current_user: CurrentUser = Depends(get_current_user),
+) -> CreateScanResponse:
     app_state = request.app.state
     factory = _session_factory(request)
     event_bus = app_state.event_bus
@@ -140,7 +145,7 @@ async def create_scan(body: CreateScanRequest, request: Request) -> CreateScanRe
     app_id = app_id_from_url(body.url)
     started_at = datetime.now(timezone.utc)
     name = body.name or body.url
-    started_by = _STUB_USER.username
+    started_by = current_user.username
 
     async with factory() as session:
         existing_app = await session.get(AppRow, app_id)
@@ -210,7 +215,11 @@ async def patch_finding(
 
 
 @router.post("/scans/{scan_id}/submit", response_model=SubmitScanResponse)
-async def submit_scan(scan_id: str, request: Request) -> SubmitScanResponse:
+async def submit_scan(
+    scan_id: str,
+    request: Request,
+    current_user: CurrentUser = Depends(get_current_user),
+) -> SubmitScanResponse:
     factory = _session_factory(request)
     async with factory() as session:
         scan = await session.get(ScanRow, scan_id)
@@ -239,7 +248,7 @@ async def submit_scan(scan_id: str, request: Request) -> SubmitScanResponse:
             ApprovalRow(
                 id=approval_id,
                 scan_id=scan_id,
-                submitted_by=_STUB_USER.username,
+                submitted_by=current_user.username,
             )
         )
         await session.commit()

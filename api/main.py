@@ -12,8 +12,8 @@ from config_loader import Config, FormConfig, load_config
 from .db import init_db, make_engine, make_session_factory, sweep_stale_scans
 from .routes_apps import router as apps_router
 from .routes_events import router as events_router
-from .routes_me import router as me_router
 from .routes_scans import router as scans_router
+from .security import AuthSettings, JwksCache
 from .sse import EventBus
 
 load_dotenv()
@@ -67,6 +67,10 @@ def _check_single_worker() -> None:
 async def lifespan(app: FastAPI):
     _check_single_worker()
 
+    auth_settings = AuthSettings()
+    app.state.auth_settings = auth_settings
+    app.state.jwks_cache = JwksCache(auth_settings)
+
     app.state.base_config = _load_base_config()
     max_parallel = int(os.environ.get("SCRAPER_MAX_PARALLEL", "2"))
     app.state.semaphore = asyncio.Semaphore(max_parallel)
@@ -119,7 +123,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(me_router, prefix="/api")
 app.include_router(scans_router, prefix="/api")
 app.include_router(apps_router, prefix="/api")
 app.include_router(events_router, prefix="/api")

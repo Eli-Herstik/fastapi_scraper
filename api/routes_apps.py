@@ -1,6 +1,6 @@
 from typing import Dict, List
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -14,9 +14,10 @@ from .models import (
     ScanSummary,
     Severity,
 )
+from .security import get_current_user
 from .serialize import finding_to_schema, scan_to_summary
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 
 def _session_factory(request: Request) -> async_sessionmaker[AsyncSession]:

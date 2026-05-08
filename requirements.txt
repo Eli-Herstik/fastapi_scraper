@@ -5,3 +5,5 @@ uvicorn[standard]
 sqlalchemy[asyncio]>=2.0
 aiosqlite
 sse-starlette
+python-jose[cryptography]
+httpx

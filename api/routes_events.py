@@ -10,6 +10,12 @@ from .sse import replay_events
 
 logger = logging.getLogger(__name__)
 
+# NOTE: SSE endpoints are intentionally unauthenticated. The frontend uses the
+# native browser EventSource (gatekeeper/src/app/lib/sse.service.ts) which
+# cannot attach an Authorization: Bearer header. Closing this gap requires
+# either a fetch-based EventSource polyfill (so the existing auth interceptor
+# applies), accepting ?access_token=... and validating it here, or session
+# cookies. Tracked as a follow-up to the Keycloak migration.
 router = APIRouter()
 
 
