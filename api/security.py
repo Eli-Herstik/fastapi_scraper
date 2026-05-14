@@ -6,7 +6,7 @@ from typing import Any
 
 import httpx
 from fastapi import Depends, HTTPException, Request, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.security import OAuth2AuthorizationCodeBearer
 from jose import jwt
 from jose.exceptions import ExpiredSignatureError, JOSEError, JWTError
 
@@ -14,7 +14,17 @@ from .models import CurrentUser
 
 logger = logging.getLogger(__name__)
 
-_BEARER = HTTPBearer(auto_error=True)
+_KEYCLOAK_ISSUER = os.environ.get("KEYCLOAK_ISSUER", "").rstrip("/")
+_oauth2_scheme = OAuth2AuthorizationCodeBearer(
+    authorizationUrl=f"{_KEYCLOAK_ISSUER}/protocol/openid-connect/auth",
+    tokenUrl=f"{_KEYCLOAK_ISSUER}/protocol/openid-connect/token",
+    refreshUrl=f"{_KEYCLOAK_ISSUER}/protocol/openid-connect/token",
+    scopes={
+        "openid": "OpenID Connect scope",
+        "profile": "User profile",
+        "email": "User email",
+    },
+)
 _UNAUTHENTICATED_HEADERS = {"WWW-Authenticate": "Bearer"}
 
 
@@ -77,11 +87,10 @@ class JwksCache:
 
 async def get_current_user(
     request: Request,
-    credentials: HTTPAuthorizationCredentials = Depends(_BEARER),
+    token: str = Depends(_oauth2_scheme),
 ) -> CurrentUser:
     settings: AuthSettings = request.app.state.auth_settings
     jwks: JwksCache = request.app.state.jwks_cache
-    token = credentials.credentials
 
     try:
         header = jwt.get_unverified_header(token)

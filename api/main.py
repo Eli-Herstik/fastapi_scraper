@@ -4,6 +4,11 @@ import os
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
+
+# Load .env before importing modules that read env vars at import time
+# (api.security reads KEYCLOAK_ISSUER to build the OAuth2 scheme URLs).
+load_dotenv()
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -15,8 +20,6 @@ from .routes_events import router as events_router
 from .routes_scans import router as scans_router
 from .security import AuthSettings, JwksCache
 from .sse import EventBus
-
-load_dotenv()
 
 logging.basicConfig(
     level=logging.INFO,
@@ -106,6 +109,11 @@ app = FastAPI(
     description="Pre-exposure scanner backend for the gatekeeper UI.",
     version="2.0.0",
     lifespan=lifespan,
+    swagger_ui_init_oauth={
+        "clientId": os.environ.get("KEYCLOAK_AUDIENCE", "gatekeeper_client"),
+        "usePkceWithAuthorizationCodeGrant": True,
+        "scopes": "openid profile email",
+    },
 )
 
 _default_origins = "http://localhost:4200"
