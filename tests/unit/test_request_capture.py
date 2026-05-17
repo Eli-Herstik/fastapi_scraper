@@ -59,7 +59,7 @@ class TestOnRequest:
     async def test_captures_external_url(self, capture, mock_request):
         req = mock_request(url="http://api.example.com/v1")
         await capture._on_request(req)
-        assert "http://api.example.com/v1" in capture.pending_requests
+        assert ("GET", "http://api.example.com/v1") in capture.pending_requests
 
     async def test_does_not_duplicate_pending(self, capture, mock_request):
         req = mock_request(url="http://api.example.com/v1")
@@ -84,11 +84,11 @@ class TestOnResponse:
         resp.request = req
         await capture._on_response(resp)
         assert len(interceptor.requests) == 1
-        assert "http://api.example.com/v1" in capture.captured_urls
-        assert "http://api.example.com/v1" not in capture.pending_requests
+        assert ("GET", "http://api.example.com/v1") in capture.captured_keys
+        assert ("GET", "http://api.example.com/v1") not in capture.pending_requests
 
     async def test_skips_already_captured(self, capture, interceptor, mock_request, mock_response):
-        capture.captured_urls.add("http://api.example.com/v1")
+        capture.captured_keys.add(("GET", "http://api.example.com/v1"))
         req = mock_request(url="http://api.example.com/v1")
         resp = mock_response(200)
         resp.request = req

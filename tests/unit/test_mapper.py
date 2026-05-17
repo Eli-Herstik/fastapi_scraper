@@ -28,7 +28,7 @@ class TestMapWebsite:
         m.page = MagicMock()
         m.navigator.navigate_to = AsyncMock(return_value=False)
         result = await m.map_website()
-        assert result == {"external_hosts": []}
+        assert result["external_hosts"] == []
 
     async def test_aggregates_interceptor_requests(self, make_config):
         m = Mapper(make_config())

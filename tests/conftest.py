@@ -21,7 +21,6 @@ def make_config():
             "network_idle_timeout": 500,
             "form_filling": FormConfig(),
             "exclude_patterns": ["logout", "delete", "remove"],
-            "output_file": "test_output.json",
         }
         defaults.update(overrides)
         return Config(**defaults)

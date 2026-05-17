@@ -19,7 +19,6 @@ class TestLoadConfig:
                 "defaults": {"#email": "test@example.com"},
             },
             "exclude_patterns": ["logout", "settings"],
-            "output_file": "output.json",
         }
         config_file = tmp_path / "config.json"
         config_file.write_text(json.dumps(config_data))
@@ -36,7 +35,6 @@ class TestLoadConfig:
         assert config.form_filling.fill_delay == 200
         assert config.form_filling.defaults == {"#email": "test@example.com"}
         assert config.exclude_patterns == ["logout", "settings"]
-        assert config.output_file == "output.json"
 
     def test_load_minimal_config(self, tmp_path):
         config_file = tmp_path / "config.json"
@@ -54,7 +52,6 @@ class TestLoadConfig:
         assert config.form_filling.defaults == {}
         # When exclude_patterns absent, Config.__post_init__ applies the default list.
         assert config.exclude_patterns == ["logout", "delete", "remove", "login", "signin"]
-        assert config.output_file == "mappings_output.json"
         assert config.login is None
 
     def test_load_config_missing_start_url(self, tmp_path):
@@ -173,16 +170,6 @@ class TestLoadConfig:
 
         config = load_config(str(config_file))
         assert config.http_credentials == {}
-
-    def test_output_file_override(self, tmp_path):
-        config_file = tmp_path / "config.json"
-        config_file.write_text(json.dumps({
-            "start_url": "https://example.com",
-            "output_file": "custom_output.json",
-        }))
-
-        config = load_config(str(config_file))
-        assert config.output_file == "custom_output.json"
 
     def test_zero_max_depth(self, tmp_path):
         config_file = tmp_path / "config.json"

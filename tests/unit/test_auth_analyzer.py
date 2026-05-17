@@ -112,7 +112,9 @@ class TestAggregateByHost:
     def test_single_host(self):
         reqs = [{"url": "http://a.com/x", "authentication": "OAuth (Bearer)"}]
         result = aggregate_by_host(reqs)
-        assert result == [{"host": "a.com", "authentication": "OAuth (Bearer)"}]
+        assert len(result) == 1
+        assert result[0]["host"] == "a.com"
+        assert result[0]["authentication"] == "OAuth (Bearer)"
 
     def test_groups_by_host(self):
         reqs = [
