@@ -29,6 +29,14 @@ class Severity(str, Enum):
     cleared = "cleared"
 
 
+class ExposureState(str, Enum):
+    never_scanned = "never_scanned"
+    ready_for_submission = "ready_for_submission"
+    blocked = "blocked"
+    submitted = "submitted"
+    failed = "failed"
+
+
 class FindingEvidence(BaseModel):
     headers_snippet: str = ""
     status_code: int = 0
@@ -102,9 +110,28 @@ class ScanDiff(BaseModel):
     auth_method_changes: List[AuthMethodChange]
 
 
+class AppSummary(BaseModel):
+    model_config = ConfigDict(use_enum_values=True)
+
+    id: str
+    name: str
+    url: Optional[str] = None
+    owner_ad_group: str
+    exposure_state: ExposureState
+    last_scan_id: Optional[str] = None
+    last_scan_status: Optional[ScanStatus] = None
+    last_scanned_at: Optional[str] = None
+
+
+class CreateAppRequest(BaseModel):
+    name: str
+    url: Optional[str] = None
+    owner_ad_group: str
+
+
 class CreateScanRequest(BaseModel):
+    app_id: str
     url: str
-    name: Optional[str] = None
     max_depth: Optional[int] = Field(default=None, ge=1, le=10)
 
 

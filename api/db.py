@@ -36,6 +36,8 @@ class AppRow(Base):
 
     id: Mapped[str] = mapped_column(String, primary_key=True)
     name: Mapped[str] = mapped_column(String, nullable=False)
+    url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    owner_ad_group: Mapped[str] = mapped_column(String, nullable=False, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
 
