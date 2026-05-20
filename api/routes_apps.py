@@ -11,13 +11,14 @@ from .models import (
     AuthMethod,
     AuthMethodChange,
     CreateAppRequest,
+    CurrentUser,
     ExclusionChange,
     Finding,
     ScanDiff,
     ScanSummary,
     Severity,
 )
-from .security import get_current_user
+from .security import get_current_user, require_admin
 from .serialize import app_to_summary, finding_to_schema, scan_to_summary
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
@@ -93,7 +94,11 @@ async def list_apps(request: Request) -> List[AppSummary]:
 
 
 @router.post("/apps", response_model=AppSummary, status_code=201)
-async def create_app(body: CreateAppRequest, request: Request) -> AppSummary:
+async def create_app(
+    body: CreateAppRequest,
+    request: Request,
+    _admin: CurrentUser = Depends(require_admin),
+) -> AppSummary:
     factory = _session_factory(request)
     app_id = "app_" + uuid.uuid4().hex[:10]
 

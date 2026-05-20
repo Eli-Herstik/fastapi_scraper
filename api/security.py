@@ -27,6 +27,12 @@ _oauth2_scheme = OAuth2AuthorizationCodeBearer(
 )
 _UNAUTHENTICATED_HEADERS = {"WWW-Authenticate": "Bearer"}
 
+# Admin authorization is delegated to the AD Groups API: a caller is an admin
+# iff they are a direct member of the configured gatekeeper-admin group. The
+# token itself carries no group/role claim, so membership is checked live.
+_AD_GROUPS_API_URL = os.environ.get("AD_GROUPS_API_URL", "http://localhost:8001").rstrip("/")
+_GATEKEEPER_ADMIN_GROUP = os.environ.get("GATEKEEPER_ADMIN_GROUP", "Gatekeeper-Admins")
+
 
 class AuthSettings:
     def __init__(self) -> None:
@@ -146,3 +152,46 @@ async def get_current_user(
         display_name=claims.get("name") or username,
         email=claims.get("email") or "",
     )
+
+
+async def require_admin(
+    user: CurrentUser = Depends(get_current_user),
+) -> CurrentUser:
+    """Authorize an admin-only action via the caller's AD group membership.
+
+    Looks up the current user's direct AD groups through the AD Groups API and
+    requires the configured gatekeeper-admin group. Fails closed: if the AD
+    service is unreachable or errors we deny with 503; if the user is unknown to
+    the directory or lacks the group we deny with 403.
+    """
+    url = f"{_AD_GROUPS_API_URL}/users/{user.username}/groups"
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.get(url)
+    except httpx.HTTPError as exc:
+        logger.warning("AD Groups API unreachable (%s): %s", url, exc)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Authorization service unreachable",
+        ) from exc
+
+    if resp.status_code == status.HTTP_404_NOT_FOUND:
+        # Unknown to the directory -> cannot be an admin. Fail closed.
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to perform this action",
+        )
+    if resp.status_code != 200:
+        logger.warning("AD Groups API returned %s for %s", resp.status_code, url)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Authorization service error",
+        )
+
+    groups = resp.json().get("groups", [])
+    if _GATEKEEPER_ADMIN_GROUP not in groups:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to perform this action",
+        )
+    return user
