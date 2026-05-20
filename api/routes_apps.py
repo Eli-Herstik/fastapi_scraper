@@ -18,7 +18,7 @@ from .models import (
     ScanSummary,
     Severity,
 )
-from .security import get_current_user, require_admin
+from .security import get_current_user, get_user_groups, is_admin, require_admin
 from .serialize import app_to_summary, finding_to_schema, scan_to_summary
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
@@ -52,7 +52,10 @@ def _blocker_count_subq():
 
 
 @router.get("/apps", response_model=List[AppSummary])
-async def list_apps(request: Request) -> List[AppSummary]:
+async def list_apps(
+    request: Request,
+    groups: List[str] = Depends(get_user_groups),
+) -> List[AppSummary]:
     factory = _session_factory(request)
     async with factory() as session:
         # Most recent scan per app, by started_at desc.
@@ -80,6 +83,10 @@ async def list_apps(request: Request) -> List[AppSummary]:
             .outerjoin(blockers, blockers.c.scan_id == ScanRow.id)
             .order_by(AppRow.created_at.desc())
         )
+        # Non-admins only see apps owned by an AD group they belong to. An empty
+        # `groups` yields an always-false IN, i.e. an empty list (200).
+        if not is_admin(groups):
+            stmt = stmt.where(AppRow.owner_ad_group.in_(groups))
         result = await session.execute(stmt)
         out: list[AppSummary] = []
         for app, scan, blocker_count in result.all():
@@ -116,10 +123,30 @@ async def create_app(
     return app_to_summary(app, last_scan=None, last_scan_blocker_count=0)
 
 
+async def _require_app_visible(session, app_id: str, groups: List[str]) -> AppRow:
+    """Load an app, enforcing that the caller may see it.
+
+    Admins see any app; everyone else only apps owned by an AD group they belong
+    to. Raises 404 (not 403) for missing or not-visible apps so we don't leak
+    the existence of apps the caller can't see.
+    """
+    app = await session.get(AppRow, app_id)
+    if app is None or (not is_admin(groups) and app.owner_ad_group not in groups):
+        raise HTTPException(
+            status_code=404, detail={"message": f"app {app_id} not found"}
+        )
+    return app
+
+
 @router.get("/apps/{app_id}/scans", response_model=List[ScanSummary])
-async def list_app_scans(app_id: str, request: Request) -> List[ScanSummary]:
+async def list_app_scans(
+    app_id: str,
+    request: Request,
+    groups: List[str] = Depends(get_user_groups),
+) -> List[ScanSummary]:
     factory = _session_factory(request)
     async with factory() as session:
+        await _require_app_visible(session, app_id, groups)
         agg = (
             select(
                 FindingRow.scan_id.label("scan_id"),
@@ -177,6 +204,7 @@ async def app_diff(
     request: Request,
     from_: str | None = None,
     to: str | None = None,
+    groups: List[str] = Depends(get_user_groups),
 ) -> ScanDiff:
     # `from` is reserved in Python, so accept it under an alias.
     qp = request.query_params
@@ -187,6 +215,7 @@ async def app_diff(
 
     factory = _session_factory(request)
     async with factory() as session:
+        await _require_app_visible(session, app_id, groups)
         for scan_id in (from_id, to_id):
             scan = await session.get(ScanRow, scan_id)
             if not scan or scan.app_id != app_id:

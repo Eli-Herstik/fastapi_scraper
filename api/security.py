@@ -154,15 +154,15 @@ async def get_current_user(
     )
 
 
-async def require_admin(
+async def get_user_groups(
     user: CurrentUser = Depends(get_current_user),
-) -> CurrentUser:
-    """Authorize an admin-only action via the caller's AD group membership.
+) -> list[str]:
+    """Fetch the caller's direct AD groups from the AD Groups API.
 
-    Looks up the current user's direct AD groups through the AD Groups API and
-    requires the configured gatekeeper-admin group. Fails closed: if the AD
-    service is unreachable or errors we deny with 503; if the user is unknown to
-    the directory or lacks the group we deny with 403.
+    Fails closed: if the AD service is unreachable or errors we deny with 503;
+    if the user is unknown to the directory (404) we treat them as having no
+    groups (empty list) rather than erroring, so list endpoints can return an
+    empty result.
     """
     url = f"{_AD_GROUPS_API_URL}/users/{user.username}/groups"
     try:
@@ -176,11 +176,8 @@ async def require_admin(
         ) from exc
 
     if resp.status_code == status.HTTP_404_NOT_FOUND:
-        # Unknown to the directory -> cannot be an admin. Fail closed.
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to perform this action",
-        )
+        # Unknown to the directory -> no groups. Fail closed.
+        return []
     if resp.status_code != 200:
         logger.warning("AD Groups API returned %s for %s", resp.status_code, url)
         raise HTTPException(
@@ -188,8 +185,25 @@ async def require_admin(
             detail="Authorization service error",
         )
 
-    groups = resp.json().get("groups", [])
-    if _GATEKEEPER_ADMIN_GROUP not in groups:
+    return resp.json().get("groups", [])
+
+
+def is_admin(groups: list[str]) -> bool:
+    """True if the caller's AD groups include the gatekeeper-admin group."""
+    return _GATEKEEPER_ADMIN_GROUP in groups
+
+
+async def require_admin(
+    groups: list[str] = Depends(get_user_groups),
+    user: CurrentUser = Depends(get_current_user),
+) -> CurrentUser:
+    """Authorize an admin-only action via the caller's AD group membership.
+
+    Requires the configured gatekeeper-admin group. Denies with 403 if the user
+    is not a member (including users unknown to the directory); a 503 from the
+    AD service propagates from ``get_user_groups``.
+    """
+    if not is_admin(groups):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to perform this action",
