@@ -1,7 +1,6 @@
 """Translate raw scraper output into the frontend's domain model."""
 import uuid
 from typing import Any, Dict, List
-from urllib.parse import urlparse
 
 from .models import AuthMethod, Severity
 
@@ -55,17 +54,6 @@ def severity_for(method: AuthMethod) -> Severity:
     if method in (AuthMethod.kerberos, AuthMethod.unknown):
         return Severity.review
     return Severity.cleared
-
-
-def app_id_from_url(url: str) -> str:
-    """Use the URL hostname literally — no slugging (avoids ambiguous collisions)."""
-    parsed = urlparse(url)
-    host = (parsed.hostname or url).lower()
-    return host or "unknown"
-
-
-def app_name_from_url(url: str) -> str:
-    return app_id_from_url(url)
 
 
 def truncate_headers(headers: Dict[str, Any] | None, limit: int = 512) -> str:

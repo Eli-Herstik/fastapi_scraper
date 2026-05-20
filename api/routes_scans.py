@@ -23,7 +23,6 @@ from .models import (
 from .security import get_current_user
 from .serialize import finding_to_schema, scan_to_detail, scan_to_summary
 from .service import run_scrape_job
-from .translate import app_id_from_url, app_name_from_url
 
 logger = logging.getLogger(__name__)
 
@@ -142,19 +141,19 @@ async def create_scan(
     event_bus = app_state.event_bus
 
     scan_id = uuid.uuid4().hex
-    app_id = app_id_from_url(body.url)
     started_at = datetime.now(timezone.utc)
     name = body.name or body.url
     started_by = current_user.username
 
     async with factory() as session:
-        existing_app = await session.get(AppRow, app_id)
+        existing_app = await session.get(AppRow, body.app_id)
         if not existing_app:
-            session.add(AppRow(id=app_id, name=app_name_from_url(body.url)))
+            raise HTTPException(status_code=404, detail={"message": "app not found"})
+        name = existing_app.name
         session.add(
             ScanRow(
                 id=scan_id,
-                app_id=app_id,
+                app_id=body.app_id,
                 name=name,
                 url=body.url,
                 status="queued",

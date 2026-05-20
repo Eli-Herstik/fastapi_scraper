@@ -18,6 +18,7 @@ class EventBus:
 
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]):
         self._subscribers: Dict[str, Set[asyncio.Queue]] = {}
+        self._notification_subscribers: Set[asyncio.Queue] = set()
         self._session_factory = session_factory
         self._lock = asyncio.Lock()
 
@@ -35,6 +36,14 @@ class EventBus:
                 subs.discard(queue)
                 if not subs:
                     self._subscribers.pop(scan_id, None)
+
+    async def subscribe_notifications(self, queue: asyncio.Queue) -> None:
+        async with self._lock:
+            self._notification_subscribers.add(queue)
+
+    async def unsubscribe_notifications(self, queue: asyncio.Queue) -> None:
+        async with self._lock:
+            self._notification_subscribers.discard(queue)
 
     async def next_seq(self, scan_id: str) -> int:
         async with self._session_factory() as session:
@@ -85,6 +94,13 @@ class EventBus:
                 queue.put_nowait(event)
             except asyncio.QueueFull:
                 logger.warning("SSE subscriber queue full for scan %s; dropping event", scan_id)
+
+        if event_type in ("scan_completed", "scan_failed"):
+            for queue in list(self._notification_subscribers):
+                try:
+                    queue.put_nowait(event)
+                except asyncio.QueueFull:
+                    logger.warning("Notification queue full; dropping event for scan %s", scan_id)
         return event
 
 

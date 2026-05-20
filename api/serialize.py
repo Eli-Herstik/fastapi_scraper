@@ -1,13 +1,16 @@
 """Helpers that turn ORM rows into the shapes the frontend expects."""
 from datetime import datetime, timezone
-from typing import Iterable
+from typing import Iterable, Optional
 
-from .db import FindingRow, ScanRow
+from .db import AppRow, FindingRow, ScanRow
 from .models import (
+    AppSummary,
     AuthMethod,
+    ExposureState,
     Finding,
     FindingEvidence,
     ScanDetail,
+    ScanStatus,
     ScanSummary,
     Severity,
 )
@@ -58,6 +61,43 @@ def scan_to_summary(
         started_by=scan.started_by,
         blocker_count=blocker_count,
         finding_count=finding_count,
+    )
+
+
+def derive_exposure_state(
+    last_status: Optional[str], last_blocker_count: int
+) -> ExposureState:
+    if last_status is None:
+        return ExposureState.never_scanned
+    if last_status in ("queued", "running"):
+        return ExposureState.never_scanned
+    if last_status in ("failed", "cancelled"):
+        return ExposureState.failed
+    return (
+        ExposureState.blocked
+        if last_blocker_count > 0
+        else ExposureState.ready_for_submission
+    )
+
+
+def app_to_summary(
+    app: AppRow,
+    *,
+    last_scan: Optional[ScanRow],
+    last_scan_blocker_count: int,
+) -> AppSummary:
+    return AppSummary(
+        id=app.id,
+        name=app.name,
+        url=app.url,
+        owner_ad_group=app.owner_ad_group or "",
+        exposure_state=derive_exposure_state(
+            last_scan.status if last_scan else None,
+            last_scan_blocker_count,
+        ),
+        last_scan_id=last_scan.id if last_scan else None,
+        last_scan_status=ScanStatus(last_scan.status) if last_scan else None,
+        last_scanned_at=_isoformat(last_scan.started_at) if last_scan else None,
     )
 
 

@@ -89,11 +89,22 @@ async def scan_events(scan_id: str, request: Request):
 
 @router.get("/notifications")
 async def notifications(request: Request):
+    bus = request.app.state.event_bus
+    queue: asyncio.Queue = asyncio.Queue(maxsize=1024)
+    await bus.subscribe_notifications(queue)
+
     async def gen():
-        while True:
-            if await request.is_disconnected():
-                return
-            yield {"comment": "keepalive"}
-            await asyncio.sleep(25)
+        try:
+            while True:
+                if await request.is_disconnected():
+                    return
+                try:
+                    event = await asyncio.wait_for(queue.get(), timeout=25.0)
+                except asyncio.TimeoutError:
+                    yield {"comment": "keepalive"}
+                    continue
+                yield _format(event["seq"], event)
+        finally:
+            await bus.unsubscribe_notifications(queue)
 
     return EventSourceResponse(gen())

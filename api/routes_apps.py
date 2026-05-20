@@ -1,13 +1,16 @@
+import uuid
 from typing import Dict, List
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from .db import FindingRow, ScanRow
+from .db import AppRow, FindingRow, ScanRow
 from .models import (
+    AppSummary,
     AuthMethod,
     AuthMethodChange,
+    CreateAppRequest,
     ExclusionChange,
     Finding,
     ScanDiff,
@@ -15,13 +18,97 @@ from .models import (
     Severity,
 )
 from .security import get_current_user
-from .serialize import finding_to_schema, scan_to_summary
+from .serialize import app_to_summary, finding_to_schema, scan_to_summary
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
 
 
 def _session_factory(request: Request) -> async_sessionmaker[AsyncSession]:
     return request.app.state.session_factory
+
+
+def _blocker_count_subq():
+    return (
+        select(
+            FindingRow.scan_id.label("scan_id"),
+            func.coalesce(
+                func.sum(
+                    case(
+                        (
+                            (FindingRow.severity == Severity.blocker.value)
+                            & (FindingRow.excluded.is_(False)),
+                            1,
+                        ),
+                        else_=0,
+                    )
+                ),
+                0,
+            ).label("blocker_count"),
+        )
+        .group_by(FindingRow.scan_id)
+        .subquery()
+    )
+
+
+@router.get("/apps", response_model=List[AppSummary])
+async def list_apps(request: Request) -> List[AppSummary]:
+    factory = _session_factory(request)
+    async with factory() as session:
+        # Most recent scan per app, by started_at desc.
+        latest_subq = (
+            select(
+                ScanRow.app_id.label("app_id"),
+                func.max(ScanRow.started_at).label("latest_started_at"),
+            )
+            .group_by(ScanRow.app_id)
+            .subquery()
+        )
+        blockers = _blocker_count_subq()
+        stmt = (
+            select(
+                AppRow,
+                ScanRow,
+                func.coalesce(blockers.c.blocker_count, 0),
+            )
+            .outerjoin(latest_subq, latest_subq.c.app_id == AppRow.id)
+            .outerjoin(
+                ScanRow,
+                (ScanRow.app_id == AppRow.id)
+                & (ScanRow.started_at == latest_subq.c.latest_started_at),
+            )
+            .outerjoin(blockers, blockers.c.scan_id == ScanRow.id)
+            .order_by(AppRow.created_at.desc())
+        )
+        result = await session.execute(stmt)
+        out: list[AppSummary] = []
+        for app, scan, blocker_count in result.all():
+            out.append(
+                app_to_summary(
+                    app,
+                    last_scan=scan,
+                    last_scan_blocker_count=int(blocker_count or 0),
+                )
+            )
+        return out
+
+
+@router.post("/apps", response_model=AppSummary, status_code=201)
+async def create_app(body: CreateAppRequest, request: Request) -> AppSummary:
+    factory = _session_factory(request)
+    app_id = "app_" + uuid.uuid4().hex[:10]
+
+    async with factory() as session:
+        app = AppRow(
+            id=app_id,
+            name=body.name,
+            url=body.url,
+            owner_ad_group=body.owner_ad_group,
+        )
+        session.add(app)
+        await session.commit()
+        await session.refresh(app)
+
+    return app_to_summary(app, last_scan=None, last_scan_blocker_count=0)
 
 
 @router.get("/apps/{app_id}/scans", response_model=List[ScanSummary])
