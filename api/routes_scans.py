@@ -142,7 +142,6 @@ async def create_scan(
 
     scan_id = uuid.uuid4().hex
     started_at = datetime.now(timezone.utc)
-    name = body.name or body.url
     started_by = current_user.username
 
     async with factory() as session:
