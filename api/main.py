@@ -18,7 +18,7 @@ from .db import init_db, make_engine, make_session_factory, sweep_stale_scans
 from .routes_apps import router as apps_router
 from .routes_events import router as events_router
 from .routes_scans import router as scans_router
-from .security import AuthSettings, JwksCache
+from .security import AdGroupsCache, AuthSettings, JwksCache
 from .sse import EventBus
 
 logging.basicConfig(
@@ -73,6 +73,7 @@ async def lifespan(app: FastAPI):
     auth_settings = AuthSettings()
     app.state.auth_settings = auth_settings
     app.state.jwks_cache = JwksCache(auth_settings)
+    app.state.ad_groups_cache = AdGroupsCache()
 
     app.state.base_config = _load_base_config()
     max_parallel = int(os.environ.get("SCRAPER_MAX_PARALLEL", "2"))

@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import time
+from dataclasses import dataclass
 from typing import Any
 
 import httpx
@@ -32,6 +33,11 @@ _UNAUTHENTICATED_HEADERS = {"WWW-Authenticate": "Bearer"}
 # token itself carries no group/role claim, so membership is checked live.
 _AD_GROUPS_API_URL = os.environ.get("AD_GROUPS_API_URL", "http://localhost:8001").rstrip("/")
 _GATEKEEPER_ADMIN_GROUP = os.environ.get("GATEKEEPER_ADMIN_GROUP", "Gatekeeper-Admins")
+# AD group lookups are cached briefly to avoid hitting the AD Groups API on every
+# guarded request. Sliding window since last read, capped by an absolute window
+# since fetch (mirrors the C# claims-transformation cache).
+_AD_GROUPS_CACHE_SLIDING_SECONDS = int(os.environ.get("AD_GROUPS_CACHE_SLIDING_SECONDS", "600"))
+_AD_GROUPS_CACHE_ABSOLUTE_SECONDS = int(os.environ.get("AD_GROUPS_CACHE_ABSOLUTE_SECONDS", "3600"))
 
 
 class AuthSettings:
@@ -89,6 +95,53 @@ class JwksCache:
 
             self._keys_by_kid = {k["kid"]: k for k in payload.get("keys", []) if "kid" in k}
             self._fetched_at = time.monotonic()
+
+
+@dataclass
+class _GroupsCacheEntry:
+    groups: list[str]
+    fetched_at: float
+    last_access: float
+
+
+class AdGroupsCache:
+    """Short-TTL cache of AD group memberships, keyed by username.
+
+    Mirrors the cache used by the equivalent C# claims transformation: an entry
+    stays valid for ``sliding_seconds`` since it was last read, but never longer
+    than ``absolute_seconds`` since it was fetched. Trades a little staleness for
+    far fewer calls to the AD Groups API on back-to-back requests.
+
+    Accessors are plain synchronous methods: under asyncio they run to
+    completion without yielding, so no lock is needed.
+    """
+
+    def __init__(
+        self,
+        sliding_seconds: int = _AD_GROUPS_CACHE_SLIDING_SECONDS,
+        absolute_seconds: int = _AD_GROUPS_CACHE_ABSOLUTE_SECONDS,
+    ) -> None:
+        self._sliding = sliding_seconds
+        self._absolute = absolute_seconds
+        self._entries: dict[str, _GroupsCacheEntry] = {}
+
+    def get(self, username: str) -> list[str] | None:
+        """Return cached groups (a copy) or None if absent/expired."""
+        entry = self._entries.get(username)
+        if entry is None:
+            return None
+        now = time.monotonic()
+        if now - entry.fetched_at > self._absolute or now - entry.last_access > self._sliding:
+            del self._entries[username]
+            return None
+        entry.last_access = now
+        return list(entry.groups)
+
+    def set(self, username: str, groups: list[str]) -> None:
+        now = time.monotonic()
+        self._entries[username] = _GroupsCacheEntry(
+            groups=list(groups), fetched_at=now, last_access=now
+        )
 
 
 async def get_current_user(
@@ -154,17 +207,15 @@ async def get_current_user(
     )
 
 
-async def get_user_groups(
-    user: CurrentUser = Depends(get_current_user),
-) -> list[str]:
-    """Fetch the caller's direct AD groups from the AD Groups API.
+async def _fetch_user_groups(username: str) -> list[str]:
+    """Call the AD Groups API for a user's direct group memberships.
 
     Fails closed: if the AD service is unreachable or errors we deny with 503;
     if the user is unknown to the directory (404) we treat them as having no
     groups (empty list) rather than erroring, so list endpoints can return an
     empty result.
     """
-    url = f"{_AD_GROUPS_API_URL}/users/{user.username}/groups"
+    url = f"{_AD_GROUPS_API_URL}/users/{username}/groups"
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
             resp = await client.get(url)
@@ -186,6 +237,25 @@ async def get_user_groups(
         )
 
     return resp.json().get("groups", [])
+
+
+async def get_user_groups(
+    request: Request,
+    user: CurrentUser = Depends(get_current_user),
+) -> list[str]:
+    """Caller's direct AD groups, served from a short-TTL per-username cache.
+
+    On a cache miss we hit the AD Groups API via ``_fetch_user_groups`` and
+    cache the result (including the empty list for unknown users). A 503 from
+    the AD service is *not* cached, so the next request retries.
+    """
+    cache: AdGroupsCache = request.app.state.ad_groups_cache
+    cached = cache.get(user.username)
+    if cached is not None:
+        return cached
+    groups = await _fetch_user_groups(user.username)
+    cache.set(user.username, groups)
+    return groups
 
 
 def is_admin(groups: list[str]) -> bool:
