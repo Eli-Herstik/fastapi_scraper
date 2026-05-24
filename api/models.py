@@ -145,7 +145,7 @@ class PatchFindingRequest(BaseModel):
 
 
 class SubmitScanResponse(BaseModel):
-    approval_id: str
+    submission_id: str
 
 
 class CurrentUser(BaseModel):

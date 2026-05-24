@@ -8,7 +8,7 @@ from fastapi import APIRouter, HTTPException, Request, Response, status
 from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from .db import AppRow, FindingRow, ApprovalRow, ScanRow
+from .db import AppRow, FindingRow, ScanRow, SubmissionRow
 from .models import (
     CreateScanRequest,
     CreateScanResponse,
@@ -232,16 +232,16 @@ async def submit_scan(scan_id: str, request: Request) -> SubmitScanResponse:
                 detail={"message": f"{unresolved_blockers} unresolved blocker(s) remain"},
             )
 
-        approval_id = "apv_" + uuid.uuid4().hex[:10]
+        submission_id = "sub_" + uuid.uuid4().hex[:10]
         session.add(
-            ApprovalRow(
-                id=approval_id,
+            SubmissionRow(
+                id=submission_id,
                 scan_id=scan_id,
                 submitted_by=_STUB_USER.username,
             )
         )
         await session.commit()
-        return SubmitScanResponse(approval_id=approval_id)
+        return SubmitScanResponse(submission_id=submission_id)
 
 
 @router.post("/scans/{scan_id}/cancel", status_code=status.HTTP_204_NO_CONTENT)

@@ -61,8 +61,8 @@ class ScanRow(Base):
     findings: Mapped[list["FindingRow"]] = relationship(
         "FindingRow", back_populates="scan", cascade="all, delete-orphan"
     )
-    approvals: Mapped[list["ApprovalRow"]] = relationship(
-        "ApprovalRow", back_populates="scan", cascade="all, delete-orphan"
+    submissions: Mapped[list["SubmissionRow"]] = relationship(
+        "SubmissionRow", back_populates="scan", cascade="all, delete-orphan"
     )
     events: Mapped[list["ScanEventRow"]] = relationship(
         "ScanEventRow", back_populates="scan", cascade="all, delete-orphan"
@@ -89,8 +89,8 @@ class FindingRow(Base):
     scan: Mapped[ScanRow] = relationship("ScanRow", back_populates="findings")
 
 
-class ApprovalRow(Base):
-    __tablename__ = "approvals"
+class SubmissionRow(Base):
+    __tablename__ = "submissions"
 
     id: Mapped[str] = mapped_column(String, primary_key=True)
     scan_id: Mapped[str] = mapped_column(
@@ -99,7 +99,7 @@ class ApprovalRow(Base):
     submitted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
     submitted_by: Mapped[str] = mapped_column(String, nullable=False)
 
-    scan: Mapped[ScanRow] = relationship("ScanRow", back_populates="approvals")
+    scan: Mapped[ScanRow] = relationship("ScanRow", back_populates="submissions")
 
 
 class ScanEventRow(Base):
