@@ -236,7 +236,7 @@ async def _fetch_user_groups(username: str) -> list[str]:
             detail="Authorization service error",
         )
 
-    return resp.json().get("groups", [])
+    return [group["name"] for group in resp.json().get("groups", [])]
 
 
 async def get_user_groups(
