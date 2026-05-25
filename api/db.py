@@ -39,6 +39,20 @@ class AppRow(Base):
     url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     owner_ad_group: Mapped[str] = mapped_column(String, nullable=False, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    # Canonical "current version" — the scan that was most recently submitted for
+    # this app. Sticky: stays set across subsequent unsubmitted scans, only moves
+    # when another scan is submitted. Nullable for apps that have never had a
+    # submission. use_alter avoids the apps<->scans circular FK on create_all.
+    current_scan_id: Mapped[Optional[str]] = mapped_column(
+        String,
+        ForeignKey(
+            "scans.id",
+            ondelete="SET NULL",
+            use_alter=True,
+            name="fk_apps_current_scan_id",
+        ),
+        nullable=True,
+    )
 
 
 class ScanRow(Base):
@@ -91,6 +105,13 @@ class FindingRow(Base):
 
 class SubmissionRow(Base):
     __tablename__ = "submissions"
+    __table_args__ = (
+        # A scan can be submitted at most once. The `already_submitted` check in
+        # routes_scans.submit_scan is single-transaction; the unique constraint
+        # is what actually wins under concurrent submits — the loser hits an
+        # IntegrityError and we translate it to a 409.
+        UniqueConstraint("scan_id", name="uq_submissions_scan_id"),
+    )
 
     id: Mapped[str] = mapped_column(String, primary_key=True)
     scan_id: Mapped[str] = mapped_column(

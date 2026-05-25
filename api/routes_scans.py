@@ -6,6 +6,7 @@ from typing import List
 
 from fastapi import APIRouter, HTTPException, Request, Response, status
 from sqlalchemy import case, func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from .db import AppRow, FindingRow, ScanRow, SubmissionRow
@@ -58,6 +59,27 @@ def _summary_aggregates_subq():
     )
 
 
+# Direct outerjoin works since submissions.scan_id is UNIQUE — at most one
+# submission per scan. No aggregation needed.
+
+
+async def _latest_completed_scan_id(session, app_id: str) -> str | None:
+    """The newest-by-started_at completed scan for an app, or None.
+
+    Used by both submit (for eligibility) and patch_finding (for the editability
+    freeze). Failed/cancelled/running/queued scans don't count — they have no
+    actionable findings and shouldn't shadow an earlier valid completed scan.
+    """
+    return (
+        await session.execute(
+            select(ScanRow.id)
+            .where(ScanRow.app_id == app_id, ScanRow.status == "completed")
+            .order_by(ScanRow.started_at.desc())
+            .limit(1)
+        )
+    ).scalar_one_or_none()
+
+
 @router.get("/scans", response_model=List[ScanSummary])
 async def list_scans(request: Request) -> List[ScanSummary]:
     factory = _session_factory(request)
@@ -68,18 +90,23 @@ async def list_scans(request: Request) -> List[ScanSummary]:
                 ScanRow,
                 func.coalesce(agg.c.blocker_count, 0).label("blocker_count"),
                 func.coalesce(agg.c.finding_count, 0).label("finding_count"),
+                SubmissionRow.submitted_at,
+                SubmissionRow.submitted_by,
             )
             .outerjoin(agg, agg.c.scan_id == ScanRow.id)
+            .outerjoin(SubmissionRow, SubmissionRow.scan_id == ScanRow.id)
             .order_by(ScanRow.started_at.desc())
         )
         result = await session.execute(stmt)
         out: list[ScanSummary] = []
-        for scan, blocker_count, finding_count in result.all():
+        for scan, blocker_count, finding_count, submitted_at, submitted_by in result.all():
             out.append(
                 scan_to_summary(
                     scan,
                     blocker_count=int(blocker_count or 0),
                     finding_count=int(finding_count or 0),
+                    submitted_at=submitted_at,
+                    submitted_by=submitted_by,
                 )
             )
         return out
@@ -97,20 +124,33 @@ async def get_scan(scan_id: str, request: Request) -> ScanDetail:
                 func.coalesce(agg.c.finding_count, 0),
                 func.coalesce(agg.c.host_count, 0),
                 func.coalesce(agg.c.auth_count, 0),
+                SubmissionRow.submitted_at,
+                SubmissionRow.submitted_by,
             )
             .outerjoin(agg, agg.c.scan_id == ScanRow.id)
+            .outerjoin(SubmissionRow, SubmissionRow.scan_id == ScanRow.id)
             .where(ScanRow.id == scan_id)
         )
         row = (await session.execute(stmt)).first()
         if not row:
             raise HTTPException(status_code=404, detail={"message": "scan not found"})
-        scan, blocker_count, finding_count, host_count, auth_count = row
+        (
+            scan,
+            blocker_count,
+            finding_count,
+            host_count,
+            auth_count,
+            submitted_at,
+            submitted_by,
+        ) = row
         return scan_to_detail(
             scan,
             blocker_count=int(blocker_count or 0),
             finding_count=int(finding_count or 0),
             external_hosts=int(host_count or 0),
             auth_methods=int(auth_count or 0),
+            submitted_at=submitted_at,
+            submitted_by=submitted_by,
         )
 
 
@@ -199,6 +239,28 @@ async def patch_finding(
         finding = await session.get(FindingRow, finding_id)
         if not finding or finding.scan_id != scan_id:
             raise HTTPException(status_code=404, detail={"message": "finding not found"})
+        scan = await session.get(ScanRow, scan_id)
+        # Editable iff this is the latest completed scan AND has never been
+        # submitted. Two distinct error messages so the UI can tell the user
+        # *why* edits are blocked.
+        already_submitted = (
+            await session.execute(
+                select(func.count())
+                .select_from(SubmissionRow)
+                .where(SubmissionRow.scan_id == scan_id)
+            )
+        ).scalar_one()
+        if already_submitted:
+            raise HTTPException(
+                status_code=409,
+                detail={"message": "this scan is submitted and locked"},
+            )
+        latest_completed_id = await _latest_completed_scan_id(session, scan.app_id)
+        if latest_completed_id != scan_id:
+            raise HTTPException(
+                status_code=409,
+                detail={"message": "only the latest completed scan can be edited"},
+            )
         finding.excluded = body.excluded
         if body.justification is not None:
             finding.justification = body.justification
@@ -214,6 +276,37 @@ async def submit_scan(scan_id: str, request: Request) -> SubmitScanResponse:
         scan = await session.get(ScanRow, scan_id)
         if not scan:
             raise HTTPException(status_code=404, detail={"message": "scan not found"})
+
+        # Status check first so a non-completed scan always gets the most
+        # specific error, regardless of what other scans exist for the app.
+        if scan.status != "completed":
+            raise HTTPException(
+                status_code=409,
+                detail={"message": f"scan is {scan.status}, only completed scans can be submitted"},
+            )
+
+        latest_completed_id = await _latest_completed_scan_id(session, scan.app_id)
+        if latest_completed_id != scan_id:
+            raise HTTPException(
+                status_code=409,
+                detail={"message": "only the latest completed scan can be submitted"},
+            )
+
+        # A scan can only be submitted once. Re-submitting the same scan_id is a
+        # no-op semantically (it's already the canonical version) and would only
+        # create a duplicate SubmissionRow.
+        already_submitted = (
+            await session.execute(
+                select(func.count())
+                .select_from(SubmissionRow)
+                .where(SubmissionRow.scan_id == scan_id)
+            )
+        ).scalar_one()
+        if already_submitted:
+            raise HTTPException(
+                status_code=409,
+                detail={"message": "this scan has already been submitted"},
+            )
 
         unresolved_blockers = (
             await session.execute(
@@ -232,6 +325,10 @@ async def submit_scan(scan_id: str, request: Request) -> SubmitScanResponse:
                 detail={"message": f"{unresolved_blockers} unresolved blocker(s) remain"},
             )
 
+        # Load AppRow *before* staging the new SubmissionRow — otherwise the
+        # session.get triggers an autoflush that hits the UNIQUE constraint
+        # outside our commit's try/except.
+        app_row = await session.get(AppRow, scan.app_id)
         submission_id = "sub_" + uuid.uuid4().hex[:10]
         session.add(
             SubmissionRow(
@@ -240,7 +337,20 @@ async def submit_scan(scan_id: str, request: Request) -> SubmitScanResponse:
                 submitted_by=_STUB_USER.username,
             )
         )
-        await session.commit()
+        # Promote this scan to the app's canonical "current version".
+        if app_row is not None:
+            app_row.current_scan_id = scan_id
+        try:
+            await session.commit()
+        except IntegrityError:
+            # Lost a race: another submit committed first and the unique
+            # constraint on submissions.scan_id rejected ours. The in-transaction
+            # `already_submitted` check above can't catch this — only the DB can.
+            await session.rollback()
+            raise HTTPException(
+                status_code=409,
+                detail={"message": "this scan has already been submitted"},
+            )
         return SubmitScanResponse(submission_id=submission_id)
 
 

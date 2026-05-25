@@ -68,6 +68,8 @@ class ScanSummary(BaseModel):
     started_by: str
     blocker_count: int
     finding_count: int
+    submitted_at: Optional[str] = None
+    submitted_by: Optional[str] = None
 
 
 class ScanDetail(ScanSummary):
@@ -121,6 +123,7 @@ class AppSummary(BaseModel):
     last_scan_id: Optional[str] = None
     last_scan_status: Optional[ScanStatus] = None
     last_scanned_at: Optional[str] = None
+    current_scan_id: Optional[str] = None
 
 
 class CreateAppRequest(BaseModel):

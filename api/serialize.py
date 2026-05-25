@@ -49,6 +49,8 @@ def scan_to_summary(
     *,
     blocker_count: int,
     finding_count: int,
+    submitted_at: datetime | None = None,
+    submitted_by: str | None = None,
 ) -> ScanSummary:
     return ScanSummary(
         id=scan.id,
@@ -61,12 +63,22 @@ def scan_to_summary(
         started_by=scan.started_by,
         blocker_count=blocker_count,
         finding_count=finding_count,
+        submitted_at=_isoformat(submitted_at),
+        submitted_by=submitted_by,
     )
 
 
 def derive_exposure_state(
-    last_status: Optional[str], last_blocker_count: int
+    last_status: Optional[str],
+    last_blocker_count: int,
+    *,
+    is_submitted: bool = False,
 ) -> ExposureState:
+    # Sticky: once an app has any submission, its canonical state is "submitted",
+    # regardless of what newer non-submitted scans look like. Only another submit
+    # advances the canonical version.
+    if is_submitted:
+        return ExposureState.submitted
     if last_status is None:
         return ExposureState.never_scanned
     if last_status in ("queued", "running"):
@@ -86,6 +98,9 @@ def app_to_summary(
     last_scan: Optional[ScanRow],
     last_scan_blocker_count: int,
 ) -> AppSummary:
+    # `current_scan_id` is set only on submit success, so its presence is the
+    # authoritative signal that the app has been submitted.
+    is_submitted = app.current_scan_id is not None
     return AppSummary(
         id=app.id,
         name=app.name,
@@ -94,10 +109,12 @@ def app_to_summary(
         exposure_state=derive_exposure_state(
             last_scan.status if last_scan else None,
             last_scan_blocker_count,
+            is_submitted=is_submitted,
         ),
         last_scan_id=last_scan.id if last_scan else None,
         last_scan_status=ScanStatus(last_scan.status) if last_scan else None,
         last_scanned_at=_isoformat(last_scan.started_at) if last_scan else None,
+        current_scan_id=app.current_scan_id,
     )
 
 
@@ -108,6 +125,8 @@ def scan_to_detail(
     finding_count: int,
     external_hosts: int,
     auth_methods: int,
+    submitted_at: datetime | None = None,
+    submitted_by: str | None = None,
 ) -> ScanDetail:
     duration_ms: int | None = None
     if scan.completed_at and scan.started_at:
@@ -127,4 +146,6 @@ def scan_to_detail(
         pages_crawled=scan.pages_crawled,
         external_hosts=external_hosts,
         auth_methods_identified=auth_methods,
+        submitted_at=_isoformat(submitted_at),
+        submitted_by=submitted_by,
     )

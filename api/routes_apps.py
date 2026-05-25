@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Request
 from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from .db import AppRow, FindingRow, ScanRow
+from .db import AppRow, FindingRow, ScanRow, SubmissionRow
 from .models import (
     AppSummary,
     AuthMethod,
@@ -135,24 +135,30 @@ async def list_app_scans(app_id: str, request: Request) -> List[ScanSummary]:
             .group_by(FindingRow.scan_id)
             .subquery()
         )
+        # submissions.scan_id is UNIQUE — direct join, no aggregation needed.
         stmt = (
             select(
                 ScanRow,
                 func.coalesce(agg.c.blocker_count, 0),
                 func.coalesce(agg.c.finding_count, 0),
+                SubmissionRow.submitted_at,
+                SubmissionRow.submitted_by,
             )
             .outerjoin(agg, agg.c.scan_id == ScanRow.id)
+            .outerjoin(SubmissionRow, SubmissionRow.scan_id == ScanRow.id)
             .where(ScanRow.app_id == app_id)
             .order_by(ScanRow.started_at.desc())
         )
         result = await session.execute(stmt)
         out: list[ScanSummary] = []
-        for scan, blocker_count, finding_count in result.all():
+        for scan, blocker_count, finding_count, submitted_at, submitted_by in result.all():
             out.append(
                 scan_to_summary(
                     scan,
                     blocker_count=int(blocker_count or 0),
                     finding_count=int(finding_count or 0),
+                    submitted_at=submitted_at,
+                    submitted_by=submitted_by,
                 )
             )
         return out
