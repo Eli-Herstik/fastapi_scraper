@@ -98,7 +98,6 @@ class FindingRow(Base):
     headers_snippet: Mapped[str] = mapped_column(Text, default="", nullable=False)
     status_code: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     excluded: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    justification: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     scan: Mapped[ScanRow] = relationship("ScanRow", back_populates="findings")
 

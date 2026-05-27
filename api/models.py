@@ -144,7 +144,6 @@ class CreateScanResponse(BaseModel):
 
 class PatchFindingRequest(BaseModel):
     excluded: bool
-    justification: Optional[str] = None
 
 
 class SubmitScanResponse(BaseModel):

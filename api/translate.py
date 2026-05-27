@@ -81,7 +81,6 @@ def host_to_finding_row(scan_id: str, host_entry: Dict[str, Any]) -> Dict[str, A
         "headers_snippet": host_entry.get("headers_snippet", "") or "",
         "status_code": int(host_entry.get("status_code", 0) or 0),
         "excluded": False,
-        "justification": None,
     }
 
 

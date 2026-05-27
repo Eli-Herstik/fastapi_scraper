@@ -262,8 +262,6 @@ async def patch_finding(
                 detail={"message": "only the latest completed scan can be edited"},
             )
         finding.excluded = body.excluded
-        if body.justification is not None:
-            finding.justification = body.justification
         await session.commit()
         await session.refresh(finding)
         return finding_to_schema(finding)
