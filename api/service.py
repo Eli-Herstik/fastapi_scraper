@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from config_loader import Config
 from scraper import Mapper
 
+from .config_hunter_runner import run_config_hunter
 from .db import FindingRow, ScanRow
 from .models import Severity
 from .sse import EventBus
@@ -50,6 +51,44 @@ async def _persist_findings(
         await session.commit()
 
 
+async def _run_mapper(mapper: Mapper) -> Dict[str, Any]:
+    await mapper.initialize()
+    try:
+        return await mapper.map_website()
+    finally:
+        await mapper.cleanup()
+
+
+def _merge_host_entries(
+    scraper_hosts: list[Dict[str, Any]],
+    ch_hosts: list[Dict[str, Any]],
+) -> list[Dict[str, Any]]:
+    """Union by host. Scraper wins on auth fields (live request evidence);
+    request_counts sum; first_seen_on_page keeps scraper's value if present,
+    else falls back to config_hunter's `config:<origin>` marker."""
+    merged: dict[str, Dict[str, Any]] = {}
+    for h in scraper_hosts:
+        host = h.get("host") or ""
+        if not host:
+            continue
+        merged[host] = dict(h)
+    for h in ch_hosts:
+        host = h.get("host") or ""
+        if not host:
+            continue
+        existing = merged.get(host)
+        if existing is None:
+            merged[host] = dict(h)
+            continue
+        existing["request_count"] = (
+            int(existing.get("request_count", 0) or 0)
+            + int(h.get("request_count", 0) or 0)
+        )
+        if not existing.get("first_seen_on_page"):
+            existing["first_seen_on_page"] = h.get("first_seen_on_page", "") or ""
+    return list(merged.values())
+
+
 async def run_scrape_job(
     *,
     scan_id: str,
@@ -76,16 +115,45 @@ async def run_scrape_job(
 
         mapper = Mapper(config, on_event=on_event)
         try:
-            await mapper.initialize()
-            try:
-                result = await mapper.map_website()
-            finally:
-                await mapper.cleanup()
+            scraper_result, ch_result = await asyncio.gather(
+                _run_mapper(mapper),
+                run_config_hunter(start_url, on_event=on_event),
+                return_exceptions=True,
+            )
 
-            external_hosts = result.get("external_hosts", [])
-            pages_crawled = int(result.get("pages_crawled", 0) or 0)
+            scraper_hosts: list[Dict[str, Any]] = []
+            pages_crawled = 0
+            if isinstance(scraper_result, asyncio.CancelledError):
+                raise scraper_result
+            if isinstance(scraper_result, BaseException):
+                logger.exception(
+                    "Scraper failed for scan %s", scan_id, exc_info=scraper_result
+                )
+                await event_bus.emit(scan_id, "scraper_failed", {
+                    "error": f"{scraper_result.__class__.__name__}: {scraper_result}",
+                })
+            else:
+                scraper_hosts = scraper_result.get("external_hosts", []) or []
+                pages_crawled = int(scraper_result.get("pages_crawled", 0) or 0)
 
-            finding_rows = hosts_to_findings(scan_id, external_hosts)
+            ch_hosts: list[Dict[str, Any]] = []
+            if isinstance(ch_result, asyncio.CancelledError):
+                raise ch_result
+            if isinstance(ch_result, BaseException):
+                logger.exception(
+                    "config_hunter failed for scan %s", scan_id, exc_info=ch_result
+                )
+                await event_bus.emit(scan_id, "config_hunter_failed", {
+                    "error": f"{ch_result.__class__.__name__}: {ch_result}",
+                })
+            else:
+                ch_hosts = ch_result or []
+
+            if isinstance(scraper_result, BaseException) and isinstance(ch_result, BaseException):
+                raise scraper_result
+
+            merged_hosts = _merge_host_entries(scraper_hosts, ch_hosts)
+            finding_rows = hosts_to_findings(scan_id, merged_hosts)
             await _persist_findings(session_factory, scan_id, finding_rows)
 
             blockers = sum(1 for r in finding_rows if r["severity"] == Severity.blocker.value)
