@@ -62,7 +62,6 @@ def _pick_authentication(guesses: list[str]) -> str:
 def _aggregate_to_host_entries(
     auth_map: dict[str, AuthInfo],
     sources: list[ConfigSource],
-    unresolved: list[dict],
 ) -> list[dict]:
     host_first_source = _first_source_per_host(sources)
 
@@ -85,18 +84,6 @@ def _aggregate_to_host_entries(
                 b["www_auths"].append(info.probe_result.www_authenticate)
             if info.probe_result.status_code is not None:
                 b["status_codes"].append(info.probe_result.status_code)
-
-    # Hosts that failed DNS resolution never made it into the probe pool, but
-    # we still want them to surface as findings.
-    for entry in unresolved:
-        host = entry.get("host")
-        if host and host not in buckets:
-            buckets[host] = {
-                "guesses": ["unknown (unresolved host)"],
-                "www_auths": [],
-                "status_codes": [],
-                "url_count": 0,
-            }
 
     out: list[dict] = []
     for host, b in buckets.items():
@@ -138,8 +125,8 @@ async def run_config_hunter(
         all_urls.extend(src.urls_found)
     unique_urls = [u for u in dict.fromkeys(all_urls) if _classify_url(u) is None]
 
-    auth_map: dict[str, AuthInfo] = {u: AuthInfo(url=u) for u in unique_urls}
-
+    # Drop hosts that fail DNS resolution from the probe pool entirely — we
+    # don't surface unresolved hosts as findings.
     unresolved: list[dict] = []
     probeable_urls = unique_urls
     if unique_urls:
@@ -150,9 +137,8 @@ async def run_config_hunter(
             probeable_urls = [
                 u for u in unique_urls if urlparse(u).hostname not in unresolved_set
             ]
-            for url in unique_urls:
-                if urlparse(url).hostname in unresolved_set:
-                    auth_map[url].best_guess = "unknown (unresolved host)"
+
+    auth_map: dict[str, AuthInfo] = {u: AuthInfo(url=u) for u in probeable_urls}
 
     if probeable_urls:
         probes = await probe_urls(
@@ -163,7 +149,7 @@ async def run_config_hunter(
         merge_probe_results(auth_map, probes)
         reconcile_auth(auth_map)
 
-    host_entries = _aggregate_to_host_entries(auth_map, sources, unresolved)
+    host_entries = _aggregate_to_host_entries(auth_map, sources)
 
     await emit("config_hunter_progress", {
         "urls_found": len(unique_urls),
