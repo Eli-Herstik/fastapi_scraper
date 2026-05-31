@@ -31,7 +31,7 @@ def normalize_auth_method(raw: str) -> AuthMethod:
             return AuthMethod.ntlm
         if _KERBEROS_TOKEN_PREFIX.lower() in lower:
             return AuthMethod.kerberos
-        return AuthMethod.unknown
+        return AuthMethod.negotiate
 
     if "idp redirect" in lower or "oauth2" in lower or "/oidc" in lower:
         return AuthMethod.oauth2
@@ -51,7 +51,7 @@ def normalize_auth_method(raw: str) -> AuthMethod:
 def severity_for(method: AuthMethod) -> Severity:
     if method == AuthMethod.ntlm:
         return Severity.blocker
-    if method in (AuthMethod.kerberos, AuthMethod.unknown):
+    if method in (AuthMethod.negotiate, AuthMethod.unknown):
         return Severity.review
     return Severity.cleared
 

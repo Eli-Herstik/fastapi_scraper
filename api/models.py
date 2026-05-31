@@ -15,6 +15,7 @@ class ScanStatus(str, Enum):
 class AuthMethod(str, Enum):
     ntlm = "ntlm"
     kerberos = "kerberos"
+    negotiate = "negotiate"
     oauth2 = "oauth2"
     basic = "basic"
     bearer = "bearer"

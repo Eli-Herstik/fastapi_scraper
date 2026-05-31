@@ -55,7 +55,7 @@ class AuthInfo:
 def _parse_www_authenticate(header: str) -> str:
     """Extract the auth scheme from a WWW-Authenticate header value."""
     scheme = header.strip().split()[0].lower() if header else ""
-    mapping = {"basic": "basic", "bearer": "bearer", "negotiate": "negotiate", "ntlm": "negotiate"}
+    mapping = {"basic": "basic", "bearer": "bearer", "negotiate": "negotiate", "ntlm": "ntlm"}
     return mapping.get(scheme, scheme or "unknown")
 
 
