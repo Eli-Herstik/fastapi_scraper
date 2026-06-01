@@ -43,6 +43,9 @@ class FormFiller:
                     if not await input_el.is_visible():
                         continue
 
+                    if await self._is_search_input(input_el):
+                        continue
+
                     tag_name = await input_el.evaluate('el => el.tagName.toLowerCase()')
 
                     if tag_name == 'select':
@@ -154,6 +157,25 @@ class FormFiller:
         await input_el.dispatch_event('change')
         await page.wait_for_timeout(self.config.form_filling.fill_delay)
         return True
+
+    @staticmethod
+    async def _is_search_input(input_el) -> bool:
+        """Detect global search / typeahead inputs (e.g. Confluence's quick
+        search). Filling these adds no form-completion value and the search
+        drawer they open traps pointer events for the rest of the page."""
+        try:
+            return await input_el.evaluate('''el => {
+                if ((el.getAttribute('type') || '').toLowerCase() === 'search') return true;
+                const hay = [
+                    el.id || '', el.name || '', el.className || '',
+                    el.getAttribute('placeholder') || '',
+                    el.getAttribute('aria-label') || '',
+                ].join(' ').toLowerCase();
+                if (/search|typeahead/.test(hay)) return true;
+                return !!el.closest('[role="search"]');
+            }''')
+        except Exception:
+            return False
 
     async def _determine_fill_value(self, input_el) -> str:
         fill_value = "Test Value"

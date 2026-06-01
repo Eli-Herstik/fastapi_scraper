@@ -9,8 +9,10 @@ from .element_classifier import is_destructive_action
 from .form_filler import FormFiller
 from .selectors import (
     AFFIRMATIVE_ACTION_SELECTORS,
+    BACKDROP_SELECTORS,
     CALENDAR_OVERLAY_SELECTORS,
     DISMISS_SELECTORS,
+    DRAWER_OVERLAY_SELECTORS,
     INTERACTIVE_SELECTORS,
     MODAL_CONTAINER_SELECTORS,
 )
@@ -54,7 +56,13 @@ class OverlayHandler:
             return False
 
     async def dismiss_calendar_overlay(self, page: Page) -> bool:
-        """Detect and dismiss any visible calendar/datepicker overlay."""
+        """Detect and dismiss any visible calendar/datepicker overlay.
+
+        Returns True only when the overlay is actually gone afterwards. A matched
+        overlay that survives the dismissal attempt (a false positive, or a widget
+        that ignores Escape) reports False so callers don't treat the page as
+        unblocked and skip handling the real modal.
+        """
         for selector in CALENDAR_OVERLAY_SELECTORS:
             try:
                 elements = await page.query_selector_all(selector)
@@ -69,12 +77,12 @@ class OverlayHandler:
                         await page.keyboard.press('Escape')
                         await page.wait_for_timeout(300)
 
-                        try:
-                            if await el.is_visible():
-                                await page.mouse.click(0, 0)
-                                await page.wait_for_timeout(300)
-                        except Exception:
-                            pass
+                        if await self._overlay_still_visible(el):
+                            await page.mouse.click(0, 0)
+                            await page.wait_for_timeout(300)
+                            if await self._overlay_still_visible(el):
+                                # Still blocking — don't claim success.
+                                continue
 
                         return True
                     except Exception:
@@ -83,9 +91,63 @@ class OverlayHandler:
                 continue
         return False
 
+    @staticmethod
+    async def _overlay_still_visible(el) -> bool:
+        """Visibility check that treats a detached/removed element as gone."""
+        try:
+            return await el.is_visible()
+        except Exception:
+            return False
+
+    async def _is_dismiss_only_overlay(self, page: Page) -> bool:
+        """Detect overlays that should be closed rather than explored (global
+        search drawers / typeaheads that trap pointer events)."""
+        for selector in DRAWER_OVERLAY_SELECTORS:
+            try:
+                for el in await page.query_selector_all(selector):
+                    if await el.is_visible():
+                        return True
+            except Exception:
+                continue
+        return False
+
+    async def _dismiss_blocking_drawer(self, page: Page) -> None:
+        """Close a drawer/typeahead overlay that exposes no Close control and
+        traps pointer events. Blur the focused field so Escape reaches the
+        dialog, then click any backdrop near a corner as a fallback (avoiding a
+        centred panel)."""
+        try:
+            await page.evaluate('() => document.activeElement && document.activeElement.blur()')
+        except Exception:
+            pass
+        try:
+            await page.keyboard.press('Escape')
+            await page.wait_for_timeout(300)
+        except Exception:
+            pass
+        for selector in BACKDROP_SELECTORS:
+            try:
+                for el in await page.query_selector_all(selector):
+                    if not await el.is_visible():
+                        continue
+                    box = await el.bounding_box()
+                    if box:
+                        await page.mouse.click(box['x'] + 5, box['y'] + 5)
+                        await page.wait_for_timeout(300)
+            except Exception:
+                continue
+
     async def handle(self, page: Page) -> None:
         """Attempt to interact with and dismiss any blocking modal."""
         logger.info("Handling overlay: attempting affirmative actions first...")
+
+        # Handle a global search drawer / typeahead before the calendar heuristic:
+        # it's a hard blocker with no Close control, and the calendar check can
+        # false-match a dialog that merely contains a grid.
+        if await self._is_dismiss_only_overlay(page):
+            logger.info("Search/drawer overlay detected; closing it.")
+            await self._dismiss_blocking_drawer(page)
+            return
 
         if await self.dismiss_calendar_overlay(page):
             logger.info("Dismissed calendar overlay")

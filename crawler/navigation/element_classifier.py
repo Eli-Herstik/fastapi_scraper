@@ -133,15 +133,35 @@ async def get_clickable_elements(
 
                     try:
                         if await locator.is_visible():
-                            is_enabled = await elem.evaluate('''el => {
+                            is_clickable = await elem.evaluate('''el => {
                                 if (el.disabled) return false;
                                 if (el.getAttribute('aria-disabled') === 'true') return false;
+                                // Skip-to-content accessibility links (e.g. Atlassian AUI's
+                                // .aui-skip-link) are off-screen anchors that only trap the
+                                // click timeout.
+                                const cls = (typeof el.className === 'string' ? el.className : '').toLowerCase();
+                                if (cls.includes('skip-link')) return false;
                                 const style = window.getComputedStyle(el);
                                 if (style.pointerEvents === 'none') return false;
+                                const rect = el.getBoundingClientRect();
+                                if (rect.width <= 0 || rect.height <= 0) return false;
+                                // Reject only elements off the inline-start/top: at collection
+                                // time the page sits at the scroll origin, so they can't be
+                                // scrolled into reach (the off-screen skip-link idiom). Elements
+                                // past the inline-end/bottom are normal content that
+                                // scroll_into_view reaches at click time, so they stay.
+                                // Inline-start is the left edge in LTR but the right edge in RTL,
+                                // so the unreachable horizontal side flips with writing direction.
+                                const docDir = window.getComputedStyle(document.documentElement).direction;
+                                const offInlineStart = docDir === 'rtl'
+                                    ? rect.left >= window.innerWidth
+                                    : rect.right <= 0;
+                                if (offInlineStart) return false;
+                                if (rect.bottom <= 0) return false;
                                 return true;
                             }''')
 
-                            if is_enabled and not await is_destructive_action(locator, exclude_patterns=exclude_patterns):
+                            if is_clickable and not await is_destructive_action(locator, exclude_patterns=exclude_patterns):
                                 if await is_date_picker_element(elem):
                                     logger.debug("Skipping date picker element")
                                     continue

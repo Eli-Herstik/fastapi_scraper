@@ -1,0 +1,686 @@
+18:13:22 [INFO] crawler.mapper: Starting external-hosts mapping for: https://confluence.do
+18:13:30 [INFO] crawler.mapper: Exploring page at depth 0: https://confluence.do/#all-updates
+18:13:38 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click:
+Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  -   2 x waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div class="SearchContainer_search-typeahead-inner_Y4xnr">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - retrying click action
+    - waiting 20ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div class="SearchContainer_search-typeahead-inner_Y4xnr">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - 2 x retrying click action
+    - waiting 100ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div role="dialog" aria-modal="true" id="search_drawer" aria-label="Search"
+class="SearchContainer_search-container-component_3vFGX">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - 2 x retrying click action
+    - waiting 500ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div class="SearchContainer_search-typeahead-inner_Y4xnr">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - retrying click action
+    - waiting 500ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div role="dialog" aria-modal="true" id="search_drawer" aria-label="Search"
+class="SearchContainer_search-container-component_3vFGX">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - retrying click action
+    - waiting 500ms
+
+18:13:46 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click:
+Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+-   - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div role="dialog" aria-modal="true" id="search_drawer" aria-label="Search"
+class="SearchContainer_search-container-component_3vFGX">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - retrying click action
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div class="SearchContainer_search-typeahead-inner_Y4xnr">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - retrying click action
+    - waiting 20ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div class="SearchContainer_search-typeahead-inner_Y4xnr">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - 2 x retrying click action
+    - waiting 100ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div role="dialog" aria-modal="true" id="search_drawer" aria-label="Search"
+class="SearchContainer_search-container-component_3vFGX">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - 2 x retrying click action
+    - waiting 500ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div class="SearchContainer_search-typeahead-inner_Y4xnr">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - retrying click action
+    - waiting 500ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div role="dialog" aria-modal="true" id="search_drawer" aria-label="Search"
+class="SearchContainer_search-container-component_3vFGX">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - retrying click action
+    - waiting 500ms
+
+18:13:53 [INFO] crawler.mapper: Found 20 clickable elements
+18:13:59 [ERROR] crawler.navigation.handler: Click error: Locator.click: Timeout 5000ms exceeded.
+Call log:
+  - waiting for locator("a[href]").first
+  -   - locator resolved to <a tabindex="1" href="#nav-sidebar" class="aui-skip-link"
+aui-skip-link-auto-generated="" title="Skip to sidebar (Type 'u' then '8')" aria-label="Skip to sidebar Type 'u'
+then '8'">Skip to sidebar</a>
+  -   - attempting click action
+  -     2 x waiting for element to be visible, enabled and stable
+  -       - element is visible, enabled and stable
+  -       - scrolling into view if needed
+  -       - done scrolling
+  -       - element is outside of the viewport
+  -     - retrying click action
+  -     - waiting 20ms
+  -     2 x waiting for element to be visible, enabled and stable
+  -       - element is visible, enabled and stable
+  -       - scrolling into view if needed
+  -       - done scrolling
+  -       - element is outside of the viewport
+  -     - retrying click action
+  -     - waiting 100ms
+  -     10 x waiting for element to be visible, enabled and stable
+  -       - element is visible, enabled and stable
+  -       - scrolling into view if needed
+  -       - done scrolling
+  -       - element is outside of the viewport
+  -     - retrying click action
+  -     - waiting 500ms
+
+18:14:04 [ERROR] crawler.navigation.handler: Click error: Locator.click: Timeout 5000ms exceeded.
+Call log:
+  - waiting for locator("a[href]").nth(1)
+  -   - locator resolved to <a tabindex="1" href="#main" class="aui-skip-link"
+aui-skip-link-auto-generated="">Skip to main content</a>
+  -   - attempting click action
+  -     2 x waiting for element to be visible, enabled and stable
+  -       - element is visible, enabled and stable
+  -       - scrolling into view if needed
+  -       - done scrolling
+  -       - element is outside of the viewport
+  -     - retrying click action
+  -     - waiting 20ms
+  -     2 x waiting for element to be visible, enabled and stable
+  -       - element is visible, enabled and stable
+  -       - scrolling into view if needed
+  -       - done scrolling
+  -       - element is outside of the viewport
+  -     - retrying click action
+  -     - waiting 100ms
+  -     10 x waiting for element to be visible, enabled and stable
+  -       - element is visible, enabled and stable
+  -       - scrolling into view if needed
+  -       - done scrolling
+  -       - element is outside of the viewport
+-   - retrying click action
+  -   - waiting 500ms
+
+18:14:10 [ERROR] crawler.navigation.handler: Click error: Locator.click: Timeout 5000ms exceeded.
+Call log:
+  - waiting for locator("a[href]").nth(2)
+  -   - locator resolved to <a tabindex="1" class="aui-skip-link" href="#quick-search-query"
+aui-skip-link-auto-generated="">Skip to search</a>
+  -   - attempting click action
+  -     2 x waiting for element to be visible, enabled and stable
+  -       - element is visible, enabled and stable
+  -       - scrolling into view if needed
+  -       - done scrolling
+  -       - element is outside of the viewport
+  -     - retrying click action
+  -     - waiting 20ms
+  -     2 x waiting for element to be visible, enabled and stable
+  -       - element is visible, enabled and stable
+  -       - scrolling into view if needed
+  -       - done scrolling
+  -       - element is outside of the viewport
+  -     - retrying click action
+  -     - waiting 100ms
+  -     9 x waiting for element to be visible, enabled and stable
+  -       - element is visible, enabled and stable
+  -       - scrolling into view if needed
+  -       - done scrolling
+  -       - element is outside of the viewport
+  -     - retrying click action
+  -     - waiting 500ms
+
+18:14:15 [WARNING] crawler.navigation.handler: Element click intercepted by a modal. Attempting to interact
+with overlay...
+18:14:15 [INFO] crawler.navigation.overlay_handler: Handling overlay: attempting affirmative actions first...
+18:14:16 [INFO] crawler.navigation.overlay_handler: Dismissed calendar overlay
+18:14:33 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click:
+Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  -   2 x waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div class="SearchContainer_search-typeahead-inner_Y4xnr">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - retrying click action
+    - waiting 20ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div class="SearchContainer_search-typeahead-inner_Y4xnr">...</div> from <div>...</div> subtree
+intercepts pointer events
+- 2 x retrying click action
+    - waiting 100ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div role="dialog" aria-modal="true" id="search_drawer" aria-label="Search"
+class="SearchContainer_search-container-component_3vFGX">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - 2 x retrying click action
+    - waiting 500ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div class="SearchContainer_search-typeahead-inner_Y4xnr">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - retrying click action
+    - waiting 500ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div role="dialog" aria-modal="true" id="search_drawer" aria-label="Search"
+class="SearchContainer_search-container-component_3vFGX">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - retrying click action
+    - waiting 500ms
+
+18:14:40 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click:
+Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  -   - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div role="dialog" aria-modal="true" id="search_drawer" aria-label="Search"
+class="SearchContainer_search-container-component_3vFGX">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - retrying click action
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div class="SearchContainer_search-typeahead-inner_Y4xnr">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - retrying click action
+    - waiting 20ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+-   - <div class="SearchContainer_search-typeahead-inner_Y4xnr">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - 2 x retrying click action
+    - waiting 100ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div role="dialog" aria-modal="true" id="search_drawer" aria-label="Search"
+class="SearchContainer_search-container-component_3vFGX">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - 2 x retrying click action
+    - waiting 500ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div class="SearchContainer_search-typeahead-inner_Y4xnr">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - retrying click action
+    - waiting 500ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div role="dialog" aria-modal="true" id="search_drawer" aria-label="Search"
+class="SearchContainer_search-container-component_3vFGX">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - retrying click action
+    - waiting 500ms
+
+18:14:48 [WARNING] crawler.mapper: Could not click popup element: ElementHandle.click: Timeout 3000ms
+exceeded.
+Call log:
+  - attempting click action
+  -   2 x waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div role="presentation" class="SearchDrawerPanel_drawer-panel-mask__pR0MJ">...</div> from
+<div>...</div> subtree intercepts pointer events
+  - retrying click action
+    - waiting 20ms
+    - 2 x waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div role="presentation" class="SearchDrawerPanel_drawer-panel-mask__pR0MJ">...</div> from
+<div>...</div> subtree intercepts pointer events
+  - retrying click action
+    - waiting 100ms
+    - 6 x waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+- scrolling into view if needed
+    - done scrolling
+    - <div role="presentation" class="SearchDrawerPanel_drawer-panel-mask__pR0MJ">...</div> from
+<div>...</div> subtree intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+18:14:51 [WARNING] crawler.mapper: Could not click popup element: ElementHandle.click: Timeout 3000ms
+exceeded.
+Call log:
+  - attempting click action
+  -   2 x waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div role="presentation" class="SearchDrawerPanel_drawer-panel-mask__pR0MJ">...</div> from
+<div>...</div> subtree intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 x waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div role="presentation" class="SearchDrawerPanel_drawer-panel-mask__pR0MJ">...</div> from
+<div>...</div> subtree intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 6 x waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div role="presentation" class="SearchDrawerPanel_drawer-panel-mask__pR0MJ">...</div> from
+<div>...</div> subtree intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+18:14:54 [WARNING] crawler.mapper: Could not click popup element: ElementHandle.click: Timeout 3000ms
+exceeded.
+Call log:
+  - attempting click action
+  -   2 x waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div role="presentation" class="SearchDrawerPanel_drawer-panel-mask__pR0MJ">...</div> from
+<div>...</div> subtree intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 x waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div role="presentation" class="SearchDrawerPanel_drawer-panel-mask__pR0MJ">...</div> from
+<div>...</div> subtree intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 6 x waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div role="presentation" class="SearchDrawerPanel_drawer-panel-mask__pR0MJ">...</div> from
+<div>...</div> subtree intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+18:14:57 [WARNING] crawler.mapper: Could not click popup element: ElementHandle.click: Timeout 3000ms
+exceeded.
+Call log:
+  - attempting click action
+  -   2 x waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div role="presentation" class="SearchDrawerPanel_drawer-panel-mask__pR0MJ">...</div> from
+<div>...</div> subtree intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 x waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div role="presentation" class="SearchDrawerPanel_drawer-panel-mask__pR0MJ">...</div> from
+<div>...</div> subtree intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 6 x waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div role="presentation" class="SearchDrawerPanel_drawer-panel-mask__pR0MJ">...</div> from
+<div>...</div> subtree intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+18:15:00 [WARNING] crawler.mapper: Could not click popup element: ElementHandle.click: Timeout 3000ms
+exceeded.
+Call log:
+  - attempting click action
+  -   2 x waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div role="presentation" class="SearchDrawerPanel_drawer-panel-mask__pR0MJ">...</div> from
+<div>...</div> subtree intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+-     2 x waiting for element to be visible, enabled and stable
+  -       - element is visible, enabled and stable
+  -       - scrolling into view if needed
+  -       - done scrolling
+  -       - <div role="presentation" class="SearchDrawerPanel_drawer-panel-mask__pR0MJ">...</div> from
+<div>...</div> subtree intercepts pointer events
+  -     - retrying click action
+  -     - waiting 100ms
+  -     6 x waiting for element to be visible, enabled and stable
+  -       - element is visible, enabled and stable
+  -       - scrolling into view if needed
+  -       - done scrolling
+  -       - <div role="presentation" class="SearchDrawerPanel_drawer-panel-mask__pR0MJ">...</div> from
+<div>...</div> subtree intercepts pointer events
+  -     - retrying click action
+  -     - waiting 500ms
+
+18:15:04 [WARNING] crawler.mapper: Could not click popup element: ElementHandle.click: Timeout 3000ms
+exceeded.
+Call log:
+  - attempting click action
+  -   2 x waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div class="SearchContainer_search-typeahead-inner_Y4xnr">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - retrying click action
+    - waiting 20ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div class="SearchContainer_search-typeahead-inner_Y4xnr">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - 2 x retrying click action
+    - waiting 100ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div role="dialog" aria-modal="true" id="search_drawer" aria-label="Search"
+class="SearchContainer_search-container-component_3vFGX">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - 2 x retrying click action
+    - waiting 500ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div class="SearchContainer_search-typeahead-inner_Y4xnr">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - 2 x retrying click action
+- waiting 500ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div role="dialog" aria-modal="true" id="search_drawer" aria-label="Search"
+class="SearchContainer_search-container-component_3vFGX">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - retrying click action
+    - waiting 500ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div class="SearchContainer_search-typeahead-inner_Y4xnr">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - retrying click action
+    - waiting 500ms
+
+18:15:07 [WARNING] crawler.mapper: Could not click popup element: ElementHandle.click: Timeout 3000ms
+exceeded.
+Call log:
+  - attempting click action
+  -   2 x waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div class="SearchContainer_search-typeahead-inner_Y4xnr">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - retrying click action
+    - waiting 20ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div class="SearchContainer_search-typeahead-inner_Y4xnr">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - 2 x retrying click action
+    - waiting 100ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div role="dialog" aria-modal="true" id="search_drawer" aria-label="Search"
+class="SearchContainer_search-container-component_3vFGX">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - 2 x retrying click action
+    - waiting 500ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div class="SearchContainer_search-typeahead-inner_Y4xnr">...</div> from <div>...</div> subtree
+intercepts pointer events
+  - 2 x retrying click action
+    - waiting 500ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div role="dialog" aria-modal="true" id="search_drawer" aria-label="Search"
+class="SearchContainer_search-container-component_3vFGX">...</div> from <div>...</div> subtree
+intercepts pointer events
+  -   - retrying click action
+    - waiting 500ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div class="SearchContainer_search-typeahead-inner_Y4xnr">...</div> from <div>...</div> subtree
+intercepts pointer events
+  -   - retrying click action
+    - waiting 500ms
+
+18:15:12 [WARNING] crawler.navigation.handler: Element click intercepted by a modal. Attempting to interact
+with overlay...
+18:15:12 [INFO] crawler.navigation.overlay_handler: Handling overlay: attempting affirmative actions first...
+18:15:13 [INFO] crawler.navigation.overlay_handler: Dismissed calendar overlay
+18:15:41 [WARNING] crawler.navigation.handler: Element click intercepted by a modal. Attempting to interact
+with overlay...
+18:15:41 [INFO] crawler.navigation.overlay_handler: Handling overlay: attempting affirmative actions first...
+18:15:41 [INFO] crawler.navigation.overlay_handler: Modal container identified. Filling forms and searching for
+interactive elements...
+18:15:48 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click:
+Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  -   2 x waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <a tabindex="-1" class="select2-choice" href="javascript:void(0)">...</a> intercepts pointer events
+  - retrying click action
+    - waiting 20ms
+    - 2 x waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <a tabindex="-1" class="select2-choice" href="javascript:void(0)">...</a> intercepts pointer events
+  - retrying click action
+    - waiting 100ms
+    - 4 x waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <a tabindex="-1" class="select2-choice" href="javascript:void(0)">...</a> intercepts pointer events
+-   - retrying click action
+  -   - waiting 500ms
+
+18:15:59 [WARNING] crawler.navigation.overlay_handler: Could not click modal element: ElementHandle.click:
+Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  -   2 x waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+    - waiting 20ms
+    - 2 x waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+    - waiting 100ms
+    - 4 x waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+    - waiting 500ms
+
+18:16:01 [WARNING] crawler.navigation.overlay_handler: Could not click modal element: ElementHandle.click:
+Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  -   2 x waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+    - waiting 20ms
+    - 2 x waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+    - waiting 100ms
+    - 4 x waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+-   - waiting 500ms
+
+18:16:03 [WARNING] crawler.navigation.overlay_handler: Could not click modal element: ElementHandle.click:
+Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  -   2 x waiting for element to be visible, enabled and stable
+    - element is not enabled
+  -   - retrying click action
+  -   - waiting 20ms
+  -   2 x waiting for element to be visible, enabled and stable
+    - element is not enabled
+  -   - retrying click action
+  -   - waiting 100ms
+  -   4 x waiting for element to be visible, enabled and stable
+    - element is not enabled
+  -   - retrying click action
+  -   - waiting 500ms
+
+18:18:00 [ERROR] crawler.mapper: Error processing link: ElementHandle.get_attribute: Execution context was
+destroyed, most likely because of a navigation
+Call log:
+  - waiting for locator(":scope")
+
+18:18:00 [ERROR] crawler.mapper: Error processing link: ElementHandle.get_attribute: Execution context was
+destroyed, most likely because of a navigation
+Call log:
+  - waiting for locator(":scope")
+
+18:18:00 [ERROR] crawler.mapper: Error processing link: ElementHandle.get_attribute: Execution context was
+destroyed, most likely because of a navigation
+Call log:
+  - waiting for locator(":scope")
+
+18:18:00 [ERROR] crawler.mapper: Error processing link: ElementHandle.get_attribute: Execution context was
+destroyed, most likely because of a navigation
+Call log:
+  - waiting for locator(":scope")
+
+18:18:00 [ERROR] crawler.mapper: Error processing link: ElementHandle.get_attribute: Execution context was
+destroyed, most likely because of a navigation
+Call log:
+  - waiting for locator(":scope")
+
+18:18:00 [ERROR] crawler.mapper: Error processing link: ElementHandle.get_attribute: Execution context was
+destroyed, most likely because of a navigation
+Call log:
+  - waiting for locator(":scope")
+
+18:18:00 [INFO] crawler.mapper: Mapping complete. Found 0 unique external hosts.

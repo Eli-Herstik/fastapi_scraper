@@ -33,7 +33,8 @@ class TestDismissCalendarOverlay:
     async def test_dismisses_when_calendar(self, overlay, mock_page):
         page = mock_page()
         cal = AsyncMock()
-        cal.is_visible = AsyncMock(return_value=True)
+        # Detected as visible, then gone once Escape is pressed.
+        cal.is_visible = AsyncMock(side_effect=[True, False])
         cal.evaluate = AsyncMock(return_value=True)
 
         call_count = {"n": 0}
@@ -46,6 +47,19 @@ class TestDismissCalendarOverlay:
         result = await overlay.dismiss_calendar_overlay(page)
         assert result is True
         page.keyboard.press.assert_called_with("Escape")
+
+    async def test_returns_false_when_overlay_persists(self, overlay, mock_page):
+        """A matched overlay that survives Escape + click must report False so
+        handle() falls through to the real blocking modal instead of stopping."""
+        page = mock_page()
+        cal = AsyncMock()
+        cal.is_visible = AsyncMock(return_value=True)  # never goes away
+        cal.evaluate = AsyncMock(return_value=True)
+        page.query_selector_all = AsyncMock(return_value=[cal])
+
+        result = await overlay.dismiss_calendar_overlay(page)
+        assert result is False
+        page.mouse.click.assert_any_call(0, 0)  # tried the click-outside fallback
 
     async def test_returns_false_when_no_calendar(self, overlay, mock_page):
         page = mock_page()
@@ -66,6 +80,21 @@ class TestHandle:
         overlay.dismiss_calendar_overlay = AsyncMock(return_value=True)
         overlay._find_modal_container = AsyncMock()
         await overlay.handle(page)
+        overlay._find_modal_container.assert_not_called()
+
+    async def test_drawer_overlay_closed_before_calendar(self, overlay, mock_page):
+        """A search/drawer overlay is closed first and must not fall through to
+        the calendar heuristic or general modal handling."""
+        page = mock_page()
+        overlay._is_dismiss_only_overlay = AsyncMock(return_value=True)
+        overlay._dismiss_blocking_drawer = AsyncMock()
+        overlay.dismiss_calendar_overlay = AsyncMock(return_value=True)
+        overlay._find_modal_container = AsyncMock()
+
+        await overlay.handle(page)
+
+        overlay._dismiss_blocking_drawer.assert_called_once()
+        overlay.dismiss_calendar_overlay.assert_not_called()
         overlay._find_modal_container.assert_not_called()
 
     async def test_fills_forms_and_clicks_in_modal(self, overlay, mock_page):

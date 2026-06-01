@@ -299,10 +299,22 @@ class Mapper:
             return
 
         try:
-            links = await page.query_selector_all('a[href]')
-            for link in links[:10]:
+            # Snapshot hrefs as strings up front. Navigating to one link destroys
+            # the page's execution context and invalidates every live ElementHandle,
+            # so holding handles across a navigation would make each later access
+            # raise "Execution context was destroyed".
+            #
+            # Read the resolved el.href (absolute) rather than the raw attribute so
+            # same-host relative links (e.g. Confluence's "/display/...") are followed
+            # instead of being rejected by _should_follow_url, which compares netloc
+            # and would treat a relative URL as host-less. el.href also honours any
+            # <base> tag, matching what a real click would navigate to.
+            hrefs = await page.eval_on_selector_all(
+                'a[href]:not([class*="skip-link"])',
+                'els => els.map(el => el.href)',
+            )
+            for href in hrefs[:10]:
                 try:
-                    href = await link.get_attribute('href')
                     if not href or href in self.navigator.visited_urls:
                         continue
                     if not self.navigator._should_follow_url(href):

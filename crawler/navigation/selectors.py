@@ -68,10 +68,36 @@ DISMISS_SELECTORS = [
     'button[aria-label="close"]',
     '.close-button',
     '.modal-close',
+    # Atlassian AUI close controls are <a>/<button> elements whose label sits in a
+    # child <span>, so they're missed by the aria-label and button:has-text rules.
+    '.aui-dialog2-header-close',
+    '.aui-close-button',
     'button:has-text("Close")',
     'button:has-text("Cancel")',
     'button:has-text("No thanks")',
     'button:has-text("Dismiss")',
+]
+
+# Full-screen backdrops/masks behind drawers and typeaheads. Clicking these
+# (near a corner) closes the overlay they belong to.
+BACKDROP_SELECTORS = [
+    '[class*="drawer-panel-mask"]',
+    '[class*="panel-mask"]',
+    '[class*="drop-mask"]',
+    '[class*="backdrop"]',
+    '[class*="overlay-mask"]',
+    '.modal-backdrop',
+]
+
+# Overlays that should be closed rather than interacted with: global search
+# drawers / typeaheads that trap pointer events but expose no useful actions.
+DRAWER_OVERLAY_SELECTORS = [
+    '[id*="search_drawer"]',
+    '[class*="search-drawer"]',
+    '[class*="SearchDrawer"]',
+    '[class*="SearchContainer"]',
+    '[class*="typeahead"]',
+    '[role="search"][aria-modal="true"]',
 ]
 
 DROPDOWN_OPTION_SELECTORS = [
