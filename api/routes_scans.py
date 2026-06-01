@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from .db import AppRow, FindingRow, ScanRow, SubmissionRow
 from .models import (
+    AuthMethod,
     CreateScanRequest,
     CreateScanResponse,
     Finding,
@@ -23,6 +24,7 @@ from .models import (
 from .routes_me import _STUB_USER
 from .serialize import finding_to_schema, scan_to_detail, scan_to_summary
 from .service import run_scrape_job
+from .translate import severity_for
 
 logger = logging.getLogger(__name__)
 
@@ -261,7 +263,29 @@ async def patch_finding(
                 status_code=409,
                 detail={"message": "only the latest completed scan can be edited"},
             )
-        finding.excluded = body.excluded
+
+        if body.auth_method is not None:
+            # Manual auth correction is allowed only as a fill-in for what the
+            # scraper couldn't classify — never to override an auto-detected
+            # method, and never back to "unknown".
+            if finding.auth_method != AuthMethod.unknown.value:
+                raise HTTPException(
+                    status_code=409,
+                    detail={"message": "auth method can only be set manually while it is unknown"},
+                )
+            if body.auth_method == AuthMethod.unknown:
+                raise HTTPException(
+                    status_code=422,
+                    detail={"message": "cannot set auth method to unknown"},
+                )
+            finding.auth_method = body.auth_method.value
+            # Severity is derived from the auth method, so re-derive it using
+            # the same mapping the scraper uses (e.g. ntlm -> blocker).
+            finding.severity = severity_for(body.auth_method).value
+
+        if body.excluded is not None:
+            finding.excluded = body.excluded
+
         await session.commit()
         await session.refresh(finding)
         return finding_to_schema(finding)

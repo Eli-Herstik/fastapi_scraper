@@ -143,7 +143,10 @@ class CreateScanResponse(BaseModel):
 
 
 class PatchFindingRequest(BaseModel):
-    excluded: bool
+    # Both fields optional so a PATCH can carry an exclusion toggle, a manual
+    # auth-method correction, or both. A body with neither is a no-op.
+    excluded: Optional[bool] = None
+    auth_method: Optional[AuthMethod] = None
 
 
 class SubmitScanResponse(BaseModel):
