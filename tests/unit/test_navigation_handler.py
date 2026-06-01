@@ -1,9 +1,9 @@
-"""Tests for scraper.navigation.NavigationHandler (URL/state handling & delegation)."""
+"""Tests for crawler.navigation.NavigationHandler (URL/state handling & delegation)."""
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from scraper.navigation import NavigationHandler
-from scraper.navigation.dom_hasher import DOMHasher
+from crawler.navigation import NavigationHandler
+from crawler.navigation.dom_hasher import DOMHasher
 
 
 class TestShouldFollowUrl:

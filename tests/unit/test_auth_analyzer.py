@@ -1,6 +1,6 @@
-"""Tests for scraper.network.auth_analyzer."""
+"""Tests for crawler.network.auth_analyzer."""
 import pytest
-from scraper.network.auth_analyzer import (
+from crawler.network.auth_analyzer import (
     detect_authentication,
     detect_idp_redirect,
     aggregate_by_host,

@@ -1,8 +1,8 @@
-"""Tests for scraper.navigation.element_classifier."""
+"""Tests for crawler.navigation.element_classifier."""
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from scraper.navigation.element_classifier import (
+from crawler.navigation.element_classifier import (
     is_destructive_action,
     is_date_picker_element,
     get_clickable_elements,
@@ -152,7 +152,7 @@ class TestGetClickableElements:
         return loc
 
     async def test_collects_enabled_visible_element(self):
-        from scraper.navigation import element_classifier as ec
+        from crawler.navigation import element_classifier as ec
         page = MagicMock()
         elem = self._make_enabled_elem("<button>OK</button>")
         loc = self._make_loc("OK")
@@ -173,7 +173,7 @@ class TestGetClickableElements:
         assert len(result) == 1
 
     async def test_respects_max_clicks(self):
-        from scraper.navigation import element_classifier as ec
+        from crawler.navigation import element_classifier as ec
         page = MagicMock()
         elems = [self._make_enabled_elem(f"<b>{i}</b>") for i in range(5)]
         locators = [self._make_loc() for _ in range(5)]

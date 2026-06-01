@@ -1,8 +1,8 @@
-"""Tests for scraper.navigation.form_filler.FormFiller (pure logic helpers)."""
+"""Tests for crawler.navigation.form_filler.FormFiller (pure logic helpers)."""
 import pytest
 from unittest.mock import AsyncMock
 
-from scraper.navigation.form_filler import FormFiller
+from crawler.navigation.form_filler import FormFiller
 
 
 @pytest.fixture

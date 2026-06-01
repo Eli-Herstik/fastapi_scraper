@@ -1,8 +1,8 @@
-"""Tests for scraper.navigation.dom_hasher.DOMHasher."""
+"""Tests for crawler.navigation.dom_hasher.DOMHasher."""
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from scraper.navigation.dom_hasher import DOMHasher
+from crawler.navigation.dom_hasher import DOMHasher
 
 
 @pytest.fixture

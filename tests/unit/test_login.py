@@ -1,10 +1,10 @@
-"""Tests for scraper.auth.login."""
+"""Tests for crawler.auth.login."""
 import json
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
 from config_loader import LoginConfig
-from scraper.auth.login import is_on_login_page, storage_state_valid, perform_login
+from crawler.auth.login import is_on_login_page, storage_state_valid, perform_login
 
 
 def _make_login_cfg(**overrides):

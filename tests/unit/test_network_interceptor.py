@@ -1,8 +1,8 @@
-"""Tests for scraper.network.NetworkInterceptor."""
+"""Tests for crawler.network.NetworkInterceptor."""
 import pytest
 from unittest.mock import MagicMock
 
-from scraper.network import NetworkInterceptor
+from crawler.network import NetworkInterceptor
 
 
 @pytest.fixture

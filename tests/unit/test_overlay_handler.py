@@ -1,9 +1,9 @@
-"""Tests for scraper.navigation.overlay_handler.OverlayHandler."""
+"""Tests for crawler.navigation.overlay_handler.OverlayHandler."""
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from scraper.navigation.overlay_handler import OverlayHandler
-from scraper.navigation.form_filler import FormFiller
+from crawler.navigation.overlay_handler import OverlayHandler
+from crawler.navigation.form_filler import FormFiller
 
 
 @pytest.fixture

@@ -9,7 +9,7 @@ from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from config_loader import Config
-from scraper import Mapper
+from crawler import Mapper
 
 from .db import FindingRow, ScanRow
 from .models import Severity

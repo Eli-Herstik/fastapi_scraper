@@ -1,11 +1,11 @@
-"""Tests for scraper.Mapper (orchestrator, without launching a real browser)."""
+"""Tests for crawler.Mapper (orchestrator, without launching a real browser)."""
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from scraper import Mapper
-from scraper.navigation import NavigationHandler
-from scraper.navigation.dom_hasher import DOMHasher
-from scraper.network import NetworkInterceptor
+from crawler import Mapper
+from crawler.navigation import NavigationHandler
+from crawler.navigation.dom_hasher import DOMHasher
+from crawler.network import NetworkInterceptor
 
 
 class TestInit:
@@ -60,7 +60,7 @@ class TestEnsureAuthenticated:
         m = Mapper(cfg)
         page = MagicMock()
         page.url = "http://x/dashboard"
-        with patch("scraper.mapper.perform_login", AsyncMock()) as pl:
+        with patch("crawler.mapper.perform_login", AsyncMock()) as pl:
             await m._ensure_authenticated(page)
             pl.assert_not_called()
 
@@ -71,7 +71,7 @@ class TestEnsureAuthenticated:
         m = Mapper(cfg)
         page = MagicMock()
         page.url = "http://x/login"
-        with patch("scraper.mapper.perform_login", AsyncMock()) as pl:
+        with patch("crawler.mapper.perform_login", AsyncMock()) as pl:
             await m._ensure_authenticated(page)
             pl.assert_called_once_with(page, cfg.login)
 

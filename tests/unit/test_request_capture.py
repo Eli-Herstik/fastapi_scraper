@@ -1,8 +1,8 @@
-"""Tests for scraper.network.request_capture.RequestCapture."""
+"""Tests for crawler.network.request_capture.RequestCapture."""
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from scraper.network import NetworkInterceptor, RequestCapture
+from crawler.network import NetworkInterceptor, RequestCapture
 
 
 @pytest.fixture
