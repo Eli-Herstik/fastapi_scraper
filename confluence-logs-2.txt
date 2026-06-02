@@ -1,0 +1,756 @@
+16:32:54 [INFO] crawler.mapper: Starting external-hosts mapping for: https://confluence.do
+16:33:01 [INFO] crawler.mapper: Exploring page at depth 0: https://confluence.do/#all-updates
+16:33:04 [INFO] crawler.mapper: Found 20 clickable elements
+16:33:41 [WARNING] crawler.navigation.handler: Element click intercepted by a modal. Attempting to interact with overlay...
+16:33:41 [INFO] crawler.navigation.overlay_handler: Handling overlay: attempting affirmative actions first...
+16:33:41 [INFO] crawler.navigation.overlay_handler: Modal container identified. Filling forms and searching for interactive elements...
+16:33:44 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <a tabindex="-1" class="select2-choice" href="javascript:void(0)">...</a> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <a tabindex="-1" class="select2-choice" href="javascript:void(0)">...</a> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <a tabindex="-1" class="select2-choice" href="javascript:void(0)">...</a> intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+16:33:49 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+-   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+16:33:53 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+16:33:58 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+-   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+16:34:02 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+16:34:06 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+-   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+16:34:10 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+16:34:15 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+-   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+16:34:19 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+16:34:23 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+- retrying click action
+  - waiting 500ms
+
+16:34:28 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+16:34:32 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+- waiting 500ms
+
+16:34:36 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+16:34:40 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+16:34:45 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+16:34:49 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+16:34:53 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+16:34:58 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+16:35:02 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click:
+Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+16:35:06 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+16:35:10 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+16:35:15 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+16:35:19 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+- attempting click action
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+16:35:23 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+16:35:28 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+- 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+16:35:32 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+16:35:36 [WARNING] crawler.navigation.form_filler: Error checking click dropdown: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  - 2 × waiting for element to be visible, enabled and stable
+-   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+16:35:43 [WARNING] crawler.navigation.overlay_handler: Could not click modal element: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+16:35:45 [WARNING] crawler.navigation.overlay_handler: Could not click modal element: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+-   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+16:35:47 [WARNING] crawler.navigation.overlay_handler: Could not click modal element: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+  - attempting click action
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 20ms
+  - 2 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 100ms
+  - 4 × waiting for element to be visible, enabled and stable
+  -   - element is visible, enabled and stable
+  -   - scrolling into view if needed
+  -   - done scrolling
+  -   - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+  - retrying click action
+  - waiting 500ms
+
+16:37:53 [INFO] crawler.mapper: Mapping complete. Found 1 unique external hosts.

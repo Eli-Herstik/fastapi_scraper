@@ -155,6 +155,101 @@ class TestGetElementLabel:
         assert "a" * 31 not in label
 
 
+class TestDismissDropdownMask:
+    async def test_clicks_visible_mask(self, filler, mock_page):
+        page = mock_page()
+        mask = AsyncMock()
+        mask.is_visible = AsyncMock(return_value=True)
+        mask.bounding_box = AsyncMock(return_value={"x": 0, "y": 0, "width": 1920, "height": 1080})
+
+        # Only the first backdrop selector matches; the rest return [].
+        calls = {"n": 0}
+
+        async def qs(selector):
+            calls["n"] += 1
+            return [mask] if calls["n"] == 1 else []
+        page.query_selector_all = AsyncMock(side_effect=qs)
+
+        assert await filler._dismiss_dropdown_mask(page) is True
+        page.mouse.click.assert_called_once_with(5, 5)
+        # Must not press Escape (would bubble up and close the surrounding modal).
+        page.keyboard.press.assert_not_called()
+
+    async def test_no_mask_returns_false(self, filler, mock_page):
+        page = mock_page()  # query_selector_all defaults to []
+        assert await filler._dismiss_dropdown_mask(page) is False
+        page.mouse.click.assert_not_called()
+
+    async def test_skips_invisible_mask(self, filler, mock_page):
+        page = mock_page()
+        mask = AsyncMock()
+        mask.is_visible = AsyncMock(return_value=False)
+        page.query_selector_all = AsyncMock(return_value=[mask])
+        assert await filler._dismiss_dropdown_mask(page) is False
+        page.mouse.click.assert_not_called()
+
+
+class TestTryClickDropdown:
+    async def test_recovers_from_intercepted_click(self, filler, mock_page):
+        """First click is blocked by a leftover mask; after dismissing it the
+        retry succeeds and an option is selected."""
+        page = mock_page()
+        input_el = AsyncMock()
+        input_el.click = AsyncMock(side_effect=[
+            Exception("Timeout 2000ms exceeded ... intercepts pointer events"),
+            None,
+        ])
+        filler._dismiss_dropdown_mask = AsyncMock(return_value=True)
+        filler._try_dropdown_options = AsyncMock(return_value=True)
+
+        assert await filler._try_click_dropdown(input_el, page) is True
+        assert input_el.click.call_count == 2
+        filler._dismiss_dropdown_mask.assert_called_once()
+
+    async def test_gives_up_when_mask_cannot_be_dismissed(self, filler, mock_page):
+        page = mock_page()
+        input_el = AsyncMock()
+        input_el.click = AsyncMock(side_effect=Exception("... intercepts pointer events"))
+        filler._dismiss_dropdown_mask = AsyncMock(return_value=False)
+        filler._try_dropdown_options = AsyncMock(return_value=True)
+
+        assert await filler._try_click_dropdown(input_el, page) is False
+        input_el.click.assert_called_once()  # no retry without a dismissable mask
+        filler._try_dropdown_options.assert_not_called()
+
+    async def test_non_intercept_error_does_not_dismiss(self, filler, mock_page):
+        page = mock_page()
+        input_el = AsyncMock()
+        input_el.click = AsyncMock(side_effect=Exception("element detached"))
+        filler._dismiss_dropdown_mask = AsyncMock(return_value=False)
+
+        assert await filler._try_click_dropdown(input_el, page) is False
+        filler._dismiss_dropdown_mask.assert_not_called()
+
+    async def test_closes_dropdown_left_open_with_nothing_selected(self, filler, mock_page):
+        """A successful click that opens a dropdown but selects nothing must still
+        clear the mask so it doesn't trap later fields."""
+        page = mock_page()
+        input_el = AsyncMock()
+        input_el.click = AsyncMock()
+        filler._try_dropdown_options = AsyncMock(return_value=False)
+        filler._dismiss_dropdown_mask = AsyncMock(return_value=False)
+
+        assert await filler._try_click_dropdown(input_el, page) is False
+        filler._dismiss_dropdown_mask.assert_called_once()
+
+    async def test_no_cleanup_when_option_selected(self, filler, mock_page):
+        """A clean selection closes the widget itself; no mask cleanup needed."""
+        page = mock_page()
+        input_el = AsyncMock()
+        input_el.click = AsyncMock()
+        filler._try_dropdown_options = AsyncMock(return_value=True)
+        filler._dismiss_dropdown_mask = AsyncMock(return_value=False)
+
+        assert await filler._try_click_dropdown(input_el, page) is True
+        filler._dismiss_dropdown_mask.assert_not_called()
+
+
 class TestFillDisabled:
     async def test_fill_noop_when_disabled(self, make_config, mock_page):
         from config_loader import FormConfig

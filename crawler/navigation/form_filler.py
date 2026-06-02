@@ -5,7 +5,7 @@ import re
 from playwright.async_api import Page
 
 from config_loader import Config
-from .selectors import DROPDOWN_OPTION_SELECTORS
+from .selectors import BACKDROP_SELECTORS, DROPDOWN_OPTION_SELECTORS
 
 logger = logging.getLogger(__name__)
 
@@ -209,11 +209,58 @@ class FormFiller:
     async def _try_click_dropdown(self, input_el, page: Page) -> bool:
         try:
             await input_el.click(timeout=2000)
-            await page.wait_for_timeout(500)
-            return await self._try_dropdown_options(page, log_label="click-triggered")
         except Exception as e:
-            logger.warning("Error checking click dropdown: %s", e)
-            return False
+            # The usual cause is a *previous* field's custom dropdown leaving a
+            # full-screen mask (e.g. select2's #select2-drop-mask) over this
+            # input, which then intercepts every click for the rest of the form.
+            # Clear that mask and retry the click once; if it still fails, let the
+            # caller fall back to typing into the field.
+            if 'intercepts pointer events' not in str(e):
+                logger.warning("Error checking click dropdown: %s", e)
+                return False
+            if not await self._dismiss_dropdown_mask(page):
+                logger.warning("Click dropdown blocked by an overlay that could not be dismissed: %s", e)
+                return False
+            try:
+                await input_el.click(timeout=2000)
+            except Exception as e2:
+                logger.warning("Click dropdown still blocked after dismissing overlay: %s", e2)
+                return False
+
+        await page.wait_for_timeout(500)
+        selected = await self._try_dropdown_options(page, log_label="click-triggered")
+        if not selected:
+            # We may have opened a custom dropdown (and its blocking mask) without
+            # selecting anything. Close it now so it doesn't trap clicks on the
+            # remaining fields and passes.
+            await self._dismiss_dropdown_mask(page)
+        return selected
+
+    async def _dismiss_dropdown_mask(self, page: Page) -> bool:
+        """Close a transient full-screen dropdown mask covering the form.
+
+        Widgets like select2 open a `select2-drop-mask` overlay that intercepts
+        every pointer event until its dropdown is dismissed; once up it stays up
+        and blocks all later fields. Clicking the mask (near a corner) is exactly
+        what the widget listens for to close, so one corner click both dismisses
+        the dropdown and clears the mask. Returns True if a visible mask was found
+        and clicked. Deliberately does NOT press Escape, which could bubble up and
+        close the surrounding modal we're filling.
+        """
+        found = False
+        for selector in BACKDROP_SELECTORS:
+            try:
+                for el in await page.query_selector_all(selector):
+                    if not await el.is_visible():
+                        continue
+                    box = await el.bounding_box()
+                    if box:
+                        await page.mouse.click(box['x'] + 5, box['y'] + 5)
+                        await page.wait_for_timeout(150)
+                        found = True
+            except Exception:
+                continue
+        return found
 
     async def _try_dropdown_options(self, page: Page, log_label: str = "typing-triggered") -> bool:
         try:
