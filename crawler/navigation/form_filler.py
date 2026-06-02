@@ -5,7 +5,8 @@ import re
 from playwright.async_api import Page
 
 from config_loader import Config
-from .selectors import BACKDROP_SELECTORS, DROPDOWN_OPTION_SELECTORS
+from .element_classifier import neutralize_dropdown_masks
+from .selectors import DROPDOWN_OPTION_SELECTORS
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +76,10 @@ class FormFiller:
 
                     if not dropdown_handled:
                         try:
-                            await input_el.type(fill_value, delay=50)
+                            # Bounded timeout: if a leftover overlay still covers
+                            # this field, typing would otherwise wait the full
+                            # 30s default before giving up, stalling the whole pass.
+                            await input_el.type(fill_value, delay=50, timeout=2000)
                         except Exception:
                             pass
                         await page.wait_for_timeout(300)
@@ -88,7 +92,7 @@ class FormFiller:
                                 await page.wait_for_timeout(300)
                                 dropdown_handled = await self._try_dropdown_options(page)
                                 if not dropdown_handled:
-                                    await input_el.type(fill_value, delay=50)
+                                    await input_el.type(fill_value, delay=50, timeout=2000)
                                     await page.wait_for_timeout(300)
                             except Exception:
                                 pass
@@ -237,30 +241,16 @@ class FormFiller:
         return selected
 
     async def _dismiss_dropdown_mask(self, page: Page) -> bool:
-        """Close a transient full-screen dropdown mask covering the form.
+        """Remove a leftover full-screen dropdown mask covering the form.
 
         Widgets like select2 open a `select2-drop-mask` overlay that intercepts
         every pointer event until its dropdown is dismissed; once up it stays up
-        and blocks all later fields. Clicking the mask (near a corner) is exactly
-        what the widget listens for to close, so one corner click both dismisses
-        the dropdown and clears the mask. Returns True if a visible mask was found
-        and clicked. Deliberately does NOT press Escape, which could bubble up and
-        close the surrounding modal we're filling.
+        and blocks all later fields. We remove the mask node directly rather than
+        clicking it: a coordinate click is order-dependent and, for a modal
+        backdrop, would wrongly close the surrounding modal we're filling. Returns
+        True if a mask was removed.
         """
-        found = False
-        for selector in BACKDROP_SELECTORS:
-            try:
-                for el in await page.query_selector_all(selector):
-                    if not await el.is_visible():
-                        continue
-                    box = await el.bounding_box()
-                    if box:
-                        await page.mouse.click(box['x'] + 5, box['y'] + 5)
-                        await page.wait_for_timeout(150)
-                        found = True
-            except Exception:
-                continue
-        return found
+        return await neutralize_dropdown_masks(page) > 0
 
     async def _try_dropdown_options(self, page: Page, log_label: str = "typing-triggered") -> bool:
         try:

@@ -156,37 +156,24 @@ class TestGetElementLabel:
 
 
 class TestDismissDropdownMask:
-    async def test_clicks_visible_mask(self, filler, mock_page):
+    async def test_removes_mask_returns_true(self, filler, mock_page):
         page = mock_page()
-        mask = AsyncMock()
-        mask.is_visible = AsyncMock(return_value=True)
-        mask.bounding_box = AsyncMock(return_value={"x": 0, "y": 0, "width": 1920, "height": 1080})
-
-        # Only the first backdrop selector matches; the rest return [].
-        calls = {"n": 0}
-
-        async def qs(selector):
-            calls["n"] += 1
-            return [mask] if calls["n"] == 1 else []
-        page.query_selector_all = AsyncMock(side_effect=qs)
-
+        page.evaluate = AsyncMock(return_value=1)  # one mask node removed
         assert await filler._dismiss_dropdown_mask(page) is True
-        page.mouse.click.assert_called_once_with(5, 5)
-        # Must not press Escape (would bubble up and close the surrounding modal).
+        # DOM removal, not a coordinate click that could hit the wrong element.
+        page.mouse.click.assert_not_called()
+        # Never presses Escape (would bubble up and close the surrounding modal).
         page.keyboard.press.assert_not_called()
 
     async def test_no_mask_returns_false(self, filler, mock_page):
-        page = mock_page()  # query_selector_all defaults to []
-        assert await filler._dismiss_dropdown_mask(page) is False
-        page.mouse.click.assert_not_called()
-
-    async def test_skips_invisible_mask(self, filler, mock_page):
         page = mock_page()
-        mask = AsyncMock()
-        mask.is_visible = AsyncMock(return_value=False)
-        page.query_selector_all = AsyncMock(return_value=[mask])
+        page.evaluate = AsyncMock(return_value=0)
         assert await filler._dismiss_dropdown_mask(page) is False
-        page.mouse.click.assert_not_called()
+
+    async def test_evaluate_exception_returns_false(self, filler, mock_page):
+        page = mock_page()
+        page.evaluate = AsyncMock(side_effect=Exception("execution context destroyed"))
+        assert await filler._dismiss_dropdown_mask(page) is False
 
 
 class TestTryClickDropdown:

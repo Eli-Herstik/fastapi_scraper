@@ -1,6 +1,6 @@
 """Tests for crawler.navigation.overlay_handler.OverlayHandler."""
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from crawler.navigation.overlay_handler import OverlayHandler
 from crawler.navigation.form_filler import FormFiller
@@ -142,7 +142,58 @@ class TestFindModalContainer:
         assert await overlay._find_modal_container(page) is None
 
 
+class TestOpensBlockingDropdown:
+    async def test_true_for_select2(self, overlay):
+        el = AsyncMock()
+        el.evaluate = AsyncMock(return_value=True)
+        assert await overlay._opens_blocking_dropdown(el) is True
+
+    async def test_false_for_plain(self, overlay):
+        el = AsyncMock()
+        el.evaluate = AsyncMock(return_value=False)
+        assert await overlay._opens_blocking_dropdown(el) is False
+
+    async def test_exception_returns_false(self, overlay):
+        el = AsyncMock()
+        el.evaluate = AsyncMock(side_effect=Exception("detached"))
+        assert await overlay._opens_blocking_dropdown(el) is False
+
+
+class TestNeutralizeInHandle:
+    async def test_neutralizes_masks_before_dismiss(self, overlay, mock_page):
+        """handle() must strip a leftover dropdown mask so the dismiss selectors
+        can actually reach the modal's Close button."""
+        page = mock_page()
+        overlay._is_dismiss_only_overlay = AsyncMock(return_value=False)
+        overlay.dismiss_calendar_overlay = AsyncMock(return_value=False)
+        overlay._find_modal_container = AsyncMock(return_value=None)
+        overlay._click_affirmative_fallback = AsyncMock(return_value=False)
+        overlay._run_dismiss_selectors = AsyncMock()
+
+        with patch(
+            "crawler.navigation.overlay_handler.neutralize_dropdown_masks",
+            AsyncMock(return_value=1),
+        ) as neut:
+            await overlay.handle(page)
+
+        neut.assert_called_once()
+        overlay._run_dismiss_selectors.assert_called_once()
+
+
 class TestClickInteractiveInModal:
+    async def test_skips_select2_trigger(self, overlay, mock_page, mock_element):
+        page = mock_page()
+        modal = MagicMock()
+        trigger = mock_element(text="Choose a space")
+        trigger.is_visible = AsyncMock(return_value=True)
+        trigger.click = AsyncMock()
+        modal.query_selector_all = AsyncMock(return_value=[trigger])
+        overlay._opens_blocking_dropdown = AsyncMock(return_value=True)
+
+        result = await overlay._click_interactive_in_modal(modal, page)
+        assert result is False
+        trigger.click.assert_not_called()
+
     async def test_skips_destructive(self, overlay, mock_page, mock_element):
         page = mock_page()
         modal = MagicMock()

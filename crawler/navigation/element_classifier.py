@@ -107,6 +107,37 @@ async def is_date_picker_element(element) -> bool:
     return False
 
 
+async def neutralize_dropdown_masks(page: Page) -> int:
+    """Remove leftover custom-dropdown masks that trap pointer events.
+
+    Widgets like select2 open a full-screen ``#select2-drop-mask`` to capture the
+    next outside-click; once open it intercepts *every* click on the page —
+    including a modal's own Close button — until dismissed. Clicking the mask is
+    fragile (it depends on stacking order and the widget's own handler firing and,
+    for a modal backdrop, would wrongly close the surrounding modal), so we remove
+    the mask node outright and tidy the open-dropdown state. Returns the number of
+    mask nodes removed.
+    """
+    try:
+        return await page.evaluate('''() => {
+            let removed = 0;
+            document.querySelectorAll('#select2-drop-mask, .select2-drop-mask').forEach(e => {
+                e.remove();
+                removed++;
+            });
+            document.querySelectorAll('.select2-drop, .select2-drop-active').forEach(e => {
+                e.style.display = 'none';
+                e.classList.remove('select2-drop-active');
+            });
+            document.querySelectorAll('.select2-dropdown-open, .select2-container-active').forEach(e => {
+                e.classList.remove('select2-dropdown-open', 'select2-container-active');
+            });
+            return removed;
+        }''')
+    except Exception:
+        return 0
+
+
 async def get_clickable_elements(
     page: Page,
     max_clicks: int,

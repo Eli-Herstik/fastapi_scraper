@@ -25,6 +25,10 @@ class NavigationHandler:
         self.visited_urls: Set[str] = set()
         self.current_depth = 0
         self.clicks_on_current_page = 0
+        # Set when an intercepting modal can't be cleared by overlay handling, so
+        # the remaining clicks on the page short-circuit instead of each paying a
+        # full (and futile) overlay pass.
+        self.page_overlay_blocked = False
 
         self.dom_hasher = dom_hasher or DOMHasher()
         self.form_filler = FormFiller(config)
@@ -96,6 +100,7 @@ class NavigationHandler:
         try:
             self.current_depth = depth
             self.clicks_on_current_page = 0
+            self.page_overlay_blocked = False
             self.visited_urls.add(url)
 
             await page.goto(url, wait_until='networkidle', timeout=self.config.wait_timeout)
@@ -115,6 +120,10 @@ class NavigationHandler:
 
     async def click_element(self, page: Page, element: Locator) -> bool:
         if self.clicks_on_current_page >= self.config.max_clicks_per_page:
+            return False
+
+        if self.page_overlay_blocked:
+            logger.debug("Page blocked by an unclearable overlay; skipping click.")
             return False
 
         try:
@@ -178,7 +187,17 @@ class NavigationHandler:
             try:
                 await element.click(timeout=3000)
             except Exception:
-                await element.click(timeout=3000, force=True)
+                # Overlay handling did not clear the blocker. Re-running it for
+                # every remaining element on the page would cost a full overlay
+                # pass each (minutes on pages with a stuck widget like select2),
+                # which reads as an infinite loop. Mark the page blocked so the
+                # remaining clicks short-circuit, and move on.
+                logger.warning(
+                    "Overlay persisted after handling; marking page blocked and "
+                    "skipping its remaining clicks."
+                )
+                self.page_overlay_blocked = True
+                raise click_err
         else:
             logger.info("Click intercepted but no modal detected. Force-clicking.")
             await element.click(timeout=3000, force=True)
@@ -196,6 +215,12 @@ class NavigationHandler:
 
     def reset_page_counters(self):
         self.clicks_on_current_page = 0
+
+    def reset_overlay_state(self) -> None:
+        """Clear the per-page 'blocked by unclearable overlay' flag. Called when
+        the crawler starts exploring a page (including after a click-induced
+        navigation, which doesn't go through navigate_to)."""
+        self.page_overlay_blocked = False
 
     def can_continue_navigation(self) -> bool:
         return self.current_depth < self.config.max_depth

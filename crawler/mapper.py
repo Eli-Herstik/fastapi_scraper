@@ -152,6 +152,11 @@ class Mapper:
         if depth >= self.config.max_depth:
             return
 
+        # Fresh page: clear any 'blocked by unclearable overlay' state carried over
+        # from a previously stuck page (this path also covers click-induced
+        # navigations, which don't run through navigator.navigate_to).
+        self.navigator.reset_overlay_state()
+
         await self._ensure_authenticated(page)
 
         base_url = page.url

@@ -6,7 +6,25 @@ from crawler.navigation.element_classifier import (
     is_destructive_action,
     is_date_picker_element,
     get_clickable_elements,
+    neutralize_dropdown_masks,
 )
+
+
+class TestNeutralizeDropdownMasks:
+    async def test_returns_removed_count(self, mock_page):
+        page = mock_page()
+        page.evaluate = AsyncMock(return_value=2)
+        assert await neutralize_dropdown_masks(page) == 2
+
+    async def test_zero_when_no_mask(self, mock_page):
+        page = mock_page()
+        page.evaluate = AsyncMock(return_value=0)
+        assert await neutralize_dropdown_masks(page) == 0
+
+    async def test_swallows_exception(self, mock_page):
+        page = mock_page()
+        page.evaluate = AsyncMock(side_effect=Exception("execution context destroyed"))
+        assert await neutralize_dropdown_masks(page) == 0
 
 
 class TestIsDestructiveAction:

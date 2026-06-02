@@ -97,6 +97,7 @@ class TestNavigationHandlerState:
         assert handler.current_depth == 0
         assert handler.clicks_on_current_page == 0
         assert handler.visited_overlay_hashes == set()
+        assert handler.page_overlay_blocked is False
 
     def test_reset_page_counters(self, make_config):
         handler = NavigationHandler(make_config())
@@ -182,3 +183,61 @@ class TestClickElement:
         page = mock_page()
         assert await handler.click_element(page, el) is True
         assert handler.clicks_on_current_page == 1
+
+
+class TestOverlayBlockGuard:
+    async def test_click_skipped_when_blocked(self, make_config, mock_page):
+        handler = NavigationHandler(make_config())
+        handler.page_overlay_blocked = True
+        el = AsyncMock()
+        el.is_visible = AsyncMock(return_value=True)
+        assert await handler.click_element(mock_page(), el) is False
+        el.click.assert_not_called()
+
+    def test_reset_overlay_state(self, make_config):
+        handler = NavigationHandler(make_config())
+        handler.page_overlay_blocked = True
+        handler.reset_overlay_state()
+        assert handler.page_overlay_blocked is False
+
+    async def test_navigate_to_clears_blocked(self, make_config, mock_page):
+        handler = NavigationHandler(make_config())
+        handler.page_overlay_blocked = True
+        page = mock_page()
+        with patch.object(handler.dom_hasher, "get_dom_hash", AsyncMock(return_value="h9")):
+            await handler.navigate_to(page, "http://localhost:8080/fresh", depth=1)
+        assert handler.page_overlay_blocked is False
+
+    async def test_recover_marks_blocked_when_overlay_persists(self, make_config, mock_page):
+        """If overlay.handle() runs but the element still can't be clicked, the
+        page is marked blocked (so siblings short-circuit) and the error re-raised."""
+        handler = NavigationHandler(make_config())
+        page = mock_page()
+        element = AsyncMock()
+        element.click = AsyncMock(side_effect=Exception("retry still intercepts pointer events"))
+        handler._has_visible_modal = AsyncMock(return_value=True)
+        handler.overlay.handle = AsyncMock()
+
+        click_err = Exception(
+            '<div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events'
+        )
+        with pytest.raises(Exception):
+            await handler._recover_from_click_error(page, element, click_err)
+
+        handler.overlay.handle.assert_called_once()
+        assert handler.page_overlay_blocked is True
+
+    async def test_recover_not_blocked_when_overlay_cleared(self, make_config, mock_page):
+        handler = NavigationHandler(make_config())
+        page = mock_page()
+        element = AsyncMock()
+        element.click = AsyncMock()  # retry after handle() succeeds
+        handler._has_visible_modal = AsyncMock(return_value=True)
+        handler.overlay.handle = AsyncMock()
+
+        click_err = Exception('<div class="blocker"></div> intercepts pointer events')
+        await handler._recover_from_click_error(page, element, click_err)
+
+        handler.overlay.handle.assert_called_once()
+        element.click.assert_called_once_with(timeout=3000)
+        assert handler.page_overlay_blocked is False

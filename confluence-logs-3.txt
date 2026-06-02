@@ -1,0 +1,499 @@
+19:21:42 [INFO] crawler.mapper.Starting external-hosts mapping for: https://confluence.do
+19:21:45 [INFO] crawler.mapper: Exploring page at depth 0:https://confluence.do/#all-updates
+19:21:47 [INFO] crawler.mapper: Found 20 clickable elements
+19:22:24 [WARNING] crawler.navigation.handler: Element click intercepted by a modal. Attempting to interact with overlay..
+19:22:24 [INFO] crawler.navigation.overlay_handler: Handling overlay: attempting affirmative actions first...
+19:22:25 [INFO]crawler.navigation.overlay_handler: Modal container identified. Filling forms and searching for interactive elements...
+19:22:27 [WARNING]crawler.navigation.form_filler: Click dropdown blocked by an overlay that could not be dismissed: ElementHandle.click: Timeout 2000ms exceeded.Call log:
+-attempting click action
+2 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+- scrolling into view if needed
+-done scrolling
+<a tabindeex="-1" class="select2-choice" href="javascript:void(0)">...</a>intercepts pointer events
+-retrying click action
+-waiting 20ms
+2 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+- scrolling into view if needed
+-done scrolling
+<a tabindex="-1" class="select2-choice" href="javascript:void(0)">...</a>intercepts pointer events
+-retrying click action
+-waiting 100ms
+4 x waiting for element to be visible, enabled and stable
+-element is visible, enabled and stable
+- scrolling into view if needed
+-done scrolling
+- <a tabindex="-1" class="select2-choice" href="javascript:void(0)">...</a>intercepts pointer events
+-retrying click action
+-waiting 500ms
+19:23:51 [WARNING] crawler.navigation.form_filler: Click dropdown blocked by an overlay that could not be dismissed: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+-attempting click action
+2xwaiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+-scrolling into view if needed
+-done scrolling
+- <a tabindex="-1" class="select2-choice" href="javascript:void(0)">...⋯</a> intercepts pointer events
+-retrying click action
+-waiting 20ms
+2 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+- scrolling into view if needed
+- done scrolling
+- <a tabindex="-1" class="select2-choice"href="javascript:void(0)">...</a> intercepts pointer events
+-retrying click action
+-waiting 100ms
+4 xwaiting for element to be visible, enabled and stable 
+- element is visible, enabled and stable
+-	-scrolling into view if needed
+-	-done scrolling 
+-   -<a tabindeex="-1" class="select2-choice" href="javascript:void(0)">...</a>intercepts pointer events
+- -retrying click action
+-waiting 500ms
+19:23:59 [WARNING] crawler.navigation.overlay_handler:Could not click modal element: ElementHandle.click:Timeout 2000ms exceeded.
+Call log:
+-attempting click action
+2 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+- scrolling into view if needed
+-	-done scrolling
+- <div id="select2-drop-mask" class="select2-drop-mask"></div>intercepts pointer events
+-retrying click action
+-waiting 20ms
+2 x waiting for element to be visible, enabled and stable
+-element is visible, enabled and stable
+- scrolling into view if needed
+-done scrolling
+- <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+-retrying click action
+-waiting 100ms
+4 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+- scrolling into view if needed
+- done scrolling
+- <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+- retrying click action
+- waiting 500ms
+19:24:01 [WARNING] crawler.navigation.overlay_handler: Could not click modal element: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+-attempting click action
+2 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+-scrolling into view if needed
+- done scrolling
+- <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+-retrying click action
+-waiting 20ms
+2 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+- scrolling into view if needed
+-done scrolling
+- <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+-retrying click action
+-waiting 100ms
+4 x waiting for element to be visible, enabled and stable
+-element is visible, enabled and stable 
+-	- scrolling into view if needed
+-	-done scrolling 
+-       - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+- -retrying click action
+-	-waiting 500ms
+19:24:03 [WARNING] crawler.navigation.overlay_handler: Could not click modal element: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+-attempting click action
+2 x waiting for element to be visible, enabled and stable
+-element is visible, enabled and stable
+-scrolling into view if needed
+-done scrolling - <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+-retrying click action
+-waiting 20ms 
+2 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+-scrolling into view if needed
+-done scrolling
+- <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+-retrying click action
+-waiting 100ms
+4 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+- scrolling into view if needed
+-done scrolling
+- <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+-retrying click action
+- waiting 500ms
+
+19:24:15 [WARNING] crawler.navigation.handler: Element click intercepted by a modal.Attempting to interact with overlay...
+19:24:15 [INFO] crawler.navigation.overlay_handler: Handling overlay: attempting affirmative actions first...
+19:24:16 [INFO] crawler.navigation.overlay_handler: Modal container identified. Filling forms and searching for interactive elements...
+19:24:18 [WARNING] crawler.navigation.form_filler: Click dropdown blocked by an overlay that could not be dismissed: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+-attempting click action
+2 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+- scrolling into view if needed
+-done scrolling
+- <a tabindex="-1" class="select2-choice" href="javascript:void(0)">⋯</a>intercepts pointer events
+-retrying click action
+-waiting 20ms
+2  x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+-scrolling into view if needed
+-done scrolling
+-<a tabindex="-1" class="select2-choice" href="javascript:void(0)">...</a>intercepts pointer events 
+-retrying click action
+-waiting 100ms
+4 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+- scrolling into view if needed
+-	-done scrolling
+- <a tabindex="-1" class="select2-choice" href="javascript:void(0)">...</a>intercepts pointer events
+-retrying click action
+-waiting 500ms
+19:25:42 [WARNING] crawler.navigation.form_filler: Click dropdown blocked by an overlay that could not be dismissed: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+-attempting click action
+2 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+-scrolling into view if needed
+-done scrolling
+-<a tabindex="-1" chss="select2-choice" href="javascript:void(0)">...</a> intercepts pointer events
+-retrying click action
+-waiting 20ms
+2 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+-scrolling into view if needed
+-done scrolling
+- <a tabindex="-1" class="select2choice" href="javascript:void(0)">...</a>intercepts pointer events
+-retrying click action
+-waiting 100ms
+4 x waiting for element to be visible, enabled and stable
+-elementis visible, enabled and stable
+-scrolling into view if needed
+-done scrolling
+-<a tabindex="-1"class="select2-choice"href="javascript:void(0)">...</a>intercepts pointer events
+-retrying click action
+-waiting 500ms
+19:25:50 [WARNING] crawler.navigation.overlay_handler: Could not click modal element: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+-attempting click action
+2 x waiting for element to be visible, enabled and stable
+-element is visible, enabled and stable
+-scrolling into view if needed
+- done scrolling
+- <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+-retrying click action
+-waiting 20ms
+2 x waiting for element to be visible, enabled and stable
+-element is visible, enabled and stable
+-	- scrolling into view if needed
+-done scrolling 
+- <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+-retrying click action 
+-waiting 100ms
+4 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+- scrolling into view if needed
+- done scrolling - <div id="select2-drop-mask" class="select2-drop-mask"></div>intercepts pointer events
+- retrying click action
+- waiting 500ms
+19:25:52 [WARNING] crawler.navigation.overlay_handler:Could not click modal element: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+-attempting click action
+2 x waiting for element to be visible, enabled and stable
+-element is visible, enabled and stable
+-scrolling into view if needed
+-done scrolling
+- <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+-retrying click action
+-waiting 20ms
+2 x waiting for element to be visible, enabled and stable
+-element is visible, enabled and stable
+-scrolling into view if needed
+-done scrolling
+- <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+-retrying click action
+-waiting 100ms
+4 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+-scrolling into view if needed
+-done scrolling
+- <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+-retrying click action
+-waiting 500ms
+19:25:54 [WARNING] crawler.navigation.overlay_handler: Could not click modal element: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+-attempting click action
+2 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+-scrolling into view if needed
+-done scrolling
+- <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+-retrying click action
+-waiting 20ms
+2 x waiting for element to be visible, enabled and stable
+-element is visible, enabled and stable
+-scrolling into view if needed
+-	-done scrolling
+- <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+-retrying click action
+-waiting 100ms 
+4 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+-	-scrolling into view if needed
+-	-done scrolling
+-	-<div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+-retrying click action
+-waiting 500ms
+19:26:06 [WARNING] crawler.navigation.handler: Element click intercepted by a modal. Attempting to interact with overlay...
+19:26:06 [INFO] crawler.navigation.overlay_handler: Handling overlay: attempting affirmative actions first...
+19:26:06 [INFO] crawler.navigation.overlay_handler: Modal container identified. Filling forms and searching for interactive elements...
+19:26:09 [WARNING] crawler.navigation.form_filler: Click dropdown blocked by an overlay that could not be dismissed: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+-attempting click action
+2 x waiting for element to be visible, enabled and stable
+-element is visible, enabled and stable
+-scrolling into view if needed
+-done scrolling
+<a tabindex="-1" class="select2-choice" href="javascript:void(0)">...</a>intercepts pointer events 
+-retrying click action
+-waiting 20ms
+2 ×waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+-scrolling into view if needed
+-done scrolling
+<a tabindex="-1" class="select2-choice" href="javascript:void(0)">...</a>intercepts pointer events
+-retrying click action
+-waiting 100ms
+4 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+- scrolling into view if needed
+-done scrolling
+-<a tabindex="-1" class="select2-choice" href="javascript:void(0)">...</a>intercepts pointer events
+-retrying click action
+-waiting 500ms
+
+19:27:33 [WARNING] crawler.navigation.form_filler: Click dropdown blocked by an overlay that could not be dismissed: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+-attempting click action
+2 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+- scrolling into view if needed
+-done scrolling
+- <a tabindex="-1" class="select2-choice" href="javascript:void(0)">...</a>intercepts pointer events
+-retrying click action
+-	-waiting 20ms
+2 x waiting for element to be visible, enabled and stable
+-element is visible, enabled and stable
+- scrolling into view if needed 
+-done scrolling
+
+-retrying click action
+-waiting 100ms
+4 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+- scrolling into view if needed
+-done scrolling 
+- <a tabindex="-1" class="select2-choice" href="javascript:void(0)">⋯</a>intercepts pointer events
+- -retrying click action
+-waiting 500ms
+19:27:41 [WARNING] crawler.navigation.overlay_handler: Could not click modal element: ElementHandle.click:
+Timeout 2000ms exceeded.
+Call log:
+-attempting click action
+2 x waiting for element to be visible, enabled and stable
+-element is visible, enabled and stable
+-scrolling into view if needed
+-done scrolling
+- <div id="select2-drop-mask" class="select2-drop-mask"></div>intercepts pointer events
+-retrying click action
+-waiting 20ms
+2 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+-scrolling into view if needed
+-done scrolling
+- <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+-retrying click action
+-waiting 100ms
+4 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+-scrolling into view if needed
+-done scrolling
+- <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+-retrying click action
+-waiting 500ms
+
+19:27:43 [WARNING] crawler.navigation.overlay_handler: Could not click modal element: ElementHandle.click:
+Timeout 2000ms exceeded.
+Call log:
+-attempting click action
+2 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+-scrolling into view if needed
+-done scrolling
+- <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+-retrying click action
+-waiting 20ms
+2 x waiting for element to be visible, enabled and stable
+-	- element is visible, enabled and stable
+- scrolling into view if needed
+-done scrolling 
+- <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+-retrying click action
+-waiting 100ms
+4 x waiting for element to be visible, enabled and stable
+-	- element is visible, enabled and stable
+-	- scrolling into view if needed
+-	-done scrolling
+- <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+-retrying click action
+-waiting 500ms
+19:27:45 [WARNING] crawler.navigation.overlay_handler: Could not click modal element: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+-attempting click action
+2 x waiting for element to bevisible, enabled and stable
+-element is visible, enabled and stable
+-scrolling into view if needed
+-done scrolling
+- <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+-retrying click action
+-waiting 20ms
+2 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+-scrolling into view if needed
+-done scrolling
+- <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+- retrying click action
+-waiting 100ms
+4 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+- scrolling into view if needed
+-done scrolling
+- <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+-retrying click action
+-waiting 500ms
+
+19:27:57 [WARNING] crawler.navigation.handler: Element click intercepted by a modal. Attempting to interact with overlay...
+19:27:57 [INFO] crawler.navigation.overlay_handler: Handling overlay: attempting affirmative actions first..
+19:27:57 [INFO] crawler.navigation.overlay_handler:Modal container identified. Filling forms and searching for interactive elements...
+19:27:59 [WARNING] crawler.navigation.form_filler:Click dropdown blocked by an overlay that could not be dismissed: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+-attempting click action
+2 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+- scrolling intoview if needed
+-done scrolling 
+- <a tabindex="-1" class="select2-choice" href="javascript:void(0)">.⋯</a> intercepts pointer events
+-retrying click action
+-waiting 20ms 
+2 x waiting for element to be visible, enabled and stable
+-element is visible, enabled and stable
+- scrolling into view if needed
+- done scrolling -	
+-<a tabindeex="-1" class="select2-choice" href="javascript:void(0)">⋯</a>intercepts pointer events
+-retrying click action
+-waiting 100ms
+4 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+-scrolling into view if needed
+-done scrolling 
+<a tabindex="-1" class="select2-choice" href="javascript:void(0)">...</a>intercepts pointer events
+-retrying click action
+-waiting 500ms
+19:29:23 [WARNING] crawler.navigation.form_filler: Click dropdown blocked by an overlay that could not be dismissed: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+-attempting click action
+2 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+-scrolling into view if needed
+-done scrolling
+-	-<a tabindex="-1" class="select2-choice" href="javascript:void(0)">...</a>intercepts pointer events
+-  -retrying click action
+-waiting 20ms
+2 x waiting for element to be visible, enabled and stable
+-element is visible, enabled and stable
+- scrolling into view if needed
+-done scrolling
+-<a tabindex="-1" class="select2-choice" href="javascript:void(0)">...</a>intercepts pointer events
+-retrying click action
+-waiting 100ms
+4 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+-scrolling into view if needed
+-done scrolling
+-<a tabindex="-1" class="select2-choice" href="javascript:void(0)">...</a>intercepts pointer events
+-retrying click action
+-waiting 500ms
+19:29:31 [WARNING] crawler.navigation.overlay_handler: Could not click modal element: ElementHandle.click:
+Timeout 2000ms exceeded.
+Call log:
+-attempting click action
+2 x waiting for element to be visible, enabled and stable
+-element is visible, enabled and stable
+-scrolling into view if needed
+-done scrolling
+- <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+-retrying click action
+-waiting 20ms
+2 x waiting for element to be visible, enabled and stable 
+- element is visible, enabled and stable
+- scrolling into view if needed
+-done scrolling
+-<div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+-retrying click action
+-waiting 100ms
+-  4 x waiting for element to be visible, enabled and stable
+-element is visible, enabled and stable
+-scrolling into view if needed
+-done scrolling
+- <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+-retrying click action
+-waiting 500ms
+19:29:33 [WARNING] crawler.navigation.overlay_handler: Could not click modal element: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+-attempting click action
+2 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+-scrolling into view if needed
+-done scrolling
+- <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+-retrying click action
+-waiting 20ms
+2 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+- scrolling into view if needed
+-done scrolling
+- <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events 
+-retrying click action
+-waiting 100ms
+4 xwaiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+-scrolling into view if needed
+-	-done scrolling
+- <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events 
+-retrying click action
+-waiting 500ms
+19:29:35 [WARNING] crawler.navigation.overlay_handler: Could not click modal element: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+-attempting click action
+2 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+-scrolling into view if needed
+-done scrolling
+- <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events 
+-retrying click action
+-waiting 20ms
+2 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable 
+- scrolling into view if needed
+- done scrolling
+- <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+-retrying click action
+-waiting 100ms
+4 x waiting for element to be visible, enabled and stable
+- element is visible, enabled and stable
+- scrolling into view if needed
+-done scrolling
+- <div id="select2-drop-mask" class="select2-drop-mask"></div> intercepts pointer events
+-retrying click action
+-waiting 500ms

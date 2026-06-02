@@ -5,7 +5,7 @@ from typing import Iterable
 from playwright.async_api import Page
 
 from .dom_hasher import DOMHasher
-from .element_classifier import is_destructive_action
+from .element_classifier import is_destructive_action, neutralize_dropdown_masks
 from .form_filler import FormFiller
 from .selectors import (
     AFFIRMATIVE_ACTION_SELECTORS,
@@ -168,6 +168,12 @@ class OverlayHandler:
             if action_taken:
                 await page.wait_for_timeout(1000)
 
+            # A custom dropdown (e.g. select2) opened while filling/clicking leaves
+            # a full-screen mask that blocks the dialog's own Close button. Remove
+            # it so the dismiss selectors and Escape below can actually close the
+            # modal instead of every later click being intercepted.
+            await neutralize_dropdown_masks(page)
+
             await self._run_dismiss_selectors(page)
             await page.keyboard.press('Escape')
             await page.wait_for_timeout(500)
@@ -193,6 +199,9 @@ class OverlayHandler:
             for el in interactive_elements:
                 if not await el.is_visible():
                     continue
+                if await self._opens_blocking_dropdown(el):
+                    logger.debug("Skipping custom-dropdown trigger (would open a blocking mask)")
+                    continue
                 if await is_destructive_action(el, exclude_patterns=self.exclude_patterns):
                     continue
 
@@ -212,6 +221,21 @@ class OverlayHandler:
         except Exception as e:
             logger.error("Error exploring modal elements: %s", e)
         return action_taken
+
+    @staticmethod
+    async def _opens_blocking_dropdown(el) -> bool:
+        """Detect custom-dropdown triggers (e.g. select2's choice anchor) whose
+        click opens a full-screen mask that traps every subsequent click and
+        can't be reliably closed, stalling the whole page. Better to leave them
+        unclicked than to strand the crawler behind their mask."""
+        try:
+            return await el.evaluate('''el => {
+                if (el.closest('.select2-container, .select2-choice, [class*="select2"]')) return true;
+                const cls = (typeof el.className === 'string' ? el.className : '').toLowerCase();
+                return cls.includes('select2');
+            }''')
+        except Exception:
+            return False
 
     async def _click_affirmative_fallback(self, page: Page) -> bool:
         action_taken = False
