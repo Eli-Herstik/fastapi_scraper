@@ -128,13 +128,12 @@ class AppSummary(BaseModel):
 
 class CreateAppRequest(BaseModel):
     name: str
-    url: Optional[str] = None
+    url: str
     owner_ad_group: str
 
 
 class CreateScanRequest(BaseModel):
     app_id: str
-    url: str
     max_depth: Optional[int] = Field(default=None, ge=1, le=10)
 
 

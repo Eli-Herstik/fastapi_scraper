@@ -185,13 +185,22 @@ async def create_scan(body: CreateScanRequest, request: Request) -> CreateScanRe
         existing_app = await session.get(AppRow, body.app_id)
         if not existing_app:
             raise HTTPException(status_code=404, detail={"message": "app not found"})
+        # The scan always targets the app's own URL — it's no longer supplied per
+        # scan. Apps are created with a required URL, but guard for legacy rows
+        # that predate that rule so we never start a scrape without a start URL.
+        if not existing_app.url:
+            raise HTTPException(
+                status_code=422,
+                detail={"message": "app has no URL configured; cannot start a scan"},
+            )
         name = existing_app.name
+        start_url = existing_app.url
         session.add(
             ScanRow(
                 id=scan_id,
                 app_id=body.app_id,
                 name=name,
-                url=body.url,
+                url=start_url,
                 status="queued",
                 started_at=started_at,
                 started_by=started_by,
@@ -203,13 +212,13 @@ async def create_scan(body: CreateScanRequest, request: Request) -> CreateScanRe
 
     # Persist the seed scan_started event before responding so an immediate SSE
     # GET sees at least one event.
-    await event_bus.emit(scan_id, "scan_started", {"url": body.url, "name": name})
+    await event_bus.emit(scan_id, "scan_started", {"url": start_url, "name": name})
 
     task = asyncio.create_task(
         run_scrape_job(
             scan_id=scan_id,
             base_config=app_state.base_config,
-            start_url=body.url,
+            start_url=start_url,
             max_depth=body.max_depth,
             semaphore=app_state.semaphore,
             session_factory=factory,
