@@ -100,7 +100,7 @@ class TestDetermineFillValue:
         assert await filler._determine_fill_value(el) == "Password123!"
 
     async def test_default_for_plain_text(self, filler, mock_element):
-        assert await filler._determine_fill_value(mock_element(input_type="text", name="first")) == "Test Value"
+        assert await filler._determine_fill_value(mock_element(input_type="text", name="first")) == "Test-value-for-filling"
 
     async def test_config_default_overrides(self, make_config, mock_element):
         from config_loader import FormConfig

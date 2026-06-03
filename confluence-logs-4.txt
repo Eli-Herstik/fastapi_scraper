@@ -1,0 +1,101 @@
+15:10:40 [INFO] crawler.mapper: Starting external-hosts mapping for: https://confluence.do
+15:10:46 [INFO] crawler.mapper: Exploring page at depth 0: https://confluence.do/#all-updates
+15:10:49 [INFO] crawler.mapper: Found 20 clickable elements
+15:10:49 [DEBUG] crawler.mapper: Clicking element 1/20 of depth 0 ('Go to home page')
+15:10:54 [DEBUG] crawler.mapper: Found popup/menu with 24 interactive elements
+15:10:54 [DEBUG] crawler.mapper: Clicking popup element: 'Linked Applications'
+15:10:56 [DEBUG] crawler.mapper: Clicking popup element: 'Jira'
+15:10:58 [DEBUG] crawler.mapper: Skipping external/excluded URL: https://jira.do/secure/Dashboard.jspa
+15:11:00 [DEBUG] crawler.mapper: Clicking element 2/20 of depth 0 ('Spaces')
+15:11:03 [DEBUG] crawler.mapper: Found popup/menu with 1 interactive elements
+15:11:03 [DEBUG] crawler.mapper: Clicking popup element: 'Space directory'
+15:11:07 [DEBUG] crawler.mapper: Clicking element 3/20 of depth 0 ('Create')
+15:11:16 [DEBUG] crawler.mapper: Clicking element 4/20 of depth 0 ('Create from template')
+15:11:20 [DEBUG] crawler.mapper: Skipping already-seen overlay (hash: 93284545)
+15:11:20 [DEBUG] crawler.mapper: Clicking element 5/20 of depth 0 ('Help')
+15:11:26 [WARNING] crawler.navigation.handler: Element click intercepted by a modal. Attempting to interact
+with overlay...
+15:11:26 [INFO] crawler.navigation.overlay_handler: Handling overlay: attempting affirmative actions first...
+15:11:26 [INFO] crawler.navigation.overlay_handler: Modal container identified. Filling forms and searching for
+interactive elements...
+15:11:28 [WARNING] crawler.navigation.form_filler: Click dropdown blocked by an overlay that could not be
+dismissed: ElementHandle.click: Timeout 2000ms exceeded.
+Call log:
+- attempting click action
+-   2 × waiting for element to be visible, enabled and stable
+-     - element is visible, enabled and stable
+-     - scrolling into view if needed
+-     - done scrolling
+-     - <a tabindex="-1" class="select2-choice" href="javascript:void(0)">...</a> intercepts pointer events
+-   - retrying click action
+-   - waiting 20ms
+-   2 × waiting for element to be visible, enabled and stable
+-     - element is visible, enabled and stable
+-     - scrolling into view if needed
+-     - done scrolling
+-     - <a tabindex="-1" class="select2-choice" href="javascript:void(0)">...</a> intercepts pointer events
+-   - retrying click action
+-   - waiting 100ms
+-   4 × waiting for element to be visible, enabled and stable
+-     - element is visible, enabled and stable
+-     - scrolling into view if needed
+-     - done scrolling
+-     - <a tabindex="-1" class="select2-choice" href="javascript:void(0)">...</a> intercepts pointer events
+-   - retrying click action
+-   - waiting 500ms
+
+15:11:31 [DEBUG] crawler.navigation.form_filler: Filled form field with: Test-value-for-filling ('s2id_autogen1')
+15:11:36 [DEBUG] crawler.navigation.form_filler: Filled form field with: Test-value-for-filling ('template')
+15:11:39 [DEBUG] crawler.navigation.form_filler: Filled form field with: Test-value-for-filling ('template')
+15:11:42 [DEBUG] crawler.navigation.form_filler: Filled form field with: Test-value-for-filling ('template')
+15:11:44 [DEBUG] crawler.navigation.form_filler: Filled form field with: Test-value-for-filling ('template')
+15:11:47 [DEBUG] crawler.navigation.form_filler: Filled form field with: Test-value-for-filling ('template')
+15:11:50 [DEBUG] crawler.navigation.form_filler: Filled form field with: Test-value-for-filling ('template')
+15:11:53 [DEBUG] crawler.navigation.form_filler: Filled form field with: Test-value-for-filling ('template')
+15:11:56 [DEBUG] crawler.navigation.form_filler: Filled form field with: Test-value-for-filling ('template')
+15:11:59 [DEBUG] crawler.navigation.form_filler: Filled form field with: Test-value-for-filling ('template')
+15:12:01 [DEBUG] crawler.navigation.form_filler: Filled form field with: Test-value-for-filling ('template')
+15:12:04 [DEBUG] crawler.navigation.form_filler: Filled form field with: Test-value-for-filling ('template')
+15:12:07 [DEBUG] crawler.navigation.form_filler: Filled form field with: Test-value-for-filling ('template')
+15:12:10 [DEBUG] crawler.navigation.form_filler: Filled form field with: Test-value-for-filling ('template')
+15:12:13 [DEBUG] crawler.navigation.form_filler: Filled form field with: Test-value-for-filling ('template')
+15:12:16 [DEBUG] crawler.navigation.form_filler: Filled form field with: Test-value-for-filling ('template')
+15:12:19 [DEBUG] crawler.navigation.form_filler: Filled form field with: Test-value-for-filling ('template')
+15:12:22 [DEBUG] crawler.navigation.form_filler: Filled form field with: Test-value-for-filling ('template')
+15:12:24 [DEBUG] crawler.navigation.form_filler: Filled form field with: Test-value-for-filling ('template')
+15:12:27 [DEBUG] crawler.navigation.form_filler: Filled form field with: Test-value-for-filling ('template')
+15:12:30 [DEBUG] crawler.navigation.form_filler: Filled form field with: Test-value-for-filling ('template')
+15:12:33 [DEBUG] crawler.navigation.form_filler: Filled form field with: Test-value-for-filling ('template')
+15:12:36 [DEBUG] crawler.navigation.form_filler: Filled form field with: Test-value-for-filling ('template')
+15:12:39 [DEBUG] crawler.navigation.form_filler: Filled form field with: Test-value-for-filling ('template')
+15:12:42 [DEBUG] crawler.navigation.form_filler: Filled form field with: Test-value-for-filling ('template')
+15:12:44 [DEBUG] crawler.navigation.form_filler: Filled form field with: Test-value-for-filling ('template')
+15:12:47 [DEBUG] crawler.navigation.form_filler: Filled form field with: Test-value-for-filling ('template')
+15:12:50 [DEBUG] crawler.navigation.overlay_handler: Clicking actionable element in modal: 'Help'
+15:12:51 [DEBUG] crawler.navigation.overlay_handler: Skipping custom-dropdown trigger (would open a
+blocking mask)
+15:12:51 [DEBUG] crawler.navigation.overlay_handler: Clicking actionable element in modal: 'Create'
+15:12:53 [DEBUG] crawler.navigation.overlay_handler: Clicking dismiss action in overlay:
+button[aria-label="Close"]
+15:12:54 [DEBUG] crawler.navigation.overlay_handler: Clicking dismiss action in overlay:
+button:has-text("Close")
+15:12:59 [WARNING] crawler.mapper: Restoring state: Expected https://confluence.do/#all-updates, got
+https://confluence.do/pages/resumedraft.action?draftId=366711869&draftShareId=97636ae3-5725-41e0-54e
+8-02ed0d1a6e80&
+15:13:00 [DEBUG] crawler.mapper: Clicking element 6/20 of depth 0 ('All updates')
+15:13:03 [DEBUG] crawler.mapper: Skipping already-seen overlay (hash: 93284545)
+15:13:04 [DEBUG] crawler.mapper: Clicking element 7/20 of depth 0 ('Popular')
+15:13:07 [DEBUG] crawler.mapper: Clicking element 8/20 of depth 0 ('All')
+15:13:12 [DEBUG] crawler.mapper: Clicking element 9/20 of depth 0 ('Palantir-Support')
+15:13:22 [DEBUG] crawler.mapper: Clicking element 10/20 of depth 0 ('test-pre')
+15:13:32 [DEBUG] crawler.mapper: Clicking element 11/20 of depth 0 ('UpSkill')
+15:13:37 [DEBUG] crawler.mapper: Clicking element 12/20 of depth 0 ('Revelio')
+15:13:47 [DEBUG] crawler.mapper: Clicking element 13/20 of depth 0 ('DevSecOps')
+15:13:56 [DEBUG] crawler.mapper: Clicking element 14/20 of depth 0 ('Foundation')
+15:14:07 [DEBUG] crawler.mapper: Clicking element 15/20 of depth 0 ('DevEx Review')
+15:14:17 [DEBUG] crawler.mapper: Clicking element 16/20 of depth 0 ('IT-Support')
+15:14:27 [DEBUG] crawler.mapper: Clicking element 17/20 of depth 0 ('Tech-Team')
+15:14:31 [DEBUG] crawler.mapper: Clicking element 18/20 of depth 0 ('Dev-Team')
+15:14:36 [DEBUG] crawler.mapper: Clicking element 19/20 of depth 0 ('Dotnet-Developers')
+15:14:46 [DEBUG] crawler.mapper: Clicking element 20/20 of depth 0 ('Get-It')
+15:14:59 [INFO] crawler.mapper: Mapping complete. Found 1 unique external hosts.

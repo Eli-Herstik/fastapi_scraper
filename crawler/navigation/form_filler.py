@@ -182,7 +182,7 @@ class FormFiller:
             return False
 
     async def _determine_fill_value(self, input_el) -> str:
-        fill_value = "Test Value"
+        fill_value = "Test-value-for-filling"
 
         if self.config.form_filling.defaults:
             for selector, value in self.config.form_filling.defaults.items():
