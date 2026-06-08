@@ -90,7 +90,7 @@ class TestHandleResponse:
         result = await interceptor.handle_response(
             req_data, mock_response(401, {"www-authenticate": 'Bearer realm="api"'})
         )
-        assert "Required: OAuth/Bearer" in result["authentication"]
+        assert "Required: Bearer" in result["authentication"]
 
     async def test_401_negotiate(self, interceptor, mock_response):
         req_data = {"url": "http://a.com", "authentication": "unauthenticated"}

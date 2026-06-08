@@ -98,7 +98,7 @@ class NetworkInterceptor:
             if lower.startswith('basic'):
                 request_data['authentication'] = f"Required: Basic ({auth_challenge})"
             elif lower.startswith('bearer'):
-                request_data['authentication'] = f"Required: OAuth/Bearer ({auth_challenge})"
+                request_data['authentication'] = f"Required: Bearer ({auth_challenge})"
             elif lower.startswith('negotiate'):
                 request_data['authentication'] = f"Required: Negotiate ({auth_challenge})"
             else:
