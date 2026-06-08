@@ -1,4 +1,6 @@
 """Authentication detection: request headers, API keys, IdP redirects, auth challenges."""
+import base64
+import binascii
 from typing import Any, Dict, List, Optional
 from urllib.parse import parse_qs, urlparse
 
@@ -9,12 +11,43 @@ from urllib.parse import parse_qs, urlparse
 # for robustness against externally-supplied request dicts.
 NO_AUTH_VALUES = {"unauthenticated", "None", "anonymous"}
 
+# Mechanism signatures for classifying a "Negotiate" (SPNEGO) token by scanning
+# its decoded bytes, instead of a full ASN.1 parse. NTLM messages always begin
+# with the literal "NTLMSSP\0" magic (also present when NTLM rides inside a
+# SPNEGO mechToken); Kerberos shows up as its mech OID in DER form.
+_NTLM_SIGNATURE = b"NTLMSSP\x00"
+_KERBEROS_MECH_OIDS = (
+    bytes((0x2a, 0x86, 0x48, 0x86, 0xf7, 0x12, 0x01, 0x02, 0x02)),  # 1.2.840.113554.1.2.2  (KRB5)
+    bytes((0x2a, 0x86, 0x48, 0x82, 0xf7, 0x12, 0x01, 0x02, 0x02)),  # 1.2.840.48018.1.2.2    (MS KRB5)
+)
+
+
+def _classify_negotiate_token(token: str) -> str:
+    """Classify a SPNEGO/"Negotiate" token by scanning its bytes (no ASN.1 parse).
+
+    An embedded NTLM magic means NTLM is actively being exchanged (raw or as a
+    SPNEGO mechToken) and wins over a merely-offered Kerberos OID, since NTLM is
+    the only mechanism that changes severity. A Kerberos mech OID -> "kerberos".
+    Anything else -- including a token that isn't valid base64 -- stays in the
+    "negotiate" bucket, because the scheme is still unambiguously SPNEGO.
+    """
+    try:
+        raw = base64.b64decode(token, validate=False)
+    except (binascii.Error, ValueError):
+        return "negotiate"
+    if _NTLM_SIGNATURE in raw:
+        return "ntlm"
+    if any(oid in raw for oid in _KERBEROS_MECH_OIDS):
+        return "kerberos"
+    return "negotiate"
+
 
 def detect_authentication(headers: Dict[str, str], url: str) -> str:
     """Detect the authentication method used in the request.
 
     Returns a canonical short tag aligned with the FE's AuthMethod vocabulary:
-    "bearer", "basic", "ntlm", "kerberos", "api_key", "unknown" (an
+    "bearer", "basic", "ntlm", "kerberos", "negotiate" (SPNEGO whose underlying
+    mechanism couldn't be resolved), "api_key", "unknown" (an
     unrecognized/ambiguous scheme), or "unauthenticated" (no auth observed).
     """
     auth_header = None
@@ -30,11 +63,12 @@ def detect_authentication(headers: Dict[str, str], url: str) -> str:
             return "basic"
         if auth_header.startswith('Negotiate '):
             token = auth_header[10:].strip()
+            # Fast path: base64 of the NTLM "NTLMSSP\0" magic. Otherwise fall to
+            # a byte-signature scan that also catches NTLM/Kerberos wrapped in a
+            # SPNEGO blob, settling on "negotiate" when no mechanism is resolvable.
             if token.startswith('TlR'):
                 return "ntlm"
-            if token.startswith('YII'):
-                return "kerberos"
-            return "unknown"
+            return _classify_negotiate_token(token)
         if auth_header.startswith('NTLM '):
             return "ntlm"
         if auth_header.startswith('Kerberos '):

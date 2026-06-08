@@ -5,15 +5,11 @@ from typing import Any, Dict, List
 from .models import AuthMethod, Severity
 
 
-_NTLM_TOKEN_PREFIX = "TlR"
-_KERBEROS_TOKEN_PREFIX = "YII"
-
-
 def normalize_auth_method(raw: str) -> AuthMethod:
     """Map the scraper's freeform authentication string to the FE enum.
 
     Scraper sources:
-    - auth_analyzer.detect_authentication() — short tags: ntlm, kerberos, basic, bearer, api_key, unknown, unauthenticated
+    - auth_analyzer.detect_authentication() — short tags: ntlm, kerberos, negotiate, basic, bearer, api_key, unknown, unauthenticated
     - interceptor._apply_auth_challenge() — "Required: Basic ...", "Required: OAuth/Bearer ...", "Required: Negotiate ..."
     - interceptor._apply_idp_redirect() — "IdP Redirect: <provider>"
     """
@@ -27,11 +23,11 @@ def normalize_auth_method(raw: str) -> AuthMethod:
     if "kerberos" in lower:
         return AuthMethod.kerberos
     if "negotiate" in lower:
-        if _NTLM_TOKEN_PREFIX.lower() in lower:
-            return AuthMethod.ntlm
-        if _KERBEROS_TOKEN_PREFIX.lower() in lower:
-            return AuthMethod.kerberos
-        return AuthMethod.unknown
+        # SPNEGO with no resolvable concrete mechanism. detect_authentication
+        # already resolves NTLM/Kerberos to their own tags upstream (byte scan),
+        # and a raw "NTLM"/"Kerberos" challenge is caught above, so what reaches
+        # here is a bare "WWW-Authenticate: Negotiate" 401 or the "negotiate" tag.
+        return AuthMethod.negotiate
 
     if "idp redirect" in lower or "oauth2" in lower or "/oidc" in lower:
         return AuthMethod.oauth2
@@ -51,7 +47,7 @@ def normalize_auth_method(raw: str) -> AuthMethod:
 def severity_for(method: AuthMethod) -> Severity:
     if method == AuthMethod.ntlm:
         return Severity.blocker
-    if method in (AuthMethod.kerberos, AuthMethod.unknown):
+    if method in (AuthMethod.negotiate, AuthMethod.unknown):
         return Severity.review
     return Severity.cleared
 
