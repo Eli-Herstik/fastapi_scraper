@@ -3,8 +3,20 @@ from typing import Any, Dict, List, Optional
 from urllib.parse import parse_qs, urlparse
 
 
+# Authentication values that represent "no auth observed". Shared with the
+# interceptor's 401-challenge handling and the aggregation priority logic so the
+# definition of "no auth" stays in one place. "None"/"anonymous" are tolerated
+# for robustness against externally-supplied request dicts.
+NO_AUTH_VALUES = {"unauthenticated", "None", "anonymous"}
+
+
 def detect_authentication(headers: Dict[str, str], url: str) -> str:
-    """Detect the authentication method used in the request."""
+    """Detect the authentication method used in the request.
+
+    Returns a canonical short tag aligned with the FE's AuthMethod vocabulary:
+    "bearer", "basic", "ntlm", "kerberos", "api_key", "session", "unknown" (an
+    unrecognized/ambiguous scheme), or "unauthenticated" (no auth observed).
+    """
     auth_header = None
     for k, v in headers.items():
         if k.lower() == 'authorization':
@@ -13,40 +25,40 @@ def detect_authentication(headers: Dict[str, str], url: str) -> str:
 
     if auth_header:
         if auth_header.startswith('Bearer '):
-            return "OAuth (Bearer)"
+            return "bearer"
         if auth_header.startswith('Basic '):
-            return "Basic Auth"
+            return "basic"
         if auth_header.startswith('Negotiate '):
             token = auth_header[10:].strip()
             if token.startswith('TlR'):
-                return "NTLM (Negotiate)"
+                return "ntlm"
             if token.startswith('YII'):
-                return "Kerberos (Negotiate)"
-            return "Negotiate (Unknown)"
+                return "kerberos"
+            return "unknown"
         if auth_header.startswith('NTLM '):
-            return "NTLM"
+            return "ntlm"
         if auth_header.startswith('Kerberos '):
-            return "Kerberos"
-        return f"Unknown Authorization ({auth_header.split(' ')[0]})"
+            return "kerberos"
+        return "unknown"
 
     api_key_headers = [
         'x-api-key', 'x-auth-token', 'x-auth', 'api-key', 'apikey', 'auth-token'
     ]
     for k in headers:
         if k.lower() in api_key_headers:
-            return f"API Key ({k})"
+            return "api_key"
 
     parsed_url = urlparse(url)
     query_params = parse_qs(parsed_url.query)
     api_key_params = ['api_key', 'apikey', 'key', 'auth_token', 'token']
     for param in api_key_params:
         if param in query_params:
-            return f"API Key (Query Param: {param})"
+            return "api_key"
 
     if 'cookie' in headers or 'Cookie' in headers:
-        return "Cookie / Session"
+        return "session"
 
-    return "None"
+    return "unauthenticated"
 
 
 def detect_idp_redirect(location: str) -> Optional[str]:
@@ -111,7 +123,7 @@ def aggregate_by_host(requests: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         if not host:
             continue
 
-        current_auth = req.get('authentication', 'None')
+        current_auth = req.get('authentication', 'unauthenticated')
 
         if host not in result_map:
             entry = {
@@ -127,12 +139,14 @@ def aggregate_by_host(requests: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         entry['request_count'] = int(entry.get('request_count', 1)) + 1
 
         existing_auth = entry['authentication']
-        # Priority: Actual Auth > Required Auth > None
+        # Priority: Actual Auth > Required Auth > unauthenticated.
+        # "Required: ..." challenge strings come from the interceptor and stay
+        # verbose; detect_authentication's value is a short tag (e.g. "bearer").
         replaced = False
-        if existing_auth in ['None', 'anonymous'] and current_auth not in ['None', 'anonymous']:
+        if existing_auth in NO_AUTH_VALUES and current_auth not in NO_AUTH_VALUES:
             entry['authentication'] = current_auth
             replaced = True
-        elif "Required" in existing_auth and "OAuth" in current_auth:
+        elif "Required" in existing_auth and current_auth == "bearer":
             entry['authentication'] = current_auth
             replaced = True
 

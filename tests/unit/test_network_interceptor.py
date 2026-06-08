@@ -64,7 +64,7 @@ class TestHandleRequest:
         result = await interceptor.handle_request(req)
         assert result["url"] == "http://api.example.com/v1/test"
         assert result["method"] == "GET"
-        assert result["authentication"] == "OAuth (Bearer)"
+        assert result["authentication"] == "bearer"
         assert result["source_url"] == "http://example.com"
         assert result["navigation_depth"] == 1
         assert "timestamp" in result
@@ -73,87 +73,87 @@ class TestHandleRequest:
 
 class TestHandleResponse:
     async def test_200(self, interceptor, mock_response):
-        req_data = {"url": "http://a.com", "authentication": "None"}
+        req_data = {"url": "http://a.com", "authentication": "unauthenticated"}
         result = await interceptor.handle_response(req_data, mock_response(200))
         assert result["response"]["status"] == 200
         assert len(interceptor.requests) == 1
 
     async def test_401_basic(self, interceptor, mock_response):
-        req_data = {"url": "http://a.com", "authentication": "None"}
+        req_data = {"url": "http://a.com", "authentication": "unauthenticated"}
         result = await interceptor.handle_response(
             req_data, mock_response(401, {"www-authenticate": 'Basic realm="test"'})
         )
         assert "Required: Basic" in result["authentication"]
 
     async def test_401_bearer(self, interceptor, mock_response):
-        req_data = {"url": "http://a.com", "authentication": "None"}
+        req_data = {"url": "http://a.com", "authentication": "unauthenticated"}
         result = await interceptor.handle_response(
             req_data, mock_response(401, {"www-authenticate": 'Bearer realm="api"'})
         )
         assert "Required: OAuth/Bearer" in result["authentication"]
 
     async def test_401_negotiate(self, interceptor, mock_response):
-        req_data = {"url": "http://a.com", "authentication": "None"}
+        req_data = {"url": "http://a.com", "authentication": "unauthenticated"}
         result = await interceptor.handle_response(
             req_data, mock_response(401, {"www-authenticate": "Negotiate"})
         )
         assert "Required: Negotiate" in result["authentication"]
 
     async def test_401_unknown_scheme(self, interceptor, mock_response):
-        req_data = {"url": "http://a.com", "authentication": "None"}
+        req_data = {"url": "http://a.com", "authentication": "unauthenticated"}
         result = await interceptor.handle_response(
             req_data, mock_response(401, {"www-authenticate": 'Digest realm="t"'})
         )
         assert "Required: Digest" in result["authentication"]
 
     async def test_401_without_header(self, interceptor, mock_response):
-        req_data = {"url": "http://a.com", "authentication": "None"}
+        req_data = {"url": "http://a.com", "authentication": "unauthenticated"}
         result = await interceptor.handle_response(req_data, mock_response(401, {}))
-        assert result["authentication"] == "None"
+        assert result["authentication"] == "unauthenticated"
 
     async def test_401_does_not_overwrite_existing_auth(self, interceptor, mock_response):
-        req_data = {"url": "http://a.com", "authentication": "OAuth (Bearer)"}
+        req_data = {"url": "http://a.com", "authentication": "bearer"}
         result = await interceptor.handle_response(
             req_data, mock_response(401, {"www-authenticate": "Basic"})
         )
-        assert result["authentication"] == "OAuth (Bearer)"
+        assert result["authentication"] == "bearer"
 
     async def test_302_idp(self, interceptor, mock_response):
-        req_data = {"url": "http://a.com", "authentication": "None"}
+        req_data = {"url": "http://a.com", "authentication": "unauthenticated"}
         result = await interceptor.handle_response(
             req_data, mock_response(302, {"location": "https://x.auth0.com/authorize"})
         )
         assert result["authentication"] == "IdP Redirect: Auth0"
 
     async def test_307_idp(self, interceptor, mock_response):
-        req_data = {"url": "http://a.com", "authentication": "None"}
+        req_data = {"url": "http://a.com", "authentication": "unauthenticated"}
         result = await interceptor.handle_response(
             req_data, mock_response(307, {"location": "https://login.microsoftonline.com/t/oauth2"})
         )
         assert result["authentication"] == "IdP Redirect: Azure AD"
 
     async def test_301_non_idp(self, interceptor, mock_response):
-        req_data = {"url": "http://a.com", "authentication": "None"}
+        req_data = {"url": "http://a.com", "authentication": "unauthenticated"}
         result = await interceptor.handle_response(
             req_data, mock_response(301, {"location": "https://example.com/new"})
         )
-        assert result["authentication"] == "None"
+        assert result["authentication"] == "unauthenticated"
 
     async def test_none_response(self, interceptor):
-        req_data = {"url": "http://a.com", "authentication": "None"}
+        req_data = {"url": "http://a.com", "authentication": "unauthenticated"}
         result = await interceptor.handle_response(req_data, None)
         assert result["response"]["status"] == 0
         assert "error" in result["response"]
 
     async def test_none_response_not_duplicated(self, interceptor):
-        req_data = {"url": "http://a.com", "authentication": "None"}
+        req_data = {"url": "http://a.com", "authentication": "unauthenticated"}
         await interceptor.handle_response(req_data, None)
         await interceptor.handle_response(req_data, None)
         assert interceptor.requests.count(req_data) == 1
 
     async def test_appended_to_list(self, interceptor, mock_response):
         for i in range(3):
-            req_data = {"url": f"http://a.com/{i}", "authentication": "None"}
+            req_data = {"url": f"http://a.com/{i}", "authentication": "unauthenticated"}
             await interceptor.handle_response(req_data, mock_response(200))
         assert len(interceptor.requests) == 3
 

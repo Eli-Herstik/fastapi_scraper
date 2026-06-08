@@ -93,7 +93,7 @@ class NetworkInterceptor:
         if not auth_challenge:
             return
         response_data['auth_challenge'] = auth_challenge
-        if request_data.get('authentication', 'None') in ['None', 'anonymous']:
+        if request_data.get('authentication', 'unauthenticated') in auth_analyzer.NO_AUTH_VALUES:
             lower = auth_challenge.lower()
             if lower.startswith('basic'):
                 request_data['authentication'] = f"Required: Basic ({auth_challenge})"

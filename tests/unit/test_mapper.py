@@ -37,8 +37,8 @@ class TestMapWebsite:
         m._ensure_authenticated = AsyncMock()
         m._explore_page = AsyncMock()
         m.interceptor.requests = [
-            {"url": "http://api.example.com/x", "authentication": "OAuth (Bearer)"},
-            {"url": "http://other.com/y", "authentication": "None"},
+            {"url": "http://api.example.com/x", "authentication": "bearer"},
+            {"url": "http://other.com/y", "authentication": "unauthenticated"},
         ]
         result = await m.map_website()
         hosts = {e["host"] for e in result["external_hosts"]}

@@ -9,73 +9,73 @@ from crawler.network.auth_analyzer import (
 
 class TestDetectAuthentication:
     def test_bearer(self):
-        assert detect_authentication({"authorization": "Bearer abc"}, "http://x") == "OAuth (Bearer)"
+        assert detect_authentication({"authorization": "Bearer abc"}, "http://x") == "bearer"
 
     def test_bearer_empty_token(self):
-        assert detect_authentication({"authorization": "Bearer "}, "http://x") == "OAuth (Bearer)"
+        assert detect_authentication({"authorization": "Bearer "}, "http://x") == "bearer"
 
     def test_basic(self):
-        assert detect_authentication({"authorization": "Basic dXNlcg=="}, "http://x") == "Basic Auth"
+        assert detect_authentication({"authorization": "Basic dXNlcg=="}, "http://x") == "basic"
 
     def test_negotiate_ntlm(self):
-        assert detect_authentication({"authorization": "Negotiate TlRMTVNTUAAB"}, "http://x") == "NTLM (Negotiate)"
+        assert detect_authentication({"authorization": "Negotiate TlRMTVNTUAAB"}, "http://x") == "ntlm"
 
     def test_negotiate_kerberos(self):
-        assert detect_authentication({"authorization": "Negotiate YIIGfAY"}, "http://x") == "Kerberos (Negotiate)"
+        assert detect_authentication({"authorization": "Negotiate YIIGfAY"}, "http://x") == "kerberos"
 
     def test_negotiate_unknown(self):
-        assert detect_authentication({"authorization": "Negotiate xyz123"}, "http://x") == "Negotiate (Unknown)"
+        assert detect_authentication({"authorization": "Negotiate xyz123"}, "http://x") == "unknown"
 
     def test_ntlm_direct(self):
-        assert detect_authentication({"authorization": "NTLM abc"}, "http://x") == "NTLM"
+        assert detect_authentication({"authorization": "NTLM abc"}, "http://x") == "ntlm"
 
     def test_kerberos_direct(self):
-        assert detect_authentication({"authorization": "Kerberos abc"}, "http://x") == "Kerberos"
+        assert detect_authentication({"authorization": "Kerberos abc"}, "http://x") == "kerberos"
 
     def test_unknown_scheme(self):
-        assert detect_authentication({"authorization": "Digest abc"}, "http://x") == "Unknown Authorization (Digest)"
+        assert detect_authentication({"authorization": "Digest abc"}, "http://x") == "unknown"
 
     def test_case_insensitive_header_key(self):
-        assert detect_authentication({"Authorization": "Bearer abc"}, "http://x") == "OAuth (Bearer)"
+        assert detect_authentication({"Authorization": "Bearer abc"}, "http://x") == "bearer"
 
     @pytest.mark.parametrize("header", [
         "x-api-key", "x-auth-token", "x-auth", "api-key", "apikey", "auth-token"
     ])
     def test_api_key_headers(self, header):
         result = detect_authentication({header: "k"}, "http://x")
-        assert result == f"API Key ({header})"
+        assert result == "api_key"
 
     @pytest.mark.parametrize("param", ["api_key", "apikey", "key", "auth_token", "token"])
     def test_api_key_query_params(self, param):
         url = f"http://api.example.com/v1?{param}=abc"
-        assert detect_authentication({}, url) == f"API Key (Query Param: {param})"
+        assert detect_authentication({}, url) == "api_key"
 
     def test_cookie_lowercase(self):
-        assert detect_authentication({"cookie": "sid=abc"}, "http://x") == "Cookie / Session"
+        assert detect_authentication({"cookie": "sid=abc"}, "http://x") == "session"
 
     def test_cookie_capital(self):
-        assert detect_authentication({"Cookie": "sid=abc"}, "http://x") == "Cookie / Session"
+        assert detect_authentication({"Cookie": "sid=abc"}, "http://x") == "session"
 
     def test_no_auth(self):
-        assert detect_authentication({}, "http://x") == "None"
+        assert detect_authentication({}, "http://x") == "unauthenticated"
 
     def test_auth_header_priority_over_api_key(self):
         assert detect_authentication(
             {"authorization": "Bearer abc", "x-api-key": "k"}, "http://x"
-        ) == "OAuth (Bearer)"
+        ) == "bearer"
 
     def test_api_key_priority_over_cookie(self):
         assert detect_authentication(
             {"x-api-key": "k", "cookie": "sid=abc"}, "http://x"
-        ) == "API Key (x-api-key)"
+        ) == "api_key"
 
     def test_api_key_header_priority_over_query_param(self):
         assert detect_authentication(
             {"x-api-key": "k"}, "http://x?api_key=abc"
-        ) == "API Key (x-api-key)"
+        ) == "api_key"
 
     def test_non_matching_query_params(self):
-        assert detect_authentication({}, "http://x?user=a&page=1") == "None"
+        assert detect_authentication({}, "http://x?user=a&page=1") == "unauthenticated"
 
 
 class TestDetectIdpRedirect:
@@ -110,17 +110,17 @@ class TestDetectIdpRedirect:
 
 class TestAggregateByHost:
     def test_single_host(self):
-        reqs = [{"url": "http://a.com/x", "authentication": "OAuth (Bearer)"}]
+        reqs = [{"url": "http://a.com/x", "authentication": "bearer"}]
         result = aggregate_by_host(reqs)
         assert len(result) == 1
         assert result[0]["host"] == "a.com"
-        assert result[0]["authentication"] == "OAuth (Bearer)"
+        assert result[0]["authentication"] == "bearer"
 
     def test_groups_by_host(self):
         reqs = [
-            {"url": "http://a.com/1", "authentication": "None"},
-            {"url": "http://a.com/2", "authentication": "None"},
-            {"url": "http://b.com/1", "authentication": "OAuth (Bearer)"},
+            {"url": "http://a.com/1", "authentication": "unauthenticated"},
+            {"url": "http://a.com/2", "authentication": "unauthenticated"},
+            {"url": "http://b.com/1", "authentication": "bearer"},
         ]
         result = aggregate_by_host(reqs)
         hosts = {e["host"] for e in result}
@@ -128,36 +128,36 @@ class TestAggregateByHost:
 
     def test_upgrades_from_none_to_actual(self):
         reqs = [
-            {"url": "http://a.com/1", "authentication": "None"},
-            {"url": "http://a.com/2", "authentication": "OAuth (Bearer)"},
+            {"url": "http://a.com/1", "authentication": "unauthenticated"},
+            {"url": "http://a.com/2", "authentication": "bearer"},
         ]
         result = aggregate_by_host(reqs)
-        assert result[0]["authentication"] == "OAuth (Bearer)"
+        assert result[0]["authentication"] == "bearer"
 
     def test_upgrades_from_required_to_oauth(self):
         reqs = [
             {"url": "http://a.com/1", "authentication": "Required: Basic (...)"},
-            {"url": "http://a.com/2", "authentication": "OAuth (Bearer)"},
+            {"url": "http://a.com/2", "authentication": "bearer"},
         ]
         result = aggregate_by_host(reqs)
-        assert result[0]["authentication"] == "OAuth (Bearer)"
+        assert result[0]["authentication"] == "bearer"
 
     def test_keeps_better_auth(self):
         reqs = [
-            {"url": "http://a.com/1", "authentication": "OAuth (Bearer)"},
-            {"url": "http://a.com/2", "authentication": "None"},
+            {"url": "http://a.com/1", "authentication": "bearer"},
+            {"url": "http://a.com/2", "authentication": "unauthenticated"},
         ]
         result = aggregate_by_host(reqs)
-        assert result[0]["authentication"] == "OAuth (Bearer)"
+        assert result[0]["authentication"] == "bearer"
 
     def test_skips_requests_without_host(self):
-        reqs = [{"url": "not-a-url", "authentication": "None"}]
+        reqs = [{"url": "not-a-url", "authentication": "unauthenticated"}]
         assert aggregate_by_host(reqs) == []
 
-    def test_missing_authentication_defaults_to_none(self):
+    def test_missing_authentication_defaults_to_unauthenticated(self):
         reqs = [{"url": "http://a.com/x"}]
         result = aggregate_by_host(reqs)
-        assert result[0]["authentication"] == "None"
+        assert result[0]["authentication"] == "unauthenticated"
 
     def test_empty_input(self):
         assert aggregate_by_host([]) == []
