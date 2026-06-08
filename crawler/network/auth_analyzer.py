@@ -14,7 +14,7 @@ def detect_authentication(headers: Dict[str, str], url: str) -> str:
     """Detect the authentication method used in the request.
 
     Returns a canonical short tag aligned with the FE's AuthMethod vocabulary:
-    "bearer", "basic", "ntlm", "kerberos", "api_key", "session", "unknown" (an
+    "bearer", "basic", "ntlm", "kerberos", "api_key", "unknown" (an
     unrecognized/ambiguous scheme), or "unauthenticated" (no auth observed).
     """
     auth_header = None
@@ -54,9 +54,6 @@ def detect_authentication(headers: Dict[str, str], url: str) -> str:
     for param in api_key_params:
         if param in query_params:
             return "api_key"
-
-    if 'cookie' in headers or 'Cookie' in headers:
-        return "session"
 
     return "unauthenticated"
 

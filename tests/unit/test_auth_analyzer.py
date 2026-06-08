@@ -50,11 +50,11 @@ class TestDetectAuthentication:
         url = f"http://api.example.com/v1?{param}=abc"
         assert detect_authentication({}, url) == "api_key"
 
-    def test_cookie_lowercase(self):
-        assert detect_authentication({"cookie": "sid=abc"}, "http://x") == "session"
+    def test_cookie_lowercase_ignored(self):
+        assert detect_authentication({"cookie": "sid=abc"}, "http://x") == "unauthenticated"
 
-    def test_cookie_capital(self):
-        assert detect_authentication({"Cookie": "sid=abc"}, "http://x") == "session"
+    def test_cookie_capital_ignored(self):
+        assert detect_authentication({"Cookie": "sid=abc"}, "http://x") == "unauthenticated"
 
     def test_no_auth(self):
         assert detect_authentication({}, "http://x") == "unauthenticated"
