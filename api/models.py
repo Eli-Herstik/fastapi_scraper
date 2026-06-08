@@ -16,7 +16,7 @@ class AuthMethod(str, Enum):
     ntlm = "ntlm"
     kerberos = "kerberos"
     negotiate = "negotiate"
-    oauth2 = "oauth2"
+    oauth = "oauth"
     basic = "basic"
     bearer = "bearer"
     mtls = "mtls"

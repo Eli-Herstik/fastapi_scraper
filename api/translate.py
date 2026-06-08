@@ -30,7 +30,7 @@ def normalize_auth_method(raw: str) -> AuthMethod:
         return AuthMethod.negotiate
 
     if "idp redirect" in lower or "oauth2" in lower or "/oidc" in lower:
-        return AuthMethod.oauth2
+        return AuthMethod.oauth
 
     if "bearer" in lower:
         return AuthMethod.bearer
