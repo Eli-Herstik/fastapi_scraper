@@ -123,14 +123,14 @@ class TestHandleResponse:
         result = await interceptor.handle_response(
             req_data, mock_response(302, {"location": "https://x.auth0.com/authorize"})
         )
-        assert result["authentication"] == "IdP Redirect: Auth0"
+        assert result["authentication"] == "oauth: Auth0"
 
     async def test_307_idp(self, interceptor, mock_response):
         req_data = {"url": "http://a.com", "authentication": "unauthenticated"}
         result = await interceptor.handle_response(
             req_data, mock_response(307, {"location": "https://login.microsoftonline.com/t/oauth2"})
         )
-        assert result["authentication"] == "IdP Redirect: Azure AD"
+        assert result["authentication"] == "oauth: Azure AD"
 
     async def test_301_non_idp(self, interceptor, mock_response):
         req_data = {"url": "http://a.com", "authentication": "unauthenticated"}

@@ -11,7 +11,7 @@ def normalize_auth_method(raw: str) -> AuthMethod:
     Scraper sources:
     - auth_analyzer.detect_authentication() — short tags: ntlm, kerberos, negotiate, basic, bearer, api_key, unknown, unauthenticated
     - interceptor._apply_auth_challenge() — "Required: Basic ...", "Required: Bearer ...", "Required: Negotiate ..."
-    - interceptor._apply_idp_redirect() — "IdP Redirect: <provider>"
+    - interceptor._apply_idp_redirect() — "oauth: <provider>"
     """
     if not raw:
         return AuthMethod.unknown
@@ -29,7 +29,7 @@ def normalize_auth_method(raw: str) -> AuthMethod:
         # here is a bare "WWW-Authenticate: Negotiate" 401 or the "negotiate" tag.
         return AuthMethod.negotiate
 
-    if "idp redirect" in lower or "oauth2" in lower or "/oidc" in lower:
+    if "oauth" in lower or "/oidc" in lower:
         return AuthMethod.oauth
 
     if "bearer" in lower:

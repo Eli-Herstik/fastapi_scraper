@@ -111,7 +111,7 @@ class NetworkInterceptor:
         idp = auth_analyzer.detect_idp_redirect(location)
         if idp:
             response_data['idp_redirect'] = idp
-            request_data['authentication'] = f"IdP Redirect: {idp}"
+            request_data['authentication'] = f"oauth: {idp}"
 
     @staticmethod
     def _get_header_value(headers: Dict[str, str], name: str) -> Optional[str]:
