@@ -132,6 +132,7 @@ class TestPerformLogin:
         )
         page = AsyncMock()
         page.url = "http://x/login"
+        page.goto.return_value = MagicMock(status=200)
         ctx = AsyncMock()
         page.context = ctx
 
@@ -142,6 +143,7 @@ class TestPerformLogin:
         page.fill.assert_any_call("#p", "p")
         page.click.assert_called_with("#go")
         page.wait_for_url.assert_called_once()
+        page.goto.assert_called_once_with("http://x/home")
         ctx.storage_state.assert_called_with(path=storage_path)
 
         predicate = page.wait_for_url.call_args[0][0]
@@ -161,3 +163,27 @@ class TestPerformLogin:
 
         with pytest.raises(RuntimeError, match="did not land back"):
             await perform_login(page, cfg, "http://x/home")
+
+    async def test_raises_when_unauthorized(self, tmp_path):
+        cfg = _make_login_cfg(storage_state_path=str(tmp_path / "s.json"))
+        page = AsyncMock()
+        page.url = "http://x/login"
+        page.goto.return_value = MagicMock(status=403)
+        ctx = AsyncMock()
+        page.context = ctx
+
+        with pytest.raises(RuntimeError, match="HTTP 403"):
+            await perform_login(page, cfg, "http://x/home")
+        ctx.storage_state.assert_not_called()
+
+    async def test_tolerates_missing_goto_response(self, tmp_path):
+        storage_path = str(tmp_path / "s.json")
+        cfg = _make_login_cfg(storage_state_path=storage_path)
+        page = AsyncMock()
+        page.url = "http://x/login"
+        page.goto.return_value = None
+        ctx = AsyncMock()
+        page.context = ctx
+
+        await perform_login(page, cfg, "http://x/home")
+        ctx.storage_state.assert_called_with(path=storage_path)

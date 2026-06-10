@@ -70,7 +70,10 @@ async def perform_login(page: Page, cfg: LoginConfig, app_url: str) -> None:
 
     Waits until the URL is back on `app_url`'s origin and off the login URL —
     an off-origin SSO/IdP hop keeps the wait pending until the redirect back —
-    then persists the resulting session to `cfg.storage_state_path`.
+    then re-navigates to `app_url` to verify the session is authorized (the
+    document response must not be an error status) before persisting it to
+    `cfg.storage_state_path`. This also normalizes where the crawl resumes:
+    on `app_url` itself rather than wherever the login redirect chain landed.
     """
     logger.info("Performing login at %s", page.url)
 
@@ -91,6 +94,12 @@ async def perform_login(page: Page, cfg: LoginConfig, app_url: str) -> None:
         await page.wait_for_load_state("networkidle", timeout=cfg.post_login_wait_ms + 5000)
     except PlaywrightTimeoutError:
         logger.debug("networkidle wait timed out after login; continuing")
+
+    response = await page.goto(app_url)
+    if response is not None and response.status >= 400:
+        raise RuntimeError(
+            f"Login completed but {app_url} returned HTTP {response.status}"
+        )
 
     await page.context.storage_state(path=cfg.storage_state_path)
     logger.info("Login successful; storage_state saved to %s", cfg.storage_state_path)
