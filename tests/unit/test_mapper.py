@@ -73,7 +73,7 @@ class TestEnsureAuthenticated:
         page.url = "http://x/login"
         with patch("crawler.mapper.perform_login", AsyncMock()) as pl:
             await m._ensure_authenticated(page)
-            pl.assert_called_once_with(page, cfg.login)
+            pl.assert_called_once_with(page, cfg.login, cfg.start_url)
 
 
 class TestCleanup:

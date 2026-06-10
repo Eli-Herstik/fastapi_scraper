@@ -2,6 +2,7 @@
 import json
 import logging
 import os
+from urllib.parse import urlparse
 
 from playwright.async_api import Page, TimeoutError as PlaywrightTimeoutError
 
@@ -10,8 +11,21 @@ from config_loader import LoginConfig
 logger = logging.getLogger(__name__)
 
 
+def _origin(url: str) -> tuple:
+    parsed = urlparse(url)
+    return (parsed.scheme.lower(), parsed.netloc.lower())
+
+
+def _is_login_url(url: str, cfg: LoginConfig) -> bool:
+    if _origin(url) != _origin(cfg.login_url):
+        return False
+    path = urlparse(url).path.rstrip('/')
+    login_path = urlparse(cfg.login_url).path.rstrip('/')
+    return path == login_path or path.startswith(login_path + '/')
+
+
 def is_on_login_page(page: Page, cfg: LoginConfig) -> bool:
-    return page.url.startswith(cfg.login_url)
+    return _is_login_url(page.url, cfg)
 
 
 def storage_state_valid(cfg: LoginConfig) -> bool:
@@ -26,23 +40,27 @@ def storage_state_valid(cfg: LoginConfig) -> bool:
         return False
 
 
-async def perform_login(page: Page, cfg: LoginConfig) -> None:
+async def perform_login(page: Page, cfg: LoginConfig, app_url: str) -> None:
     """Drive the login flow on `page`, which is already sitting on the login URL.
 
-    Waits for the URL to leave `cfg.login_url` (covering SSO round-trips), then
-    persists the resulting session to `cfg.storage_state_path`.
+    Waits until the URL is back on `app_url`'s origin and off the login URL —
+    an off-origin SSO/IdP hop keeps the wait pending until the redirect back —
+    then persists the resulting session to `cfg.storage_state_path`.
     """
     logger.info("Performing login at %s", page.url)
 
+    app_origin = _origin(app_url)
     await _fill_and_submit(page, cfg)
 
     try:
         await page.wait_for_url(
-            lambda url: not url.startswith(cfg.login_url),
+            lambda url: _origin(url) == app_origin and not _is_login_url(url, cfg),
             timeout=cfg.post_login_wait_ms + 30000,
         )
     except PlaywrightTimeoutError as e:
-        raise RuntimeError(f"Login did not redirect away from {cfg.login_url}") from e
+        raise RuntimeError(
+            f"Login did not land back on {app_url} away from {cfg.login_url}"
+        ) from e
 
     try:
         await page.wait_for_load_state("networkidle", timeout=cfg.post_login_wait_ms + 5000)

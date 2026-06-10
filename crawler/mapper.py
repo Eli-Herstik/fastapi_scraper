@@ -135,7 +135,7 @@ class Mapper:
             return
 
         try:
-            await perform_login(page, cfg)
+            await perform_login(page, cfg, self.config.start_url)
         except Exception as e:
             if not self._used_reused_storage:
                 raise
@@ -146,7 +146,7 @@ class Mapper:
                 pass
             self._used_reused_storage = False
             await page.goto(cfg.login_url, wait_until='load', timeout=self.config.wait_timeout)
-            await perform_login(page, cfg)
+            await perform_login(page, cfg, self.config.start_url)
 
     async def _explore_page(self, page: Page, depth: int) -> None:
         if depth >= self.config.max_depth:

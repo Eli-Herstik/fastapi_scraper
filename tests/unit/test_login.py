@@ -37,6 +37,18 @@ class TestIsOnLoginPage:
         page.url = "http://x/home"
         assert is_on_login_page(page, cfg) is False
 
+    def test_no_match_on_lookalike_path(self):
+        cfg = _make_login_cfg()
+        page = MagicMock()
+        page.url = "http://x/login-help"
+        assert is_on_login_page(page, cfg) is False
+
+    def test_matches_subpath(self):
+        cfg = _make_login_cfg()
+        page = MagicMock()
+        page.url = "http://x/login/step2"
+        assert is_on_login_page(page, cfg) is True
+
 
 class TestStorageStateValid:
     def test_missing_file(self, tmp_path):
@@ -76,7 +88,7 @@ class TestPerformLogin:
         ctx = AsyncMock()
         page.context = ctx
 
-        await perform_login(page, cfg)
+        await perform_login(page, cfg, "http://x/home")
 
         page.wait_for_selector.assert_called_with("#u", timeout=10000)
         page.fill.assert_any_call("#u", "u")
@@ -84,6 +96,13 @@ class TestPerformLogin:
         page.click.assert_called_with("#go")
         page.wait_for_url.assert_called_once()
         ctx.storage_state.assert_called_with(path=storage_path)
+
+        predicate = page.wait_for_url.call_args[0][0]
+        assert predicate("http://x/dashboard") is True
+        assert predicate("http://x/login") is False
+        assert predicate("http://x/login?error=1") is False
+        # Off-origin IdP hop must keep the wait pending
+        assert predicate("https://idp.example.com/oauth/authorize?client_id=1") is False
 
     async def test_raises_when_redirect_does_not_happen(self, tmp_path):
         from playwright.async_api import TimeoutError as PWTimeoutError
@@ -93,5 +112,5 @@ class TestPerformLogin:
         page.context = AsyncMock()
         page.wait_for_url.side_effect = PWTimeoutError("no redirect")
 
-        with pytest.raises(RuntimeError, match="did not redirect"):
-            await perform_login(page, cfg)
+        with pytest.raises(RuntimeError, match="did not land back"):
+            await perform_login(page, cfg, "http://x/home")
