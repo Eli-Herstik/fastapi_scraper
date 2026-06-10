@@ -2,6 +2,7 @@
 import json
 import logging
 import os
+import time
 from urllib.parse import urlparse
 
 from playwright.async_api import Page, TimeoutError as PlaywrightTimeoutError
@@ -29,15 +30,39 @@ def is_on_login_page(page: Page, cfg: LoginConfig) -> bool:
 
 
 def storage_state_valid(cfg: LoginConfig) -> bool:
+    """Cheap local check that the stored state could plausibly hold a session.
+
+    Rejects files that are structurally not a Playwright storage state or that
+    contain no usable session material (no unexpired cookies and no localStorage
+    entries). Whether the session actually still works is left to the reactive
+    login flow, which recovers if a reused state lands on the login page.
+    """
     path = cfg.storage_state_path
     if not os.path.isfile(path) or os.path.getsize(path) == 0:
         return False
     try:
         with open(path, 'r', encoding='utf-8') as f:
-            json.load(f)
-        return True
+            state = json.load(f)
     except (json.JSONDecodeError, OSError):
         return False
+
+    if not isinstance(state, dict):
+        return False
+    cookies = state.get('cookies')
+    origins = state.get('origins')
+    if not isinstance(cookies, list) or not isinstance(origins, list):
+        return False
+
+    now = time.time()
+    has_live_cookie = any(
+        isinstance(c, dict) and (c.get('expires', -1) == -1 or c.get('expires', -1) > now)
+        for c in cookies
+    )
+    has_local_storage = any(
+        isinstance(o, dict) and o.get('localStorage')
+        for o in origins
+    )
+    return has_live_cookie or has_local_storage
 
 
 async def perform_login(page: Page, cfg: LoginConfig, app_url: str) -> None:

@@ -1,5 +1,7 @@
 """Tests for crawler.auth.login."""
 import json
+import time
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
@@ -67,9 +69,54 @@ class TestStorageStateValid:
         cfg = _make_login_cfg(storage_state_path=str(p))
         assert storage_state_valid(cfg) is False
 
-    def test_valid_json(self, tmp_path):
+    def test_wrong_shape(self, tmp_path):
         p = tmp_path / "s.json"
-        p.write_text(json.dumps({"cookies": []}))
+        p.write_text(json.dumps(["not", "a", "state"]))
+        cfg = _make_login_cfg(storage_state_path=str(p))
+        assert storage_state_valid(cfg) is False
+
+    def test_empty_state(self, tmp_path):
+        p = tmp_path / "s.json"
+        p.write_text(json.dumps({"cookies": [], "origins": []}))
+        cfg = _make_login_cfg(storage_state_path=str(p))
+        assert storage_state_valid(cfg) is False
+
+    def test_all_cookies_expired(self, tmp_path):
+        p = tmp_path / "s.json"
+        p.write_text(json.dumps({
+            "cookies": [{"name": "sid", "value": "v", "expires": time.time() - 60}],
+            "origins": [],
+        }))
+        cfg = _make_login_cfg(storage_state_path=str(p))
+        assert storage_state_valid(cfg) is False
+
+    def test_unexpired_cookie(self, tmp_path):
+        p = tmp_path / "s.json"
+        p.write_text(json.dumps({
+            "cookies": [{"name": "sid", "value": "v", "expires": time.time() + 3600}],
+            "origins": [],
+        }))
+        cfg = _make_login_cfg(storage_state_path=str(p))
+        assert storage_state_valid(cfg) is True
+
+    def test_session_cookie(self, tmp_path):
+        p = tmp_path / "s.json"
+        p.write_text(json.dumps({
+            "cookies": [{"name": "sid", "value": "v", "expires": -1}],
+            "origins": [],
+        }))
+        cfg = _make_login_cfg(storage_state_path=str(p))
+        assert storage_state_valid(cfg) is True
+
+    def test_local_storage_only(self, tmp_path):
+        p = tmp_path / "s.json"
+        p.write_text(json.dumps({
+            "cookies": [],
+            "origins": [{
+                "origin": "http://x",
+                "localStorage": [{"name": "token", "value": "jwt"}],
+            }],
+        }))
         cfg = _make_login_cfg(storage_state_path=str(p))
         assert storage_state_valid(cfg) is True
 
