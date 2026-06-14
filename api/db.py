@@ -128,7 +128,18 @@ def _database_url() -> str:
 
 
 def make_engine() -> AsyncEngine:
-    return create_async_engine(_database_url(), future=True)
+    return create_async_engine(
+        _database_url(),
+        future=True,
+        # Validate each pooled connection before use. Idle connections get
+        # silently dropped in OpenShift (Postgres idle timeout, SDN/router, or
+        # an intervening proxy), which otherwise surfaces as asyncpg
+        # "connection is closed" on the next request.
+        pool_pre_ping=True,
+        # Proactively retire connections before they hit the server/proxy idle
+        # cutoff. 300s is comfortably below typical timeouts.
+        pool_recycle=300,
+    )
 
 
 def make_session_factory(engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:
