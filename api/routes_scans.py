@@ -260,7 +260,9 @@ async def cancel_scan(scan_id: str, request: Request) -> Response:
     if task and not task.done():
         task.cancel()
     else:
-        # Task already gone — record a cancellation manually.
+        # Task already gone — record a cancellation manually. Only emit if we
+        # actually transitioned a live scan; a finished scan stays as-is so its
+        # event stream isn't polluted with a spurious terminal failure.
         async with factory() as session:
             scan = await session.get(ScanRow, scan_id)
             if scan and scan.status in ("queued", "running"):
@@ -268,6 +270,6 @@ async def cancel_scan(scan_id: str, request: Request) -> Response:
                 scan.completed_at = datetime.now(timezone.utc)
                 scan.error = "cancelled"
                 await session.commit()
-        await app_state.event_bus.emit(scan_id, "scan_failed", {"reason": "cancelled"})
+                await app_state.event_bus.emit(scan_id, "scan_failed", {"reason": "cancelled"})
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
