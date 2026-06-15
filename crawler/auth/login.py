@@ -5,7 +5,7 @@ import os
 import time
 from urllib.parse import urlparse
 
-from playwright.async_api import Page, TimeoutError as PlaywrightTimeoutError
+from playwright.async_api import Error as PlaywrightError, Page, TimeoutError as PlaywrightTimeoutError
 
 from config_loader import LoginConfig
 
@@ -105,15 +105,25 @@ async def perform_login(page: Page, cfg: LoginConfig, app_url: str) -> None:
     logger.info("Login successful; storage_state saved to %s", cfg.storage_state_path)
 
 
+async def _dispatch_form_events(page: Page, selector: str) -> None:
+    """Fire synthetic input/change/blur so framework-driven forms register the typed value.
+
+    Best-effort: a field that doesn't handle a given event is not fatal. We swallow only
+    Playwright-level failures (and log them) rather than masking arbitrary Python errors.
+    """
+    for event in ("input", "change", "blur"):
+        try:
+            await page.dispatch_event(selector, event)
+        except PlaywrightError as e:
+            logger.debug("dispatch_event(%r, %r) failed: %s", selector, event, e)
+
+
 async def _fill_and_submit(page: Page, cfg: LoginConfig) -> None:
     await page.wait_for_selector(cfg.username_selector, timeout=10000)
     await page.fill(cfg.username_selector, cfg.username)
     await page.fill(cfg.password_selector, cfg.password)
 
-    for event in ("input", "change", "blur"):
-        try:
-            await page.dispatch_event(cfg.password_selector, event)
-        except Exception:
-            pass
+    await _dispatch_form_events(page, cfg.username_selector)
+    await _dispatch_form_events(page, cfg.password_selector)
 
     await page.click(cfg.submit_selector)
