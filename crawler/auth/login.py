@@ -70,9 +70,10 @@ async def perform_login(page: Page, cfg: LoginConfig, app_url: str) -> None:
 
     Waits until the URL is back on `app_url`'s origin and off the login URL —
     an off-origin SSO/IdP hop keeps the wait pending until the redirect back —
-    then re-navigates to `app_url` to verify the session is authorized (the
-    document response must not be an error status) before persisting it to
-    `cfg.storage_state_path`. This also normalizes where the crawl resumes:
+    then re-navigates to `app_url` to verify the session is authorized — the
+    document response must not be an error status, and the app must no longer be
+    presenting a login form — before persisting it to `cfg.storage_state_path`.
+    This also normalizes where the crawl resumes:
     on `app_url` itself rather than wherever the login redirect chain landed.
     """
     logger.info("Performing login at %s", page.url)
@@ -101,8 +102,41 @@ async def perform_login(page: Page, cfg: LoginConfig, app_url: str) -> None:
             f"Login completed but {app_url} returned HTTP {response.status}"
         )
 
+    try:
+        await page.wait_for_load_state("networkidle", timeout=cfg.post_login_wait_ms + 5000)
+    except PlaywrightTimeoutError:
+        logger.debug("networkidle wait on %s timed out; continuing", app_url)
+
+    if await _login_form_visible(page, cfg):
+        raise RuntimeError(
+            f"Login completed but {app_url} still presents a login form; "
+            "credentials were likely rejected"
+        )
+
     await page.context.storage_state(path=cfg.storage_state_path)
     logger.info("Login successful; storage_state saved to %s", cfg.storage_state_path)
+
+
+async def _login_form_visible(page: Page, cfg: LoginConfig) -> bool:
+    """Whether a login field is still visible — a positive "not authenticated" signal.
+
+    The URL and HTTP-status checks in `perform_login` both pass for a failed login
+    that ends on an app-origin page returning HTTP 200: a common SPA pattern, or a
+    silent bounce back to the identity provider. A still-visible password or username
+    field on `app_url` is the content-level tell that we are being asked to log in
+    again, so the submitted credentials never took.
+
+    Best-effort: a selector that fails to evaluate is treated as not-visible rather
+    than aborting the check, matching the leniency elsewhere in this module.
+    """
+    for selector in (cfg.password_selector, cfg.username_selector):
+        try:
+            element = await page.query_selector(selector)
+            if element is not None and await element.is_visible():
+                return True
+        except PlaywrightError as e:
+            logger.debug("login-form probe for %r failed: %s", selector, e)
+    return False
 
 
 async def _dispatch_form_events(page: Page, selector: str) -> None:

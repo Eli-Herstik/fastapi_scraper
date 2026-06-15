@@ -133,6 +133,7 @@ class TestPerformLogin:
         page = AsyncMock()
         page.url = "http://x/login"
         page.goto.return_value = MagicMock(status=200)
+        page.query_selector = AsyncMock(return_value=None)
         ctx = AsyncMock()
         page.context = ctx
 
@@ -182,6 +183,38 @@ class TestPerformLogin:
         page = AsyncMock()
         page.url = "http://x/login"
         page.goto.return_value = None
+        page.query_selector = AsyncMock(return_value=None)
+        ctx = AsyncMock()
+        page.context = ctx
+
+        await perform_login(page, cfg, "http://x/home")
+        ctx.storage_state.assert_called_with(path=storage_path)
+
+    async def test_raises_when_login_form_still_visible(self, tmp_path):
+        storage_path = str(tmp_path / "s.json")
+        cfg = _make_login_cfg(storage_state_path=storage_path)
+        page = AsyncMock()
+        page.url = "http://x/login"
+        page.goto.return_value = MagicMock(status=200)
+        field = AsyncMock()
+        field.is_visible = AsyncMock(return_value=True)
+        page.query_selector = AsyncMock(return_value=field)
+        ctx = AsyncMock()
+        page.context = ctx
+
+        with pytest.raises(RuntimeError, match="still presents a login form"):
+            await perform_login(page, cfg, "http://x/home")
+        ctx.storage_state.assert_not_called()
+
+    async def test_succeeds_when_login_field_present_but_hidden(self, tmp_path):
+        storage_path = str(tmp_path / "s.json")
+        cfg = _make_login_cfg(storage_state_path=storage_path)
+        page = AsyncMock()
+        page.url = "http://x/login"
+        page.goto.return_value = MagicMock(status=200)
+        field = AsyncMock()
+        field.is_visible = AsyncMock(return_value=False)
+        page.query_selector = AsyncMock(return_value=field)
         ctx = AsyncMock()
         page.context = ctx
 
