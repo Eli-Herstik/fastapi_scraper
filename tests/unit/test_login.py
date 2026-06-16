@@ -39,6 +39,24 @@ class TestIsOnLoginPage:
         page.url = "http://x/home"
         assert is_on_login_page(page, cfg) is False
 
+    def test_matches_extra_login_url(self):
+        cfg = _make_login_cfg(
+            login_url="https://psso/auth/realms",
+            extra_login_urls=["https://psso.corp/auth/realms"],
+        )
+        page = MagicMock()
+        page.url = "https://psso.corp/auth/realms/myrealm?foo=bar"
+        assert is_on_login_page(page, cfg) is True
+
+    def test_extra_login_url_host_must_match(self):
+        cfg = _make_login_cfg(
+            login_url="https://psso/auth/realms",
+            extra_login_urls=["https://psso.corp/auth/realms"],
+        )
+        page = MagicMock()
+        page.url = "https://other/auth/realms"
+        assert is_on_login_page(page, cfg) is False
+
     def test_no_match_on_lookalike_path(self):
         cfg = _make_login_cfg()
         page = MagicMock()

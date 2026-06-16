@@ -17,12 +17,16 @@ def _origin(url: str) -> tuple:
     return (parsed.scheme.lower(), parsed.netloc.lower())
 
 
-def _is_login_url(url: str, cfg: LoginConfig) -> bool:
-    if _origin(url) != _origin(cfg.login_url):
+def _matches_login_url(url: str, login_url: str) -> bool:
+    if _origin(url) != _origin(login_url):
         return False
     path = urlparse(url).path.rstrip('/')
-    login_path = urlparse(cfg.login_url).path.rstrip('/')
+    login_path = urlparse(login_url).path.rstrip('/')
     return path == login_path or path.startswith(login_path + '/')
+
+
+def _is_login_url(url: str, cfg: LoginConfig) -> bool:
+    return any(_matches_login_url(url, candidate) for candidate in cfg.login_urls)
 
 
 def is_on_login_page(page: Page, cfg: LoginConfig) -> bool:
@@ -88,7 +92,7 @@ async def perform_login(page: Page, cfg: LoginConfig, app_url: str) -> None:
         )
     except PlaywrightTimeoutError as e:
         raise RuntimeError(
-            f"Login did not land back on {app_url} away from {cfg.login_url}"
+            f"Login did not land back on {app_url} away from {cfg.login_urls}"
         ) from e
 
     try:

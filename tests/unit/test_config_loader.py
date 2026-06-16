@@ -252,6 +252,31 @@ class TestResolveLogin:
         assert cfg.storage_state_path == "storage_state.json"
         assert cfg.reuse_storage_state is True
 
+    def test_login_url_list_resolves_to_login_urls(self, monkeypatch):
+        monkeypatch.setenv("TEST_USER", "alice")
+        monkeypatch.setenv("TEST_PASS", "secret")
+        cfg = _resolve_login({"login": {
+            "login_url": ["https://psso/auth/realms", "https://psso.corp/auth/realms"],
+            "username_env": "TEST_USER",
+            "password_env": "TEST_PASS",
+        }})
+        assert cfg.login_url == "https://psso/auth/realms"
+        assert cfg.extra_login_urls == ["https://psso.corp/auth/realms"]
+        assert cfg.login_urls == [
+            "https://psso/auth/realms",
+            "https://psso.corp/auth/realms",
+        ]
+
+    def test_empty_login_url_list_raises(self, monkeypatch):
+        monkeypatch.setenv("TEST_USER", "u")
+        monkeypatch.setenv("TEST_PASS", "p")
+        with pytest.raises(ValueError, match="login_url"):
+            _resolve_login({"login": {
+                "login_url": [],
+                "username_env": "TEST_USER",
+                "password_env": "TEST_PASS",
+            }})
+
     def test_overrides_all_optional_fields(self, monkeypatch):
         monkeypatch.setenv("U", "u")
         monkeypatch.setenv("P", "p")

@@ -16,7 +16,10 @@
     }
   },
   "login": {
-    "login_url": "https://psso/realms/oauth",
+    "login_url": [
+      "https://psso/auth/realms",
+      "https://psso.corp/auth/realms"
+    ],
     "username_env": "APP_USERNAME",
     "password_env": "APP_PASSWORD",
     "username_selector": "#username",
