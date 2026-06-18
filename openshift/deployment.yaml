@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastapi-scraper
+  labels:
+    app: fastapi-scraper
+  annotations:
+    image.openshift.io/triggers: |-
+      [{"from":{"kind":"ImageStreamTag","name":"fastapi-scraper:latest"},"fieldPath":"spec.template.spec.containers[?(@.name==\"api\")].image"}]
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: fastapi-scraper
+  template:
+    metadata:
+      labels:
+        app: fastapi-scraper
+    spec:
+      containers:
+        - name: api
+          image: fastapi-scraper:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8000
+          envFrom:
+            - secretRef:
+                name: fastapi-scraper-env
+          env:
+            - name: SCRAPER_MAX_PARALLEL
+              value: "2"
+            - name: WEB_CONCURRENCY
+              value: "1"
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            failureThreshold: 30
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1536Mi
