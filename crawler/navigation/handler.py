@@ -60,8 +60,17 @@ class NavigationHandler:
         try:
             parsed_url = urlparse(url)
             start_parsed = urlparse(self.config.start_url)
-            return (parsed_url.scheme == start_parsed.scheme and
-                    parsed_url.netloc == start_parsed.netloc)
+            if (parsed_url.scheme != start_parsed.scheme or
+                    parsed_url.netloc != start_parsed.netloc):
+                return False
+            # Honor exclude_patterns at the URL level too. Element-click filtering
+            # (is_destructive_action) skips logout/delete buttons, but raw <a href>
+            # link-following only gates on this method, so without this check a
+            # same-origin "/logout" link would still be navigated to.
+            url_lower = url.lower()
+            if any(p.lower() in url_lower for p in (self.config.exclude_patterns or ())):
+                return False
+            return True
         except Exception:
             return False
 
