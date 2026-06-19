@@ -50,7 +50,6 @@ class Config:
     max_clicks_per_page: int
     wait_timeout: int = 30000
     network_idle_timeout: int = 2000
-    http_credentials: Dict[str, str] = None
     form_filling: FormConfig = None
     exclude_patterns: list = None
     login: Optional[LoginConfig] = None
@@ -105,8 +104,6 @@ def load_config(config_path: str) -> Config:
     with open(config_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
 
-    http_credentials = data.get('http_credentials')
-
     form_data = data.get('form_filling', {})
     form_config = FormConfig(
         enabled=form_data.get('enabled', True),
@@ -120,7 +117,6 @@ def load_config(config_path: str) -> Config:
         max_clicks_per_page=data.get('max_clicks_per_page', 20),
         wait_timeout=data.get('wait_timeout', 30000),
         network_idle_timeout=data.get('network_idle_timeout', 2000),
-        http_credentials=http_credentials,
         form_filling=form_config,
         exclude_patterns=data.get('exclude_patterns'),
         login=_resolve_login(data),

@@ -4,10 +4,6 @@
   "max_clicks_per_page": 20,
   "wait_timeout": 30000,
   "network_idle_timeout": 2000,
-  "http_credentials": {
-    "username": "user",
-    "password": "pass"
-  },
   "form_filling": {
     "enabled": true,
     "fill_delay": 100,
