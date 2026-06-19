@@ -36,7 +36,6 @@ def _default_base_config() -> Config:
         max_clicks_per_page=20,
         wait_timeout=30000,
         network_idle_timeout=2000,
-        http_credentials=None,
         form_filling=FormConfig(enabled=True, fill_delay=100, defaults={}),
         exclude_patterns=None,
         login=None,

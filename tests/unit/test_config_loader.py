@@ -12,7 +12,6 @@ class TestLoadConfig:
             "max_clicks_per_page": 30,
             "wait_timeout": 60000,
             "network_idle_timeout": 3000,
-            "http_credentials": {"username": "user", "password": "pass"},
             "form_filling": {
                 "enabled": True,
                 "fill_delay": 200,
@@ -30,7 +29,6 @@ class TestLoadConfig:
         assert config.max_clicks_per_page == 30
         assert config.wait_timeout == 60000
         assert config.network_idle_timeout == 3000
-        assert config.http_credentials == {"username": "user", "password": "pass"}
         assert config.form_filling.enabled is True
         assert config.form_filling.fill_delay == 200
         assert config.form_filling.defaults == {"#email": "test@example.com"}
@@ -47,7 +45,6 @@ class TestLoadConfig:
         assert config.max_clicks_per_page == 20
         assert config.wait_timeout == 30000
         assert config.network_idle_timeout == 2000
-        assert config.http_credentials is None
         assert config.form_filling.enabled is True
         assert config.form_filling.defaults == {}
         # When exclude_patterns absent, Config.__post_init__ applies the default list.
@@ -60,23 +57,6 @@ class TestLoadConfig:
 
         with pytest.raises(KeyError):
             load_config(str(config_file))
-
-    def test_load_config_with_credentials(self, tmp_path):
-        config_file = tmp_path / "config.json"
-        config_file.write_text(json.dumps({
-            "start_url": "https://example.com",
-            "http_credentials": {"username": "admin", "password": "secret"},
-        }))
-
-        config = load_config(str(config_file))
-        assert config.http_credentials == {"username": "admin", "password": "secret"}
-
-    def test_load_config_without_credentials(self, tmp_path):
-        config_file = tmp_path / "config.json"
-        config_file.write_text(json.dumps({"start_url": "https://example.com"}))
-
-        config = load_config(str(config_file))
-        assert config.http_credentials is None
 
     def test_load_config_with_form_filling(self, tmp_path):
         config_file = tmp_path / "config.json"
@@ -160,16 +140,6 @@ class TestLoadConfig:
         assert config.form_filling.enabled is False
         assert config.form_filling.fill_delay == 100  # default
         assert config.form_filling.defaults == {}  # default
-
-    def test_empty_credentials_dict(self, tmp_path):
-        config_file = tmp_path / "config.json"
-        config_file.write_text(json.dumps({
-            "start_url": "https://example.com",
-            "http_credentials": {},
-        }))
-
-        config = load_config(str(config_file))
-        assert config.http_credentials == {}
 
     def test_zero_max_depth(self, tmp_path):
         config_file = tmp_path / "config.json"
