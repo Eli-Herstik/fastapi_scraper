@@ -2,7 +2,9 @@
 import inspect
 import logging
 import os
+import re
 from typing import Any, Awaitable, Callable, Dict, Optional, Union
+from urllib.parse import urlsplit
 
 from playwright.async_api import Browser, BrowserContext, Page, async_playwright
 
@@ -22,7 +24,12 @@ EventCallback = Callable[[str, Dict[str, Any]], Union[None, Awaitable[None]]]
 class Mapper:
     """Main mapping engine."""
 
-    def __init__(self, config: Config, on_event: Optional[EventCallback] = None):
+    def __init__(
+        self,
+        config: Config,
+        on_event: Optional[EventCallback] = None,
+        auth_token_provider: Optional[Callable[[], Awaitable[str]]] = None,
+    ):
         self.config = config
         self.interceptor = NetworkInterceptor()
         self.dom_hasher = DOMHasher()
@@ -34,6 +41,7 @@ class Mapper:
         self._capture: RequestCapture = None
         self._used_reused_storage: bool = False
         self._on_event: Optional[EventCallback] = on_event
+        self._auth_token_provider = auth_token_provider
         self._pages_visited: int = 0
         self._announced_hosts: set[str] = set()
 
@@ -97,10 +105,51 @@ class Mapper:
             logger.info("Reusing stored session from %s", self.config.login.storage_state_path)
 
         self.context = await self.browser.new_context(**context_kwargs)
+        if self._auth_token_provider is not None:
+            await self._enable_target_auth()
         self.page = await self.context.new_page()
 
         self._capture = RequestCapture(self.interceptor, self.config.start_url)
         self._capture.attach(self.page, self.context)
+
+    async def _enable_target_auth(self) -> None:
+        """Attach the caller's (exchanged) bearer token to target-origin requests.
+
+        Scoped with ``context.route`` keyed to ``start_url``'s origin rather than
+        the context's ``extra_http_headers``, so the token rides only requests to
+        the target — never the third-party subresources (CDNs, analytics, fonts)
+        the page pulls in, and never cross-origin redirects. Non-matching origins
+        aren't intercepted at all, so their caching/behaviour is untouched.
+        """
+        target = urlsplit(self.config.start_url)
+        target_origin = (target.scheme, target.netloc)
+        origin_pattern = re.compile(
+            rf"^{re.escape(f'{target.scheme}://{target.netloc}')}(?:[/?#]|$)"
+        )
+
+        async def _inject_auth(route, request):
+            try:
+                parts = urlsplit(request.url)
+                if (parts.scheme, parts.netloc) == target_origin:
+                    token = await self._auth_token_provider()
+                    if token:
+                        headers = dict(request.headers)
+                        headers["authorization"] = f"Bearer {token}"
+                        await route.continue_(headers=headers)
+                        return
+                await route.continue_()
+            except Exception as e:
+                logger.warning("auth injection failed for %s: %s", request.url, e)
+                try:
+                    await route.continue_()
+                except Exception:
+                    pass
+
+        await self.context.route(origin_pattern, _inject_auth)
+        logger.info(
+            "Target-scoped auth injection enabled for origin %s://%s",
+            target_origin[0], target_origin[1],
+        )
 
     async def map_website(self) -> Dict[str, Any]:
         logger.info("Starting external-hosts mapping for: %s", self.config.start_url)

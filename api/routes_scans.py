@@ -20,9 +20,14 @@ from .models import (
     Severity,
     SubmitScanResponse,
 )
-from .security import get_current_user
+from .security import get_current_user, oauth2_scheme
 from .serialize import finding_to_schema, scan_to_detail, scan_to_summary
 from .service import run_scrape_job
+from .token_exchange import (
+    CrawlTokenProvider,
+    TokenExchangeError,
+    token_exchange_configured,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +36,32 @@ router = APIRouter(dependencies=[Depends(get_current_user)])
 
 def _session_factory(request: Request) -> async_sessionmaker[AsyncSession]:
     return request.app.state.session_factory
+
+
+async def _build_token_provider(target_url: str, subject_token: str):
+    """Exchange the caller's token for one scoped to the target.
+
+    Returns an async ``() -> str`` token source for the crawler, or ``None``
+    when token exchange is not configured (crawl runs unauthenticated). Raises
+    HTTP 502 if exchange is configured but the IdP refuses it, so the failure
+    surfaces here rather than in the detached background job.
+    """
+    if not token_exchange_configured():
+        logger.info(
+            "Keycloak token exchange not configured; crawl of %s will run "
+            "unauthenticated",
+            target_url,
+        )
+        return None
+    try:
+        provider = await CrawlTokenProvider.create(subject_token)
+    except TokenExchangeError as exc:
+        logger.error("token exchange failed for %s: %s", target_url, exc)
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail={"message": "could not obtain credentials for target"},
+        ) from exc
+    return provider.get_token
 
 
 def _summary_aggregates_subq():
@@ -135,6 +166,7 @@ async def create_scan(
     body: CreateScanRequest,
     request: Request,
     current_user: CurrentUser = Depends(get_current_user),
+    token: str = Depends(oauth2_scheme),
 ) -> CreateScanResponse:
     app_state = request.app.state
     factory = _session_factory(request)
@@ -149,6 +181,13 @@ async def create_scan(
         if not existing_app:
             raise HTTPException(status_code=404, detail={"message": "app not found"})
         name = existing_app.name
+
+    # Mint target-scoped credentials before committing to the scan, so an
+    # exchange failure is reported to the caller (502) instead of failing the
+    # detached background job. body.url is already allowlist-validated upstream.
+    auth_token_provider = await _build_token_provider(body.url, token)
+
+    async with factory() as session:
         session.add(
             ScanRow(
                 id=scan_id,
@@ -177,6 +216,7 @@ async def create_scan(
             semaphore=app_state.semaphore,
             session_factory=factory,
             event_bus=event_bus,
+            auth_token_provider=auth_token_provider,
         ),
         name=f"scan-{scan_id}",
     )

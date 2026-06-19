@@ -26,6 +26,10 @@ _oauth2_scheme = OAuth2AuthorizationCodeBearer(
         "email": "User email",
     },
 )
+# Public alias: routes that need the raw bearer string (e.g. to perform a token
+# exchange) depend on this; get_current_user already validates it.
+oauth2_scheme = _oauth2_scheme
+
 _UNAUTHENTICATED_HEADERS = {"WWW-Authenticate": "Bearer"}
 
 # Admin authorization is delegated to the AD Groups API: a caller is an admin

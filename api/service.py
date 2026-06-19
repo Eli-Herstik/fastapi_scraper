@@ -3,7 +3,7 @@ import copy
 import logging
 import time
 from datetime import datetime, timezone
-from typing import Any, Dict
+from typing import Any, Awaitable, Callable, Dict, Optional
 
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -59,6 +59,7 @@ async def run_scrape_job(
     semaphore: asyncio.Semaphore,
     session_factory: async_sessionmaker[AsyncSession],
     event_bus: EventBus,
+    auth_token_provider: Optional[Callable[[], Awaitable[str]]] = None,
 ) -> None:
     """Background task: acquire semaphore, run scrape, persist outcome.
 
@@ -74,7 +75,7 @@ async def run_scrape_job(
         async def on_event(event_type: str, payload: Dict[str, Any]) -> None:
             await event_bus.emit(scan_id, event_type, payload)
 
-        mapper = Mapper(config, on_event=on_event)
+        mapper = Mapper(config, on_event=on_event, auth_token_provider=auth_token_provider)
         try:
             await mapper.initialize()
             try:
