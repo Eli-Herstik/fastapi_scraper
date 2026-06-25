@@ -222,6 +222,7 @@ class TestResolveLogin:
         assert cfg.storage_state_path == "storage_state.json"
         assert cfg.reuse_storage_state is True
         assert cfg.session_cookie_names == []
+        assert cfg.require_session_material is False
 
     def test_session_cookie_name_string_resolves_to_list(self, monkeypatch):
         monkeypatch.setenv("U", "u")
@@ -287,6 +288,17 @@ class TestResolveLogin:
                 "password_env": "P",
                 "session_cookie_name": 123,
             }})
+
+    def test_require_session_material_flag(self, monkeypatch):
+        monkeypatch.setenv("U", "u")
+        monkeypatch.setenv("P", "p")
+        cfg = _resolve_login({"login": {
+            "login_url": "http://x/login",
+            "username_env": "U",
+            "password_env": "P",
+            "require_session_material": True,
+        }})
+        assert cfg.require_session_material is True
 
     def test_login_url_list_resolves_to_login_urls(self, monkeypatch):
         monkeypatch.setenv("TEST_USER", "alice")

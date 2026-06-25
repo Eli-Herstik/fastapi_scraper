@@ -37,6 +37,11 @@ class LoginConfig:
     # Empty (the default) disables the check — correct for apps that authenticate
     # via localStorage / bearer tokens and set no session cookie.
     session_cookie_names: list = None
+    # When no `session_cookie_names` are configured, the login flow still checks
+    # generically that authenticating introduced new app-origin session material
+    # (a new/changed cookie, or localStorage). A miss is logged as a warning by
+    # default; set this True to make it a hard failure instead.
+    require_session_material: bool = False
 
     def __post_init__(self):
         if self.extra_login_urls is None:
@@ -115,6 +120,7 @@ def _resolve_login(data: dict) -> Optional[LoginConfig]:
         storage_state_path=block.get('storage_state_path', "storage_state.json"),
         reuse_storage_state=block.get('reuse_storage_state', True),
         session_cookie_names=session_cookie_names,
+        require_session_material=block.get('require_session_material', False),
     )
 
 

@@ -6,7 +6,12 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock
 
 from config_loader import LoginConfig
-from crawler.auth.login import is_on_login_page, storage_state_valid, perform_login
+from crawler.auth.login import (
+    is_on_login_page,
+    storage_state_valid,
+    perform_login,
+    _login_added_session_material,
+)
 
 
 def _make_login_cfg(**overrides):
@@ -298,19 +303,107 @@ class TestPerformLogin:
         await perform_login(page, cfg, "http://x/home")
         ctx.storage_state.assert_called_with(path=storage_path)
 
-    async def test_session_cookie_check_skipped_when_unconfigured(self, tmp_path):
+    async def test_unconfigured_skips_strict_named_cookie_check(self, tmp_path):
+        # With no session_cookie_name set, the strict named check is skipped; the
+        # generic material check runs instead (here it finds a new cookie -> ok).
         storage_path = str(tmp_path / "s.json")
         cfg = _make_login_cfg(storage_state_path=storage_path)
         page = AsyncMock()
-        page.url = "http://x/login"
+        page.url = "http://x/home"
         page.goto.return_value = MagicMock(status=200)
         page.query_selector = AsyncMock(return_value=None)
+        page.evaluate = AsyncMock(return_value=[])
         ctx = AsyncMock()
-        ctx.cookies = AsyncMock(return_value=[])
+        ctx.cookies = AsyncMock(side_effect=[[], [{"name": "sessionid", "value": "v"}]])
         page.context = ctx
 
         await perform_login(page, cfg, "http://x/home")
-        ctx.cookies.assert_not_called()
+        ctx.storage_state.assert_called_with(path=storage_path)
+
+    async def test_generic_warns_when_no_new_material(self, tmp_path, caplog):
+        import logging
+        storage_path = str(tmp_path / "s.json")
+        cfg = _make_login_cfg(storage_state_path=storage_path)  # no names, advisory
+        page = AsyncMock()
+        page.url = "http://x/home"
+        page.goto.return_value = MagicMock(status=200)
+        page.query_selector = AsyncMock(return_value=None)
+        page.evaluate = AsyncMock(return_value=[])
+        ctx = AsyncMock()
+        # Same app cookies before and after -> login added nothing.
+        ctx.cookies = AsyncMock(return_value=[{"name": "_ga", "value": "x"}])
+        page.context = ctx
+
+        with caplog.at_level(logging.WARNING):
+            await perform_login(page, cfg, "http://x/home")
+
+        assert any("added no new session material" in r.getMessage() for r in caplog.records)
+        ctx.storage_state.assert_called_with(path=storage_path)
+
+    async def test_generic_raises_when_required_and_no_material(self, tmp_path):
+        storage_path = str(tmp_path / "s.json")
+        cfg = _make_login_cfg(storage_state_path=storage_path, require_session_material=True)
+        page = AsyncMock()
+        page.url = "http://x/home"
+        page.goto.return_value = MagicMock(status=200)
+        page.query_selector = AsyncMock(return_value=None)
+        page.evaluate = AsyncMock(return_value=[])
+        ctx = AsyncMock()
+        ctx.cookies = AsyncMock(return_value=[{"name": "_ga", "value": "x"}])
+        page.context = ctx
+
+        with pytest.raises(RuntimeError, match="no new session material"):
+            await perform_login(page, cfg, "http://x/home")
+        ctx.storage_state.assert_not_called()
+
+    async def test_generic_passes_when_new_cookie_appears(self, tmp_path):
+        storage_path = str(tmp_path / "s.json")
+        cfg = _make_login_cfg(storage_state_path=storage_path, require_session_material=True)
+        page = AsyncMock()
+        page.url = "http://x/home"
+        page.goto.return_value = MagicMock(status=200)
+        page.query_selector = AsyncMock(return_value=None)
+        page.evaluate = AsyncMock(return_value=[])
+        ctx = AsyncMock()
+        # before: no app cookies; after: a session cookie appeared
+        ctx.cookies = AsyncMock(side_effect=[[], [{"name": "sessionid", "value": "v"}]])
+        page.context = ctx
+
+        await perform_login(page, cfg, "http://x/home")
+        assert ctx.cookies.call_count == 2
+        ctx.storage_state.assert_called_with(path=storage_path)
+
+    async def test_generic_passes_when_cookie_value_rotates(self, tmp_path):
+        storage_path = str(tmp_path / "s.json")
+        cfg = _make_login_cfg(storage_state_path=storage_path, require_session_material=True)
+        page = AsyncMock()
+        page.url = "http://x/home"
+        page.goto.return_value = MagicMock(status=200)
+        page.query_selector = AsyncMock(return_value=None)
+        page.evaluate = AsyncMock(return_value=[])
+        ctx = AsyncMock()
+        ctx.cookies = AsyncMock(side_effect=[
+            [{"name": "session", "value": "old"}],
+            [{"name": "session", "value": "new"}],
+        ])
+        page.context = ctx
+
+        await perform_login(page, cfg, "http://x/home")
+        ctx.storage_state.assert_called_with(path=storage_path)
+
+    async def test_generic_passes_for_token_app_via_local_storage(self, tmp_path):
+        storage_path = str(tmp_path / "s.json")
+        cfg = _make_login_cfg(storage_state_path=storage_path, require_session_material=True)
+        page = AsyncMock()
+        page.url = "http://x/home"
+        page.goto.return_value = MagicMock(status=200)
+        page.query_selector = AsyncMock(return_value=None)
+        page.evaluate = AsyncMock(return_value=["access_token"])
+        ctx = AsyncMock()
+        ctx.cookies = AsyncMock(return_value=[])  # cookieless app
+        page.context = ctx
+
+        await perform_login(page, cfg, "http://x/home")
         ctx.storage_state.assert_called_with(path=storage_path)
 
     async def test_raises_when_login_form_still_visible(self, tmp_path):
@@ -343,3 +436,33 @@ class TestPerformLogin:
 
         await perform_login(page, cfg, "http://x/home")
         ctx.storage_state.assert_called_with(path=storage_path)
+
+
+class TestLoginAddedSessionMaterial:
+    def test_new_cookie_name_is_material(self):
+        assert _login_added_session_material({}, {"sid": "v"}, set()) is True
+
+    def test_changed_cookie_value_is_material(self):
+        assert _login_added_session_material({"sid": "old"}, {"sid": "new"}, set()) is True
+
+    def test_unchanged_cookie_is_not_material(self):
+        assert _login_added_session_material({"sid": "v"}, {"sid": "v"}, set()) is False
+
+    def test_new_session_cookie_alongside_existing_analytics(self):
+        before = {"_ga": "x"}
+        after = {"_ga": "x", "JSESSIONID": "abc"}
+        assert _login_added_session_material(before, after, set()) is True
+
+    def test_cookie_cleared_to_empty_is_not_material(self):
+        # An emptied cookie "changed" but carries no session -> not material.
+        assert _login_added_session_material({"sid": "v"}, {"sid": ""}, set()) is False
+
+    def test_localstorage_is_material_when_cookieless(self):
+        assert _login_added_session_material({}, {}, {"access_token"}) is True
+
+    def test_localstorage_ignored_when_cookies_present(self):
+        # Cookie-based app: the (differential) cookie set decides, not localStorage.
+        assert _login_added_session_material({"_ga": "x"}, {"_ga": "x"}, {"theme"}) is False
+
+    def test_no_material_at_all(self):
+        assert _login_added_session_material({}, {}, set()) is False

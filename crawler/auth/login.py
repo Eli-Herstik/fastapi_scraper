@@ -76,15 +76,22 @@ async def perform_login(page: Page, cfg: LoginConfig, app_url: str) -> None:
     an off-origin SSO/IdP hop keeps the wait pending until the redirect back —
     then re-navigates to `app_url` to verify the session is authorized — the
     document response must not be an error status, the app must no longer be
-    presenting a login form, and (when `cfg.session_cookie_names` is configured)
-    the app must have set one of its own session cookies — before persisting it
-    to `cfg.storage_state_path`.
+    presenting a login form, and the login must have established a session: either
+    one of `cfg.session_cookie_names` is present, or (when none are configured) a
+    generic check that authenticating introduced new app-origin session material —
+    a new/changed cookie or localStorage. The generic check only warns by default;
+    `cfg.require_session_material` promotes it to a hard failure. Only then is the
+    state persisted to `cfg.storage_state_path`.
     This also normalizes where the crawl resumes:
     on `app_url` itself rather than wherever the login redirect chain landed.
     """
     logger.info("Performing login at %s", page.url)
 
     app_origin = _origin(app_url)
+    use_generic_material_check = not cfg.session_cookie_names
+    before_cookies = (
+        await _app_cookie_snapshot(page, app_url) if use_generic_material_check else {}
+    )
     await _fill_and_submit(page, cfg)
 
     try:
@@ -119,11 +126,24 @@ async def perform_login(page: Page, cfg: LoginConfig, app_url: str) -> None:
             "credentials were likely rejected"
         )
 
-    if not await _app_session_cookie_present(page, cfg, app_url):
-        raise RuntimeError(
-            f"Login completed but {app_url} set none of the expected session "
-            f"cookies {cfg.session_cookie_names}; credentials were likely rejected"
-        )
+    if cfg.session_cookie_names:
+        if not await _app_session_cookie_present(page, cfg, app_url):
+            raise RuntimeError(
+                f"Login completed but {app_url} set none of the expected session "
+                f"cookies {cfg.session_cookie_names}; credentials were likely rejected"
+            )
+    else:
+        after_cookies = await _app_cookie_snapshot(page, app_url)
+        after_localstorage = await _app_local_storage_keys(page, app_url)
+        if not _login_added_session_material(before_cookies, after_cookies, after_localstorage):
+            message = (
+                f"Login on {app_url} added no new session material: no new or "
+                "changed app-origin cookie and no localStorage entry; the session "
+                "may not have been established"
+            )
+            if cfg.require_session_material:
+                raise RuntimeError(message)
+            logger.warning(message)
 
     await page.context.storage_state(path=cfg.storage_state_path)
     logger.info("Login successful; storage_state saved to %s", cfg.storage_state_path)
@@ -176,6 +196,64 @@ async def _app_session_cookie_present(page: Page, cfg: LoginConfig, app_url: str
         return True
     wanted_set = set(wanted)
     return any(c.get("name") in wanted_set and c.get("value") for c in cookies)
+
+
+async def _app_cookie_snapshot(page: Page, app_url: str) -> dict:
+    """Best-effort ``{name: value}`` of the cookies the app origin would receive.
+
+    Uses ``context.cookies(app_url)``, so identity-provider cookies on other
+    origins are excluded. A probe failure yields an empty snapshot rather than
+    aborting the login.
+    """
+    snapshot: dict = {}
+    try:
+        cookies = await page.context.cookies(app_url)
+    except PlaywrightError as e:
+        logger.debug("cookie snapshot for %s failed: %s", app_url, e)
+        return snapshot
+    for c in cookies:
+        name = c.get("name")
+        if name:
+            snapshot[name] = c.get("value")
+    return snapshot
+
+
+async def _app_local_storage_keys(page: Page, app_url: str) -> set:
+    """Best-effort set of localStorage keys for the app origin.
+
+    Only meaningful while the page is on the app origin (e.g. right after the
+    post-login ``goto(app_url)``); returns an empty set when the page is elsewhere
+    or the probe fails. Covers token/SPA apps that persist a session in
+    localStorage rather than a cookie.
+    """
+    if _origin(page.url) != _origin(app_url):
+        return set()
+    try:
+        keys = await page.evaluate("() => Object.keys(window.localStorage)")
+    except PlaywrightError as e:
+        logger.debug("localStorage probe on %s failed: %s", app_url, e)
+        return set()
+    return set(keys) if isinstance(keys, list) else set()
+
+
+def _login_added_session_material(
+    before_cookies: dict, after_cookies: dict, after_localstorage: set
+) -> bool:
+    """Whether logging in introduced new session material on the app origin.
+
+    Differential, so material present regardless of authentication — analytics,
+    consent, load-balancer affinity, and the pre-auth OIDC ``state`` cookie — is
+    subtracted: it sits in ``before_cookies`` unchanged. A genuine login adds a
+    new cookie name or rotates an existing cookie's value (session-fixation
+    defence). localStorage is consulted only for cookieless apps, where any key on
+    the authenticated page is the token/SPA equivalent of a session cookie.
+    """
+    for name, value in after_cookies.items():
+        if value and (name not in before_cookies or before_cookies[name] != value):
+            return True
+    if not after_cookies and after_localstorage:
+        return True
+    return False
 
 
 async def _dispatch_form_events(page: Page, selector: str) -> None:
