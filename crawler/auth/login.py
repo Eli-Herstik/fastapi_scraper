@@ -75,8 +75,10 @@ async def perform_login(page: Page, cfg: LoginConfig, app_url: str) -> None:
     Waits until the URL is back on `app_url`'s origin and off the login URL —
     an off-origin SSO/IdP hop keeps the wait pending until the redirect back —
     then re-navigates to `app_url` to verify the session is authorized — the
-    document response must not be an error status, and the app must no longer be
-    presenting a login form — before persisting it to `cfg.storage_state_path`.
+    document response must not be an error status, the app must no longer be
+    presenting a login form, and (when `cfg.session_cookie_names` is configured)
+    the app must have set one of its own session cookies — before persisting it
+    to `cfg.storage_state_path`.
     This also normalizes where the crawl resumes:
     on `app_url` itself rather than wherever the login redirect chain landed.
     """
@@ -117,6 +119,12 @@ async def perform_login(page: Page, cfg: LoginConfig, app_url: str) -> None:
             "credentials were likely rejected"
         )
 
+    if not await _app_session_cookie_present(page, cfg, app_url):
+        raise RuntimeError(
+            f"Login completed but {app_url} set none of the expected session "
+            f"cookies {cfg.session_cookie_names}; credentials were likely rejected"
+        )
+
     await page.context.storage_state(path=cfg.storage_state_path)
     logger.info("Login successful; storage_state saved to %s", cfg.storage_state_path)
 
@@ -141,6 +149,33 @@ async def _login_form_visible(page: Page, cfg: LoginConfig) -> bool:
         except PlaywrightError as e:
             logger.debug("login-form probe for %r failed: %s", selector, e)
     return False
+
+
+async def _app_session_cookie_present(page: Page, cfg: LoginConfig, app_url: str) -> bool:
+    """Whether the app has set one of its configured session cookies on `app_url`.
+
+    A positive "authenticated" signal that complements `_login_form_visible`'s
+    negative one: a genuine login makes the app mint its OWN session cookie on the
+    app origin, whereas a failed login that merely bounces through the IdP leaves
+    only IdP-origin cookies behind. `context.cookies(app_url)` returns just the
+    cookies the app origin would receive, so identity-provider (`login_url`)
+    cookies are excluded from the check.
+
+    Opt-in: with no `cfg.session_cookie_names` to look for this returns True, so
+    apps that authenticate via localStorage / bearer tokens and set no cookie are
+    unaffected. A cookie probe that fails to evaluate is treated as "present"
+    rather than aborting the login, matching the leniency elsewhere in this module.
+    """
+    wanted = cfg.session_cookie_names
+    if not wanted:
+        return True
+    try:
+        cookies = await page.context.cookies(app_url)
+    except PlaywrightError as e:
+        logger.debug("session-cookie probe failed: %s", e)
+        return True
+    wanted_set = set(wanted)
+    return any(c.get("name") in wanted_set and c.get("value") for c in cookies)
 
 
 async def _dispatch_form_events(page: Page, selector: str) -> None:

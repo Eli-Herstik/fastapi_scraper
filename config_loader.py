@@ -31,10 +31,18 @@ class LoginConfig:
     # Additional login URLs (beyond `login_url`) that should also be recognized as
     # the login page — e.g. an SSO/IdP reachable under more than one hostname.
     extra_login_urls: list = None
+    # Name(s) of the cookie the app sets on its OWN origin once a session is
+    # established. When configured, a successful login must leave at least one of
+    # these cookies on the app URL; their absence signals a failed/rejected login.
+    # Empty (the default) disables the check — correct for apps that authenticate
+    # via localStorage / bearer tokens and set no session cookie.
+    session_cookie_names: list = None
 
     def __post_init__(self):
         if self.extra_login_urls is None:
             self.extra_login_urls = []
+        if self.session_cookie_names is None:
+            self.session_cookie_names = []
 
     @property
     def login_urls(self) -> list:
@@ -85,6 +93,16 @@ def _resolve_login(data: dict) -> Optional[LoginConfig]:
     else:
         raise ValueError("login 'login_url' must be a non-empty string or list of non-empty strings")
 
+    raw_cookie = block.get('session_cookie_name')
+    if raw_cookie is None:
+        session_cookie_names = []
+    elif isinstance(raw_cookie, str):
+        session_cookie_names = [raw_cookie] if raw_cookie else []
+    elif isinstance(raw_cookie, (list, tuple)) and all(isinstance(c, str) for c in raw_cookie):
+        session_cookie_names = [c for c in raw_cookie if c]
+    else:
+        raise ValueError("login 'session_cookie_name' must be a string or list of strings")
+
     return LoginConfig(
         login_url=login_urls[0],
         extra_login_urls=login_urls[1:],
@@ -96,6 +114,7 @@ def _resolve_login(data: dict) -> Optional[LoginConfig]:
         post_login_wait_ms=block.get('post_login_wait_ms', 3000),
         storage_state_path=block.get('storage_state_path', "storage_state.json"),
         reuse_storage_state=block.get('reuse_storage_state', True),
+        session_cookie_names=session_cookie_names,
     )
 
 

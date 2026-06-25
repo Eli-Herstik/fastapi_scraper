@@ -221,6 +221,72 @@ class TestResolveLogin:
         assert cfg.post_login_wait_ms == 3000
         assert cfg.storage_state_path == "storage_state.json"
         assert cfg.reuse_storage_state is True
+        assert cfg.session_cookie_names == []
+
+    def test_session_cookie_name_string_resolves_to_list(self, monkeypatch):
+        monkeypatch.setenv("U", "u")
+        monkeypatch.setenv("P", "p")
+        cfg = _resolve_login({"login": {
+            "login_url": "http://x/login",
+            "username_env": "U",
+            "password_env": "P",
+            "session_cookie_name": "sessionid",
+        }})
+        assert cfg.session_cookie_names == ["sessionid"]
+
+    def test_session_cookie_name_list(self, monkeypatch):
+        monkeypatch.setenv("U", "u")
+        monkeypatch.setenv("P", "p")
+        cfg = _resolve_login({"login": {
+            "login_url": "http://x/login",
+            "username_env": "U",
+            "password_env": "P",
+            "session_cookie_name": ["sid", "JSESSIONID"],
+        }})
+        assert cfg.session_cookie_names == ["sid", "JSESSIONID"]
+
+    def test_session_cookie_name_list_filters_empty(self, monkeypatch):
+        monkeypatch.setenv("U", "u")
+        monkeypatch.setenv("P", "p")
+        cfg = _resolve_login({"login": {
+            "login_url": "http://x/login",
+            "username_env": "U",
+            "password_env": "P",
+            "session_cookie_name": ["", "sid"],
+        }})
+        assert cfg.session_cookie_names == ["sid"]
+
+    def test_session_cookie_name_empty_string_disables(self, monkeypatch):
+        monkeypatch.setenv("U", "u")
+        monkeypatch.setenv("P", "p")
+        cfg = _resolve_login({"login": {
+            "login_url": "http://x/login",
+            "username_env": "U",
+            "password_env": "P",
+            "session_cookie_name": "",
+        }})
+        assert cfg.session_cookie_names == []
+
+    def test_session_cookie_name_absent_defaults_empty(self, monkeypatch):
+        monkeypatch.setenv("U", "u")
+        monkeypatch.setenv("P", "p")
+        cfg = _resolve_login({"login": {
+            "login_url": "http://x/login",
+            "username_env": "U",
+            "password_env": "P",
+        }})
+        assert cfg.session_cookie_names == []
+
+    def test_session_cookie_name_invalid_type_raises(self, monkeypatch):
+        monkeypatch.setenv("U", "u")
+        monkeypatch.setenv("P", "p")
+        with pytest.raises(ValueError, match="session_cookie_name"):
+            _resolve_login({"login": {
+                "login_url": "http://x/login",
+                "username_env": "U",
+                "password_env": "P",
+                "session_cookie_name": 123,
+            }})
 
     def test_login_url_list_resolves_to_login_urls(self, monkeypatch):
         monkeypatch.setenv("TEST_USER", "alice")

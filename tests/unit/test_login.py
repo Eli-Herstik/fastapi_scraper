@@ -208,6 +208,111 @@ class TestPerformLogin:
         await perform_login(page, cfg, "http://x/home")
         ctx.storage_state.assert_called_with(path=storage_path)
 
+    async def test_raises_when_session_cookie_absent(self, tmp_path):
+        storage_path = str(tmp_path / "s.json")
+        cfg = _make_login_cfg(
+            storage_state_path=storage_path,
+            session_cookie_names=["sessionid"],
+        )
+        page = AsyncMock()
+        page.url = "http://x/login"
+        page.goto.return_value = MagicMock(status=200)
+        page.query_selector = AsyncMock(return_value=None)
+        ctx = AsyncMock()
+        ctx.cookies = AsyncMock(return_value=[{"name": "other", "value": "x"}])
+        page.context = ctx
+
+        with pytest.raises(RuntimeError, match="session cookies"):
+            await perform_login(page, cfg, "http://x/home")
+        ctx.cookies.assert_called_once_with("http://x/home")
+        ctx.storage_state.assert_not_called()
+
+    async def test_succeeds_when_session_cookie_present(self, tmp_path):
+        storage_path = str(tmp_path / "s.json")
+        cfg = _make_login_cfg(
+            storage_state_path=storage_path,
+            session_cookie_names=["sessionid"],
+        )
+        page = AsyncMock()
+        page.url = "http://x/login"
+        page.goto.return_value = MagicMock(status=200)
+        page.query_selector = AsyncMock(return_value=None)
+        ctx = AsyncMock()
+        ctx.cookies = AsyncMock(return_value=[{"name": "sessionid", "value": "abc123"}])
+        page.context = ctx
+
+        await perform_login(page, cfg, "http://x/home")
+        ctx.cookies.assert_called_once_with("http://x/home")
+        ctx.storage_state.assert_called_with(path=storage_path)
+
+    async def test_raises_when_session_cookie_value_empty(self, tmp_path):
+        storage_path = str(tmp_path / "s.json")
+        cfg = _make_login_cfg(
+            storage_state_path=storage_path,
+            session_cookie_names=["sessionid"],
+        )
+        page = AsyncMock()
+        page.url = "http://x/login"
+        page.goto.return_value = MagicMock(status=200)
+        page.query_selector = AsyncMock(return_value=None)
+        ctx = AsyncMock()
+        ctx.cookies = AsyncMock(return_value=[{"name": "sessionid", "value": ""}])
+        page.context = ctx
+
+        with pytest.raises(RuntimeError, match="session cookies"):
+            await perform_login(page, cfg, "http://x/home")
+        ctx.storage_state.assert_not_called()
+
+    async def test_succeeds_when_any_configured_cookie_present(self, tmp_path):
+        storage_path = str(tmp_path / "s.json")
+        cfg = _make_login_cfg(
+            storage_state_path=storage_path,
+            session_cookie_names=["sid", "JSESSIONID"],
+        )
+        page = AsyncMock()
+        page.url = "http://x/login"
+        page.goto.return_value = MagicMock(status=200)
+        page.query_selector = AsyncMock(return_value=None)
+        ctx = AsyncMock()
+        ctx.cookies = AsyncMock(return_value=[{"name": "JSESSIONID", "value": "v"}])
+        page.context = ctx
+
+        await perform_login(page, cfg, "http://x/home")
+        ctx.storage_state.assert_called_with(path=storage_path)
+
+    async def test_session_cookie_probe_error_is_lenient(self, tmp_path):
+        from playwright.async_api import Error as PWError
+        storage_path = str(tmp_path / "s.json")
+        cfg = _make_login_cfg(
+            storage_state_path=storage_path,
+            session_cookie_names=["sessionid"],
+        )
+        page = AsyncMock()
+        page.url = "http://x/login"
+        page.goto.return_value = MagicMock(status=200)
+        page.query_selector = AsyncMock(return_value=None)
+        ctx = AsyncMock()
+        ctx.cookies = AsyncMock(side_effect=PWError("cookie jar unavailable"))
+        page.context = ctx
+
+        await perform_login(page, cfg, "http://x/home")
+        ctx.storage_state.assert_called_with(path=storage_path)
+
+    async def test_session_cookie_check_skipped_when_unconfigured(self, tmp_path):
+        storage_path = str(tmp_path / "s.json")
+        cfg = _make_login_cfg(storage_state_path=storage_path)
+        page = AsyncMock()
+        page.url = "http://x/login"
+        page.goto.return_value = MagicMock(status=200)
+        page.query_selector = AsyncMock(return_value=None)
+        ctx = AsyncMock()
+        ctx.cookies = AsyncMock(return_value=[])
+        page.context = ctx
+
+        await perform_login(page, cfg, "http://x/home")
+        ctx.cookies.assert_not_called()
+        ctx.storage_state.assert_called_with(path=storage_path)
+
     async def test_raises_when_login_form_still_visible(self, tmp_path):
         storage_path = str(tmp_path / "s.json")
         cfg = _make_login_cfg(storage_state_path=storage_path)
