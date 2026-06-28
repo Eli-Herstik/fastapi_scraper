@@ -95,12 +95,33 @@ class TestIsDestructiveAction:
         el = AsyncMock()
         el.text_content = AsyncMock(side_effect=Exception("detached"))
         el.get_attribute = AsyncMock(return_value=None)
+        el.evaluate = AsyncMock(return_value=False)
         assert await is_destructive_action(el) is False
 
     async def test_exception_on_get_attribute(self):
         el = AsyncMock()
         el.text_content = AsyncMock(return_value="Safe")
         el.get_attribute = AsyncMock(side_effect=Exception("detached"))
+        el.evaluate = AsyncMock(return_value=False)
+        assert await is_destructive_action(el) is False
+
+    async def test_destructive_icon_descendant(self, mock_element):
+        # OutSystems "Exit" link: no destructive text/href/class on the <a>,
+        # but a fa-sign-out icon on a descendant <i>. evaluate_result models the
+        # descendant scan finding a match.
+        assert await is_destructive_action(
+            mock_element(text="Exit", href="#", classes="OSFillParent",
+                         evaluate_result=True)
+        ) is True
+
+    async def test_no_destructive_icon(self, mock_element):
+        assert await is_destructive_action(
+            mock_element(text="Open menu", evaluate_result=False)
+        ) is False
+
+    async def test_icon_scan_exception_swallowed(self, mock_element):
+        el = mock_element(text="Open")
+        el.evaluate = AsyncMock(side_effect=Exception("detached"))
         assert await is_destructive_action(el) is False
 
 
@@ -167,6 +188,8 @@ class TestGetClickableElements:
         loc.is_visible = AsyncMock(return_value=True)
         loc.text_content = AsyncMock(return_value=text)
         loc.get_attribute = AsyncMock(return_value=None)
+        # is_destructive_action scans icon descendants via evaluate; no match here.
+        loc.evaluate = AsyncMock(return_value=False)
         return loc
 
     async def test_collects_enabled_visible_element(self):

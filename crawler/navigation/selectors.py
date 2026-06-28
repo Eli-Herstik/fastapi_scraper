@@ -132,3 +132,12 @@ DESTRUCTIVE_PATTERNS = [
 # Patterns that should only match the visible text content exactly (stripped),
 # not as substrings in URLs, classes, or other attributes.
 DESTRUCTIVE_TEXT_EXACT = ['x', '\u00d7']  # "x" and "×" (close buttons)
+
+# Icon classes (Font Awesome and similar) that mark a control as a logout/exit
+# action even when the clickable element itself carries no destructive text or
+# attributes. The icon typically sits on a descendant <i>/<svg> (e.g. an
+# OutSystems "Exit" link: <a><i class="fa fa-sign-out"></i></a>), which the
+# attribute checks above never inspect.
+DESTRUCTIVE_ICON_PATTERNS = [
+    'sign-out', 'signout', 'log-out', 'logout', 'power-off',
+]

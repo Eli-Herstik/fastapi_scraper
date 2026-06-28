@@ -8,6 +8,7 @@ from .selectors import (
     CLICKABLE_SELECTORS,
     DATE_INPUT_TYPES,
     DATE_PICKER_PATTERNS,
+    DESTRUCTIVE_ICON_PATTERNS,
     DESTRUCTIVE_PATTERNS,
     DESTRUCTIVE_TEXT_EXACT,
 )
@@ -56,6 +57,27 @@ async def is_destructive_action(element, text: str = "", exclude_patterns: Itera
 
     if text_lower in DESTRUCTIVE_TEXT_EXACT:
         return True
+
+    # Icon-only logout/exit controls expose no destructive text or attributes on
+    # the clickable element itself — the signal lives on a descendant icon (e.g.
+    # <a href="#"><i class="fa fa-sign-out"></i></a>). Scan the element and its
+    # icon descendants for a sign-out/power-off class.
+    try:
+        has_destructive_icon = await element.evaluate(
+            '''(el, patterns) => {
+                const guard = el.querySelectorAll('i, svg, [class*="icon"], [class*="fa-"]');
+                const nodes = [el, ...guard];
+                return nodes.some(n => {
+                    const cls = (typeof n.className === 'string' ? n.className : '').toLowerCase();
+                    return patterns.some(p => cls.includes(p));
+                });
+            }''',
+            list(DESTRUCTIVE_ICON_PATTERNS),
+        )
+        if has_destructive_icon:
+            return True
+    except Exception:
+        pass
 
     return False
 
