@@ -123,7 +123,6 @@ class Mapper:
             await self._emit('auth_detected', {
                 'host': host,
                 'method': auth_str,
-                'confidence': 'high' if 'Required' not in auth_str else 'medium',
             })
 
         return {"external_hosts": external_hosts, "pages_crawled": self._pages_visited}
