@@ -99,6 +99,17 @@ class TestHandleResponse:
         )
         assert "Required: Negotiate" in result["authentication"]
 
+    async def test_401_ntlm(self, interceptor, mock_response):
+        # A bare "WWW-Authenticate: NTLM" challenge is labeled explicitly rather
+        # than falling into the "Other" bucket, so the raw authentication field
+        # names the scheme honestly.
+        req_data = {"url": "http://a.com", "authentication": "unauthenticated"}
+        result = await interceptor.handle_response(
+            req_data, mock_response(401, {"www-authenticate": "NTLM"})
+        )
+        assert "Required: NTLM" in result["authentication"]
+        assert "Other" not in result["authentication"]
+
     async def test_401_other_scheme(self, interceptor, mock_response):
         req_data = {"url": "http://a.com", "authentication": "unauthenticated"}
         result = await interceptor.handle_response(

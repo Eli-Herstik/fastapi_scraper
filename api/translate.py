@@ -10,7 +10,7 @@ def normalize_auth_method(raw: str) -> AuthMethod:
 
     Scraper sources:
     - auth_analyzer.detect_authentication() — short tags: ntlm, kerberos, negotiate, basic, bearer, api_key, other, unauthenticated
-    - interceptor._apply_auth_challenge() — "Required: Basic ...", "Required: Bearer ...", "Required: Negotiate ...", "Required: Other ..."
+    - interceptor._apply_auth_challenge() — "Required: Basic ...", "Required: Bearer ...", "Required: NTLM ...", "Required: Negotiate ...", "Required: Other ..."
     - interceptor._apply_idp_redirect() — "oauth: <provider>"
     """
     if not raw:
@@ -45,9 +45,11 @@ def normalize_auth_method(raw: str) -> AuthMethod:
         return AuthMethod.unauthenticated
 
     # Checked last so the interceptor's "Required: Other (...)" marker never
-    # preempts a real scheme carried in the wrapped challenge -- e.g. a bare
-    # "WWW-Authenticate: NTLM" 401 becomes "Required: Other (NTLM)" and must
-    # still resolve to ntlm (a blocker), not other.
+    # preempts a real scheme carried in the wrapped challenge. The interceptor
+    # now emits recognized challenge schemes explicitly (e.g. "Required: NTLM"),
+    # so "Other" wraps only genuinely unnamed schemes -- but the ordering is kept
+    # defensively: should a known scheme name ever reach here inside an "Other"
+    # wrapper, its own branch above must still win (ntlm -> blocker, not other).
     if "other" in lower:
         return AuthMethod.other
 
