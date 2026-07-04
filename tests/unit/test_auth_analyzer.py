@@ -229,6 +229,18 @@ class TestAggregateByHost:
         result = aggregate_by_host(reqs)
         assert result[0]["authentication"] == "ntlm"
 
+    def test_other_challenge_outranks_unknown(self):
+        # Same review-tier severity, but the "Required: Other (...)" 401 carries
+        # the concrete WWW-Authenticate demand as evidence, so it wins the host
+        # label over an unclassifiable header. Deterministic tiebreak: the unknown
+        # is seen first here, yet "other" still represents the host.
+        reqs = [
+            {"url": "http://a.com/1", "authentication": "unknown"},
+            {"url": "http://a.com/2", "authentication": "Required: Other (Digest ...)"},
+        ]
+        result = aggregate_by_host(reqs)
+        assert result[0]["authentication"] == "Required: Other (Digest ...)"
+
     def test_oauth_redirect_outranks_unauthenticated(self):
         # The "oauth: <provider>" redirect form is classified by substring and
         # outranks unauthenticated.

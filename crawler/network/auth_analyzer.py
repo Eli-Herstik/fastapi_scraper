@@ -147,11 +147,11 @@ def _evidence_from(req: Dict[str, Any]) -> Dict[str, Any]:
 # 401 challenge ranks as that scheme, so a demanded Basic/NTLM is never masked by
 # an accepted credential on another endpoint of the same host.
 _AUTH_RANK = {
-    "basic": 7,
-    "ntlm": 7,
-    "negotiate": 6,
+    "basic": 8,
+    "ntlm": 8,
+    "negotiate": 7,
+    "other": 6,
     "unknown": 5,
-    "other": 5,
     "kerberos": 4,
     "bearer": 3,
     "oauth": 2,
@@ -168,9 +168,12 @@ def _auth_rank(value: str) -> int:
     to a single scheme by substring, mirroring translate.normalize_auth_method so
     the rank agrees with the scheme the FE will ultimately show. A scheme the
     server merely demanded therefore counts the same as one actually observed.
-    Anything unresolved (e.g. a "Required: Other (Digest ...)" challenge) surfaces
-    on the FE as "other" and ranks equal to "unknown", which -- like every named
-    scheme -- still outranks unauthenticated.
+    An unresolved challenge surfaces on the FE as "other" and ranks just above
+    "unknown": when a host carries both, the "Required: Other (...)" 401 -- whose
+    evidence is the literal WWW-Authenticate demand -- represents the host over an
+    unclassifiable sent header. "other" still sits below negotiate and the
+    blockers, so it never masks a more-notable demanded scheme, and (like every
+    named scheme) outranks unauthenticated.
     """
     lower = (value or "").lower()
     if not lower or value in NO_AUTH_VALUES or lower in {"none", "anonymous", "unauthenticated"}:
