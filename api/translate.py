@@ -10,7 +10,7 @@ def normalize_auth_method(raw: str) -> AuthMethod:
 
     Scraper sources:
     - auth_analyzer.detect_authentication() — short tags: ntlm, kerberos, negotiate, basic, bearer, api_key, unknown, unauthenticated
-    - interceptor._apply_auth_challenge() — "Required: Basic ...", "Required: Bearer ...", "Required: Negotiate ..."
+    - interceptor._apply_auth_challenge() — "Required: Basic ...", "Required: Bearer ...", "Required: Negotiate ...", "Required: Other ..."
     - interceptor._apply_idp_redirect() — "oauth: <provider>"
     """
     if not raw:
@@ -44,13 +44,20 @@ def normalize_auth_method(raw: str) -> AuthMethod:
     if lower in {"none", "anonymous", "unauthenticated", ""}:
         return AuthMethod.unauthenticated
 
+    # Checked last so the interceptor's "Required: Other (...)" marker never
+    # preempts a real scheme carried in the wrapped challenge -- e.g. a bare
+    # "WWW-Authenticate: NTLM" 401 becomes "Required: Other (NTLM)" and must
+    # still resolve to ntlm (a blocker), not other.
+    if "other" in lower:
+        return AuthMethod.other
+
     return AuthMethod.unknown
 
 
 def severity_for(method: AuthMethod) -> Severity:
     if method in (AuthMethod.ntlm, AuthMethod.basic):
         return Severity.blocker
-    if method in (AuthMethod.negotiate, AuthMethod.unknown):
+    if method in (AuthMethod.negotiate, AuthMethod.unknown, AuthMethod.other):
         return Severity.review
     return Severity.cleared
 

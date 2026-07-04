@@ -276,7 +276,8 @@ async def patch_finding(
         if body.auth_method is not None:
             # Manual auth correction is allowed only as a fill-in for what the
             # scraper couldn't classify — never to override an auto-detected
-            # method, and never back to "unknown".
+            # method, and never back to "unknown". "other" (a real but unnamed
+            # challenge) counts as classified, so it stays locked here too.
             if finding.auth_method != AuthMethod.unknown.value:
                 raise HTTPException(
                     status_code=409,

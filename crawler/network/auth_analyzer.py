@@ -151,6 +151,7 @@ _AUTH_RANK = {
     "ntlm": 7,
     "negotiate": 6,
     "unknown": 5,
+    "other": 5,
     "kerberos": 4,
     "bearer": 3,
     "oauth": 2,
@@ -167,8 +168,9 @@ def _auth_rank(value: str) -> int:
     to a single scheme by substring, mirroring translate.normalize_auth_method so
     the rank agrees with the scheme the FE will ultimately show. A scheme the
     server merely demanded therefore counts the same as one actually observed.
-    Anything unresolved (e.g. a "Required: Digest ..." challenge) ranks as
-    "unknown", which -- like every named scheme -- still outranks unauthenticated.
+    Anything unresolved (e.g. a "Required: Other (Digest ...)" challenge) surfaces
+    on the FE as "other" and ranks equal to "unknown", which -- like every named
+    scheme -- still outranks unauthenticated.
     """
     lower = (value or "").lower()
     if not lower or value in NO_AUTH_VALUES or lower in {"none", "anonymous", "unauthenticated"}:
@@ -187,6 +189,10 @@ def _auth_rank(value: str) -> int:
         return _AUTH_RANK["basic"]
     if "api_key" in lower or "apikey" in lower or "api-key" in lower:
         return _AUTH_RANK["api_key"]
+    # Last, mirroring normalize_auth_method: the "Required: Other (...)" marker
+    # must not preempt a real scheme wrapped inside it.
+    if "other" in lower:
+        return _AUTH_RANK["other"]
     return _AUTH_RANK["unknown"]
 
 

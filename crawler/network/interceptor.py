@@ -107,7 +107,7 @@ class NetworkInterceptor:
         elif lower.startswith('negotiate'):
             request_data['authentication'] = f"Required: Negotiate ({auth_challenge})"
         else:
-            request_data['authentication'] = f"Required: {auth_challenge}"
+            request_data['authentication'] = f"Required: Other ({auth_challenge})"
 
     def _apply_idp_redirect(self, headers, request_data, response_data) -> None:
         location = self._get_header_value(headers, 'Location')
