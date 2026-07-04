@@ -45,7 +45,7 @@ def normalize_auth_method(raw: str) -> AuthMethod:
 
 
 def severity_for(method: AuthMethod) -> Severity:
-    if method == AuthMethod.ntlm:
+    if method in (AuthMethod.ntlm, AuthMethod.basic):
         return Severity.blocker
     if method in (AuthMethod.negotiate, AuthMethod.unknown):
         return Severity.review
