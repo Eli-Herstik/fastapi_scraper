@@ -171,13 +171,15 @@ class TestAggregateByHost:
         result = aggregate_by_host(reqs)
         assert result[0]["authentication"] == "bearer"
 
-    def test_upgrades_from_required_to_oauth(self):
+    def test_basic_challenge_outranks_accepted_bearer(self):
+        # A demanded Basic scheme (blocker-tier) is the host's most notable auth
+        # and must not be masked by an accepted bearer token on another endpoint.
         reqs = [
             {"url": "http://a.com/1", "authentication": "Required: Basic (...)"},
             {"url": "http://a.com/2", "authentication": "bearer"},
         ]
         result = aggregate_by_host(reqs)
-        assert result[0]["authentication"] == "bearer"
+        assert result[0]["authentication"] == "Required: Basic (...)"
 
     def test_keeps_better_auth(self):
         reqs = [
@@ -187,10 +189,9 @@ class TestAggregateByHost:
         result = aggregate_by_host(reqs)
         assert result[0]["authentication"] == "bearer"
 
-    def test_accepted_non_bearer_credential_beats_challenge(self):
-        # Demotion generalizes beyond bearer: any credential the server accepted
-        # (a short tag, i.e. not rejected upstream) outranks a challenge seen on
-        # another endpoint of the same host.
+    def test_basic_outranks_negotiate_challenge(self):
+        # Ranking is purely by scheme: Basic (blocker-tier) outranks a Negotiate
+        # challenge (review-tier) regardless of which was actually accepted.
         reqs = [
             {"url": "http://a.com/admin", "authentication": "Required: Negotiate (...)"},
             {"url": "http://a.com/login", "authentication": "basic"},
@@ -206,6 +207,37 @@ class TestAggregateByHost:
         ]
         result = aggregate_by_host(reqs)
         assert result[0]["authentication"] == "Required: Negotiate (...)"
+
+    def test_challenge_not_overwritten_by_later_unauthenticated(self):
+        # A real 401 challenge outranks "no auth", so a later unauthenticated
+        # request on the same host must not overwrite it (regression guard for
+        # the removed NO_AUTH-only upgrade path).
+        reqs = [
+            {"url": "http://a.com/admin", "authentication": "Required: Negotiate (...)"},
+            {"url": "http://a.com/health", "authentication": "unauthenticated"},
+        ]
+        result = aggregate_by_host(reqs)
+        assert result[0]["authentication"] == "Required: Negotiate (...)"
+
+    def test_ntlm_outranks_negotiate(self):
+        # NTLM (blocker-tier) is the host's most notable auth over a plain
+        # Negotiate/SPNEGO handshake (review-tier).
+        reqs = [
+            {"url": "http://a.com/1", "authentication": "negotiate"},
+            {"url": "http://a.com/2", "authentication": "ntlm"},
+        ]
+        result = aggregate_by_host(reqs)
+        assert result[0]["authentication"] == "ntlm"
+
+    def test_oauth_redirect_outranks_unauthenticated(self):
+        # The "oauth: <provider>" redirect form is classified by substring and
+        # outranks unauthenticated.
+        reqs = [
+            {"url": "http://a.com/1", "authentication": "unauthenticated"},
+            {"url": "http://a.com/2", "authentication": "oauth: Okta"},
+        ]
+        result = aggregate_by_host(reqs)
+        assert result[0]["authentication"] == "oauth: Okta"
 
     def test_skips_requests_without_host(self):
         reqs = [{"url": "not-a-url", "authentication": "unauthenticated"}]

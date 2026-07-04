@@ -98,8 +98,7 @@ class NetworkInterceptor:
         # failed sent scheme, is the authoritative label. Promote it even over a
         # concrete detected auth like "bearer": a rejected credential must not
         # masquerade as accepted. (The raw scheme is still in the request headers
-        # for evidence.) A short tag surviving here therefore means "not rejected",
-        # which aggregate_by_host relies on to rank accepted auth over a challenge.
+        # for evidence.)
         lower = auth_challenge.lower()
         if lower.startswith('basic'):
             request_data['authentication'] = f"Required: Basic ({auth_challenge})"

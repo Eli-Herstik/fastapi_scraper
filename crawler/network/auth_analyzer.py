@@ -11,13 +11,6 @@ from urllib.parse import parse_qs, urlparse
 # for robustness against externally-supplied request dicts.
 NO_AUTH_VALUES = {"unauthenticated", "None", "anonymous"}
 
-# Short tags detect_authentication returns for a credential actually observed on
-# a request. A 401 rewrites the field to a verbose "Required: ..." challenge
-# upstream (interceptor._apply_auth_challenge), so a value still in this set
-# means the credential was NOT rejected -- which lets aggregation rank an
-# accepted credential above a mere challenge without re-checking the status here.
-DETECTED_AUTH_TAGS = {"bearer", "basic", "ntlm", "kerberos", "negotiate", "api_key", "unknown"}
-
 # Mechanism signatures for classifying a "Negotiate" (SPNEGO) token by scanning
 # its decoded bytes, instead of a full ASN.1 parse. NTLM messages always begin
 # with the literal "NTLMSSP\0" magic (also present when NTLM rides inside a
@@ -147,6 +140,56 @@ def _evidence_from(req: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+# Host-level ranking for aggregate_by_host: when a host is seen with more than
+# one authentication scheme across its requests, the highest-ranked scheme
+# becomes the host's label. Ordered so the weakest/most-notable schemes (Basic,
+# NTLM) rank highest and "no auth observed" ranks lowest; a "Required: <scheme>"
+# 401 challenge ranks as that scheme, so a demanded Basic/NTLM is never masked by
+# an accepted credential on another endpoint of the same host.
+_AUTH_RANK = {
+    "basic": 7,
+    "ntlm": 7,
+    "negotiate": 6,
+    "unknown": 5,
+    "kerberos": 4,
+    "bearer": 3,
+    "oauth": 2,
+    "api_key": 1,
+    "unauthenticated": 0,
+}
+
+
+def _auth_rank(value: str) -> int:
+    """Rank an authentication string by its scheme for host aggregation.
+
+    Classifies the raw scraper value -- a short detect_authentication tag, a
+    "Required: <scheme> ..." 401 challenge, or an "oauth: <provider>" redirect --
+    to a single scheme by substring, mirroring translate.normalize_auth_method so
+    the rank agrees with the scheme the FE will ultimately show. A scheme the
+    server merely demanded therefore counts the same as one actually observed.
+    Anything unresolved (e.g. a "Required: Digest ..." challenge) ranks as
+    "unknown", which -- like every named scheme -- still outranks unauthenticated.
+    """
+    lower = (value or "").lower()
+    if not lower or value in NO_AUTH_VALUES or lower in {"none", "anonymous", "unauthenticated"}:
+        return _AUTH_RANK["unauthenticated"]
+    if "ntlm" in lower:
+        return _AUTH_RANK["ntlm"]
+    if "kerberos" in lower:
+        return _AUTH_RANK["kerberos"]
+    if "negotiate" in lower:
+        return _AUTH_RANK["negotiate"]
+    if "oauth" in lower or "/oidc" in lower:
+        return _AUTH_RANK["oauth"]
+    if "bearer" in lower:
+        return _AUTH_RANK["bearer"]
+    if "basic" in lower:
+        return _AUTH_RANK["basic"]
+    if "api_key" in lower or "apikey" in lower or "api-key" in lower:
+        return _AUTH_RANK["api_key"]
+    return _AUTH_RANK["unknown"]
+
+
 def aggregate_by_host(requests: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """Group requests by host and pick the most specific authentication seen.
 
@@ -177,20 +220,11 @@ def aggregate_by_host(requests: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         entry['request_count'] = int(entry.get('request_count', 1)) + 1
 
         existing_auth = entry['authentication']
-        # Priority: Actual Auth > Required Auth > unauthenticated. A "Required:
-        # ..." string means the server merely demanded auth; a short detected tag
-        # (DETECTED_AUTH_TAGS) means a credential was observed and NOT rejected --
-        # a 401 would have been promoted to "Required: ..." upstream -- so it
-        # outranks any challenge, for every scheme rather than bearer alone.
-        replaced = False
-        if existing_auth in NO_AUTH_VALUES and current_auth not in NO_AUTH_VALUES:
+        # Rank by scheme (_auth_rank): the most notable auth seen on any of the
+        # host's requests wins as its label. A strictly higher rank also brings
+        # its evidence sample along; equal ranks keep the first request seen.
+        if _auth_rank(current_auth) > _auth_rank(existing_auth):
             entry['authentication'] = current_auth
-            replaced = True
-        elif "Required" in existing_auth and current_auth in DETECTED_AUTH_TAGS:
-            entry['authentication'] = current_auth
-            replaced = True
-
-        if replaced:
             entry.update(_evidence_from(req))
 
     return list(result_map.values())
