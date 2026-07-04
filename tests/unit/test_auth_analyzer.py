@@ -187,6 +187,26 @@ class TestAggregateByHost:
         result = aggregate_by_host(reqs)
         assert result[0]["authentication"] == "bearer"
 
+    def test_accepted_non_bearer_credential_beats_challenge(self):
+        # Demotion generalizes beyond bearer: any credential the server accepted
+        # (a short tag, i.e. not rejected upstream) outranks a challenge seen on
+        # another endpoint of the same host.
+        reqs = [
+            {"url": "http://a.com/admin", "authentication": "Required: Negotiate (...)"},
+            {"url": "http://a.com/login", "authentication": "basic"},
+        ]
+        result = aggregate_by_host(reqs)
+        assert result[0]["authentication"] == "basic"
+
+    def test_challenge_stands_without_accepted_credential(self):
+        # A host seen only via a rejected-and-challenged request keeps the
+        # challenge as its label -- the rejected credential does not resurface.
+        reqs = [
+            {"url": "http://a.com/admin", "authentication": "Required: Negotiate (...)"},
+        ]
+        result = aggregate_by_host(reqs)
+        assert result[0]["authentication"] == "Required: Negotiate (...)"
+
     def test_skips_requests_without_host(self):
         reqs = [{"url": "not-a-url", "authentication": "unauthenticated"}]
         assert aggregate_by_host(reqs) == []

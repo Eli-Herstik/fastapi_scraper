@@ -11,6 +11,13 @@ from urllib.parse import parse_qs, urlparse
 # for robustness against externally-supplied request dicts.
 NO_AUTH_VALUES = {"unauthenticated", "None", "anonymous"}
 
+# Short tags detect_authentication returns for a credential actually observed on
+# a request. A 401 rewrites the field to a verbose "Required: ..." challenge
+# upstream (interceptor._apply_auth_challenge), so a value still in this set
+# means the credential was NOT rejected -- which lets aggregation rank an
+# accepted credential above a mere challenge without re-checking the status here.
+DETECTED_AUTH_TAGS = {"bearer", "basic", "ntlm", "kerberos", "negotiate", "api_key", "unknown"}
+
 # Mechanism signatures for classifying a "Negotiate" (SPNEGO) token by scanning
 # its decoded bytes, instead of a full ASN.1 parse. NTLM messages always begin
 # with the literal "NTLMSSP\0" magic (also present when NTLM rides inside a
@@ -170,14 +177,16 @@ def aggregate_by_host(requests: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         entry['request_count'] = int(entry.get('request_count', 1)) + 1
 
         existing_auth = entry['authentication']
-        # Priority: Actual Auth > Required Auth > unauthenticated.
-        # "Required: ..." challenge strings come from the interceptor and stay
-        # verbose; detect_authentication's value is a short tag (e.g. "bearer").
+        # Priority: Actual Auth > Required Auth > unauthenticated. A "Required:
+        # ..." string means the server merely demanded auth; a short detected tag
+        # (DETECTED_AUTH_TAGS) means a credential was observed and NOT rejected --
+        # a 401 would have been promoted to "Required: ..." upstream -- so it
+        # outranks any challenge, for every scheme rather than bearer alone.
         replaced = False
         if existing_auth in NO_AUTH_VALUES and current_auth not in NO_AUTH_VALUES:
             entry['authentication'] = current_auth
             replaced = True
-        elif "Required" in existing_auth and current_auth == "bearer":
+        elif "Required" in existing_auth and current_auth in DETECTED_AUTH_TAGS:
             entry['authentication'] = current_auth
             replaced = True
 

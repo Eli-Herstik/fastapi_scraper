@@ -111,12 +111,25 @@ class TestHandleResponse:
         result = await interceptor.handle_response(req_data, mock_response(401, {}))
         assert result["authentication"] == "unauthenticated"
 
-    async def test_401_does_not_overwrite_existing_auth(self, interceptor, mock_response):
+    async def test_401_overwrites_rejected_credential(self, interceptor, mock_response):
+        # A 401 means the sent credential was rejected, so the server's challenge
+        # -- not the failed "bearer" -- is the authoritative label. The raw
+        # challenge is still recorded on the response for evidence.
         req_data = {"url": "http://a.com", "authentication": "bearer"}
         result = await interceptor.handle_response(
             req_data, mock_response(401, {"www-authenticate": "Basic"})
         )
-        assert result["authentication"] == "bearer"
+        assert "Required: Basic" in result["authentication"]
+        assert result["response"]["auth_challenge"] == "Basic"
+
+    async def test_401_bearer_rejected_by_negotiate(self, interceptor, mock_response):
+        # The motivating scenario: a bearer token met with a Negotiate challenge.
+        # The rejected bearer must not stick as the request's auth.
+        req_data = {"url": "http://a.com", "authentication": "bearer"}
+        result = await interceptor.handle_response(
+            req_data, mock_response(401, {"www-authenticate": "Negotiate"})
+        )
+        assert "Required: Negotiate" in result["authentication"]
 
     async def test_302_idp(self, interceptor, mock_response):
         req_data = {"url": "http://a.com", "authentication": "unauthenticated"}

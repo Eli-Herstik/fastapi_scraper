@@ -93,16 +93,22 @@ class NetworkInterceptor:
         if not auth_challenge:
             return
         response_data['auth_challenge'] = auth_challenge
-        if request_data.get('authentication', 'unauthenticated') in auth_analyzer.NO_AUTH_VALUES:
-            lower = auth_challenge.lower()
-            if lower.startswith('basic'):
-                request_data['authentication'] = f"Required: Basic ({auth_challenge})"
-            elif lower.startswith('bearer'):
-                request_data['authentication'] = f"Required: Bearer ({auth_challenge})"
-            elif lower.startswith('negotiate'):
-                request_data['authentication'] = f"Required: Negotiate ({auth_challenge})"
-            else:
-                request_data['authentication'] = f"Required: {auth_challenge}"
+        # This runs only on a 401, which means whatever credential the request
+        # carried (if any) was rejected -- so the server's challenge, not the
+        # failed sent scheme, is the authoritative label. Promote it even over a
+        # concrete detected auth like "bearer": a rejected credential must not
+        # masquerade as accepted. (The raw scheme is still in the request headers
+        # for evidence.) A short tag surviving here therefore means "not rejected",
+        # which aggregate_by_host relies on to rank accepted auth over a challenge.
+        lower = auth_challenge.lower()
+        if lower.startswith('basic'):
+            request_data['authentication'] = f"Required: Basic ({auth_challenge})"
+        elif lower.startswith('bearer'):
+            request_data['authentication'] = f"Required: Bearer ({auth_challenge})"
+        elif lower.startswith('negotiate'):
+            request_data['authentication'] = f"Required: Negotiate ({auth_challenge})"
+        else:
+            request_data['authentication'] = f"Required: {auth_challenge}"
 
     def _apply_idp_redirect(self, headers, request_data, response_data) -> None:
         location = self._get_header_value(headers, 'Location')
