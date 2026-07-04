@@ -47,8 +47,9 @@ def detect_authentication(headers: Dict[str, str], url: str) -> str:
 
     Returns a canonical short tag aligned with the FE's AuthMethod vocabulary:
     "bearer", "basic", "ntlm", "kerberos", "negotiate" (SPNEGO whose underlying
-    mechanism couldn't be resolved), "api_key", "unknown" (an
-    unrecognized/ambiguous scheme), or "unauthenticated" (no auth observed).
+    mechanism couldn't be resolved), "api_key", "other" (an Authorization header
+    carrying a real but unnamed scheme, e.g. Digest), or "unauthenticated" (no
+    auth observed).
     """
     auth_header = None
     for k, v in headers.items():
@@ -73,7 +74,12 @@ def detect_authentication(headers: Dict[str, str], url: str) -> str:
             return "ntlm"
         if auth_header.startswith('Kerberos '):
             return "kerberos"
-        return "unknown"
+        # A present Authorization header with an unrecognized scheme (e.g. Digest)
+        # is a real but unnamed mechanism, not an absence of signal -- classify it
+        # as "other", mirroring the interceptor's "Required: Other (...)" handling
+        # of an unnamed WWW-Authenticate challenge. The raw scheme still survives in
+        # the finding's headers_snippet evidence.
+        return "other"
 
     api_key_headers = [
         'x-api-key', 'x-auth-token', 'x-auth', 'api-key', 'apikey', 'auth-token'
@@ -168,12 +174,12 @@ def _auth_rank(value: str) -> int:
     to a single scheme by substring, mirroring translate.normalize_auth_method so
     the rank agrees with the scheme the FE will ultimately show. A scheme the
     server merely demanded therefore counts the same as one actually observed.
-    An unresolved challenge surfaces on the FE as "other" and ranks just above
-    "unknown": when a host carries both, the "Required: Other (...)" 401 -- whose
-    evidence is the literal WWW-Authenticate demand -- represents the host over an
-    unclassifiable sent header. "other" still sits below negotiate and the
-    blockers, so it never masks a more-notable demanded scheme, and (like every
-    named scheme) outranks unauthenticated.
+    Both an unresolved "Required: Other (...)" 401 and an Authorization header
+    carrying an unnamed scheme surface as "other", which ranks just above the
+    "unknown" defensive fallback (now only reached by a truly unrecognized aggregate
+    string). "other" still sits below negotiate and the blockers, so it never masks
+    a more-notable demanded scheme, and (like every named scheme) outranks
+    unauthenticated.
     """
     lower = (value or "").lower()
     if not lower or value in NO_AUTH_VALUES or lower in {"none", "anonymous", "unauthenticated"}:

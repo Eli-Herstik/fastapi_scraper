@@ -9,7 +9,7 @@ def normalize_auth_method(raw: str) -> AuthMethod:
     """Map the scraper's freeform authentication string to the FE enum.
 
     Scraper sources:
-    - auth_analyzer.detect_authentication() — short tags: ntlm, kerberos, negotiate, basic, bearer, api_key, unknown, unauthenticated
+    - auth_analyzer.detect_authentication() — short tags: ntlm, kerberos, negotiate, basic, bearer, api_key, other, unauthenticated
     - interceptor._apply_auth_challenge() — "Required: Basic ...", "Required: Bearer ...", "Required: Negotiate ...", "Required: Other ..."
     - interceptor._apply_idp_redirect() — "oauth: <provider>"
     """

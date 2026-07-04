@@ -69,8 +69,11 @@ class TestDetectAuthentication:
     def test_kerberos_direct(self):
         assert detect_authentication({"authorization": "Kerberos abc"}, "http://x") == "kerberos"
 
-    def test_unknown_scheme(self):
-        assert detect_authentication({"authorization": "Digest abc"}, "http://x") == "unknown"
+    def test_unnamed_scheme_is_other(self):
+        # A present-but-unrecognized scheme (Digest) is a real, unnamed mechanism,
+        # classified as "other" -- not "unknown" -- mirroring the interceptor's
+        # "Required: Other (...)" challenge handling.
+        assert detect_authentication({"authorization": "Digest abc"}, "http://x") == "other"
 
     def test_case_insensitive_header_key(self):
         assert detect_authentication({"Authorization": "Bearer abc"}, "http://x") == "bearer"
