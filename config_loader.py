@@ -38,6 +38,9 @@ class Config:
     max_clicks_per_page: int
     wait_timeout: int = 30000
     network_idle_timeout: int = 2000
+    # Recreate the browser context after this many visited pages to bound Chromium's
+    # memory growth on long crawls (prevents the container OOM-kill). 0 disables it.
+    recycle_after_pages: int = 15
     form_filling: FormConfig = None
     exclude_patterns: list = None
     login: Optional[LoginConfig] = None
@@ -97,6 +100,7 @@ def load_config(config_path: str) -> Config:
         max_clicks_per_page=data.get('max_clicks_per_page', 20),
         wait_timeout=data.get('wait_timeout', 30000),
         network_idle_timeout=data.get('network_idle_timeout', 2000),
+        recycle_after_pages=data.get('recycle_after_pages', 15),
         form_filling=form_config,
         exclude_patterns=data.get('exclude_patterns'),
         login=_resolve_login(data),

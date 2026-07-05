@@ -1,0 +1,605 @@
+11:44:44 [INFO] api.main: Backend ready (max_parallel=2)
+11:49:44 [DEBUG] httpcore.connection: connect_tcp.started host='psso' port=443 local_address=None timeout=5.0 socket_options=None
+11:49:44 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x7fa82c3e0350>
+11:49:44 [DEBUG] httpcore.connection: start_tls.started ssl_context=<ssl.SSLContext object at 0x7fa8297de850> server_hostname='psso' timeout=5.0
+11:49:44 [DEBUG] httpcore.connection: start_tls.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x7fa82ba9bb60>
+11:49:44 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'GET']>
+11:49:44 [DEBUG] httpcore.http11: send_request_headers.complete
+11:49:44 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'GET']>
+11:49:44 [DEBUG] httpcore.http11: send_request_body.complete
+11:49:44 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'GET']>
+11:49:44 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Cache-Control', b'no-cache'), (b'X-XSS-Protection', b'1; mode=block'), (b'X-Frame-Options', b'SAMEORIGIN'), (b'Referrer-Policy', b'no-referrer'), (b'Date', b'Sun, 05 Jul 2026 11:49:44 GMT'), (b'Connection', b'keep-alive'), (b'Strict-Transport-Security', b'max-age=31536000; includeSubDomains'), (b'X-Content-Type-Options', b'nosniff'), (b'Content-Type', b'application/json'), (b'Content-Length', b'3430')])
+11:49:44 [INFO] httpx: HTTP Request: GET https://psso/auth/realms/sso/protocol/openid-connect/certs "HTTP/1.1 200 OK"
+11:49:44 [DEBUG] httpcore.http11: receive_response_body.started request=<Request [b'GET']>
+11:49:44 [DEBUG] httpcore.http11: receive_response_body.complete
+11:49:44 [DEBUG] httpcore.http11: response_closed.started
+11:49:44 [DEBUG] httpcore.http11: response_closed.complete
+11:49:44 [DEBUG] httpcore.connection: close.started
+11:49:44 [DEBUG] httpcore.connection: close.complete
+11:49:44 [DEBUG] httpcore.connection: connect_tcp.started host='ad-groups-service' port=443 local_address=None timeout=5.0 socket_options=None
+11:49:44 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x7fa82baabf50>
+11:49:44 [DEBUG] httpcore.connection: start_tls.started ssl_context=<ssl.SSLContext object at 0x7fa829554a50> server_hostname='ad-groups-service' timeout=5.0
+11:49:44 [DEBUG] httpcore.connection: start_tls.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x7fa82baa8050>
+11:49:44 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'GET']>
+11:49:44 [DEBUG] httpcore.http11: send_request_headers.complete
+11:49:44 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'GET']>
+11:49:44 [DEBUG] httpcore.http11: send_request_body.complete
+11:49:44 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'GET']>
+11:49:46 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'date', b'Sun, 05 Jul 2026 11:49:43 GMT'), (b'server', b'uvicorn'), (b'content-length', b'6064'), (b'content-type', b'application/json'), (b'set-cookie', b'7d7a9a186b1c06c021b8c1f765c78f81=f99355bb6f8fdf9f009088c39031f710; path=/; HttpOnly')])
+11:49:46 [INFO] httpx: HTTP Request: GET https://ad-groups-service/sic/users/elih/all-groups "HTTP/1.1 200 OK"
+11:49:46 [DEBUG] httpcore.http11: receive_response_body.started request=<Request [b'GET']>
+11:49:46 [DEBUG] httpcore.http11: receive_response_body.complete
+11:49:46 [DEBUG] httpcore.http11: response_closed.started
+11:49:46 [DEBUG] httpcore.http11: response_closed.complete
+11:49:46 [DEBUG] httpcore.connection: close.started
+11:49:46 [DEBUG] httpcore.connection: close.complete
+11:49:59 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:49:59.440667+00:00\r\n\r\n'
+11:49:59 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:49:59.518628+00:00\r\n\r\n'
+11:50:09 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+11:50:09 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+11:50:14 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:50:14.442109+00:00\r\n\r\n'
+11:50:14 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:50:14.519745+00:00\r\n\r\n'
+11:50:29 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:50:29.442604+00:00\r\n\r\n'
+11:50:29 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:50:29.520254+00:00\r\n\r\n'
+11:50:34 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+11:50:34 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+11:50:44 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:50:44.442000+00:00\r\n\r\n'
+11:50:44 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:50:44.520223+00:00\r\n\r\n'
+11:50:49 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+11:50:59 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:50:59.442422+00:00\r\n\r\n'
+11:50:59 [DEBUG] sse_starlette.sse: Got event: http.disconnect. Stop streaming.
+11:50:59 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+11:50:59 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:50:59.519851+00:00\r\n\r\n'
+11:51:14 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:51:14.521211+00:00\r\n\r\n'
+11:51:24 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+11:51:29 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:51:29.521875+00:00\r\n\r\n'
+11:51:44 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:51:44.522454+00:00\r\n\r\n'
+11:51:49 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+11:51:59 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:51:59.522979+00:00\r\n\r\n'
+11:52:14 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+11:52:14 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:52:14.523400+00:00\r\n\r\n'
+11:52:29 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:52:29.524153+00:00\r\n\r\n'
+11:52:39 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+11:52:44 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:52:44.524396+00:00\r\n\r\n'
+11:52:59 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:52:59.524076+00:00\r\n\r\n'
+11:53:04 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+11:53:14 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:53:14.524751+00:00\r\n\r\n'
+11:53:29 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+11:53:29 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:53:29.524733+00:00\r\n\r\n'
+11:53:44 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:53:44.526119+00:00\r\n\r\n'
+11:53:54 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+11:53:59 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:53:59.526138+00:00\r\n\r\n'
+11:54:14 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:54:14.526199+00:00\r\n\r\n'
+11:54:19 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+11:54:29 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:54:29.526995+00:00\r\n\r\n'
+11:54:44 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+11:54:44 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:54:44.526811+00:00\r\n\r\n'
+11:54:59 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:54:59.528424+00:00\r\n\r\n'
+11:55:09 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+11:55:14 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:55:14.528232+00:00\r\n\r\n'
+11:55:29 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:55:29.528595+00:00\r\n\r\n'
+11:55:34 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+11:55:44 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:55:44.527501+00:00\r\n\r\n'
+11:55:59 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:55:59.529813+00:00\r\n\r\n'
+11:55:59 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+11:56:14 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:56:14.530678+00:00\r\n\r\n'
+11:56:24 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+11:56:29 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:56:29.531591+00:00\r\n\r\n'
+11:56:44 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:56:44.531803+00:00\r\n\r\n'
+11:56:49 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+11:56:59 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:56:59.531936+00:00\r\n\r\n'
+11:57:14 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+11:57:14 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:57:14.533556+00:00\r\n\r\n'
+11:57:29 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:57:29.533633+00:00\r\n\r\n'
+11:57:39 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+11:57:44 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:57:44.533077+00:00\r\n\r\n'
+11:57:59 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:57:59.533506+00:00\r\n\r\n'
+11:58:04 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+11:58:14 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:58:14.532619+00:00\r\n\r\n'
+11:58:29 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:58:29.533677+00:00\r\n\r\n'
+11:58:29 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+11:58:44 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:58:44.533679+00:00\r\n\r\n'
+11:58:54 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+11:58:59 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:58:59.534477+00:00\r\n\r\n'
+11:59:14 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:59:14.534190+00:00\r\n\r\n'
+11:59:19 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+11:59:29 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:59:29.533828+00:00\r\n\r\n'
+11:59:29 [DEBUG] sse_starlette.sse: Got event: http.disconnect. Stop streaming.
+11:59:34 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:59:34.654601+00:00\r\n\r\n'
+11:59:34 [DEBUG] sse_starlette.sse: Got event: http.disconnect. Stop streaming.
+11:59:35 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:59:35.540698+00:00\r\n\r\n'
+11:59:45 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+11:59:50 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 11:59:50.540457+00:00\r\n\r\n'
+12:00:05 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:00:05.540630+00:00\r\n\r\n'
+12:00:09 [DEBUG] sse_starlette.sse: chunk: b'id: 0\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "0", "ts": 1783252809415, "type": "scan_started", "payload": {"url": "http://timezone.prd.k8s/timezone", "name": "timezone"}}\r\n\r\n'
+2026-07-05T12:00:09.962Z pw:browser <launching> /ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell
+--disable-field-trial-config --disable-background-networking --disable-background-timer-throttling
+--disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad
+--disable-client-side-phishing-detection --disable-component-extensions-with-background-pages
+--disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage
+--disable-extensions
+--disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor
+--disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost
+--disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run
+--password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf
+--disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings
+--edge-skip-compat-layer-relaunch --enable-automation --disable-infobars
+--disable-search-engine-choice-screen --disable-sync --enable-unsafe-webgpu --headless
+--hide-scrollbar --mute-audio
+--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4
+--no-sandbox --disable-blink-features=AutomationControlled
+--user-data-dir=/tmp/playwright_chromiumdev_profile-SUgju2 --remote-debugging-pipe
+--no-startup-window
+2026-07-05T12:00:09.966Z pw:browser <launched> pid=80
+2026-07-05T12:00:10.026Z pw:browser [pid=80][err] [0705/120010.025407:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Failed to connect to socket /run/dbus/system_bus_socket: No such file or directory
+2026-07-05T12:00:10.027Z pw:browser [pid=80][err] [0705/120010.026865:ERROR:dbus/bus.cc:405] Failed to
+connect to the bus: Failed to connect to socket /run/dbus/system_bus_socket: No such file or directory
+2026-07-05T12:00:10.027Z pw:browser [pid=80][err] [0705/120010.026945:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Failed to connect to socket /run/dbus/system_bus_socket: No such file or directory
+2026-07-05T12:00:10.030Z pw:browser [pid=80][err]
+[0705/120010.030653:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 123: Permission denied (13)
+2026-07-05T12:00:10.050Z pw:browser [pid=80][err]
+[0705/120010.050647:WARNING:sandbox/policy/linux/sandbox_linux.cc:405] InitializeSandbox() called with multiple threads in process gpu-process.
+2026-07-05T12:00:10.175Z pw:browser [pid=80][err]
+[0705/120010.174740:WARNING:device/bluetooth/dbus/bluez_dbus_manager.cc:209] Floss manager service not available, cannot set Floss enable/disable.
+2026-07-05T12:00:10.192Z pw:browser [pid=80][err]
+[0705/120010.192449:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 200: Permission denied (13)
+12:00:10 [INFO] crawler.mapper: Starting external-hosts mapping for: http://timezone.prd.k8s/timezone
+2026-07-05T12:00:10.468Z pw:browser [pid=80][err]
+[0705/120010.468761:ERROR:net/socket/ssl_client_socket_impl.cc:918] Handshake failed; returned -1, SSL error code 1, net_error -202
+12:00:10 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:00:13 [INFO] crawler.auth.login: Performing login at https://psso/auth/realms/sso/login-actions/authenticate?execution=ee003e34-cc64-4aff-a995-0022b8144b76&client_id=devteam-client&tab_id=pYlgDGZWWCI
+2026-07-05T12:00:13.619Z pw:browser [pid=80][err] [0705/120013.619264:INFO:CONSOLE[1]] "refresh tokenResponse [object Object]", source: http://timezone.prd.k8s/main.03c034cf3bb62d8e.js (1)
+2026-07-05T12:00:14.309Z pw:browser [pid=80][err]
+[0705/120014.309320:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 231: Permission denied (13)
+12:00:14 [INFO] crawler.auth.login: Login successful; storage_state saved to storage_state.json
+12:00:14 [INFO] crawler.mapper: Exploring page at depth 0: http://timezone.prd.k8s/timezone
+12:00:14 [DEBUG] sse_starlette.sse: chunk: b'id: 1\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "1", "ts": 1783252814349, "type": "page_visited", "payload": {"path": "http://timezone.prd.k8s/timezone", "depth": 0}}\r\n\r\n'
+12:00:14 [DEBUG] sse_starlette.sse: chunk: b'id: 2\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "2", "ts": 1783252814361, "type": "external_host_seen", "payload": {"host": "timezone.prd.k8s"}}\r\n\r\n'
+12:00:14 [DEBUG] sse_starlette.sse: chunk: b'id: 3\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "3", "ts": 1783252814369, "type": "external_host_seen", "payload": {"host": "psso"}}\r\n\r\n'
+12:00:14 [DEBUG] sse_starlette.sse: chunk: b'id: 4\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "4", "ts": 1783252814375, "type": "scan_progress", "payload": {"pages": 1, "hosts": 2, "blockers": 0}}\r\n\r\n'
+2026-07-05T12:00:16.467Z pw:browser [pid=80][err] [0705/120016.467257:INFO:CONSOLE[1]] "Finish To Fetch User Permission", source: http://timezone.prd.k8s/974.e83f4bf089c254d0.js (1)
+12:00:18 [DEBUG] crawler.navigation.form_filler: Filled form field with: Test-value-for-filling ('undefined')
+12:00:20 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:00:20.540448+00:00\r\n\r\n'
+12:00:20 [INFO] crawler.mapper: Found 20 clickable elements
+12:00:20 [DEBUG] crawler.mapper: Clicking element 1/20 of depth 0 ('NORWAY')
+12:00:23 [INFO] crawler.mapper: Exploring page at depth 1: http://timezone.prd.k8s/timezone/dashboard/144/tab/0
+12:00:23 [DEBUG] sse_starlette.sse: chunk: b'id: 5\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "5", "ts": 1783252823594, "type": "page_visited", "payload": {"path": "http://timezone.prd.k8s/timezone/dashboard/144/tab/0", "depth": 1}}\r\n\r\n'
+12:00:23 [DEBUG] sse_starlette.sse: chunk: b'id: 6\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "6", "ts": 1783252823603, "type": "external_host_seen", "payload": {"host": "skynet"}}\r\n\r\n'
+12:00:23 [DEBUG] sse_starlette.sse: chunk: b'id: 7\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "7", "ts": 1783252823611, "type": "scan_progress", "payload": {"pages": 2, "hosts": 3, "blockers": 0}}\r\n\r\n'
+12:00:24 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:00:24.575013+00:00\r\n\r\n'
+12:00:24 [INFO] crawler.mapper: Found 15 clickable elements
+12:00:24 [DEBUG] crawler.mapper: Clicking element 1/15 of depth 1 ('Timezone')
+12:00:27 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:00:28 [DEBUG] crawler.mapper: Clicking element 2/15 of depth 1 ('Capitals')
+12:00:30 [INFO] crawler.mapper: Exploring page at depth 2: http://timezone.prd.k8s/timezone/dashboard/144/tab/1
+12:00:30 [DEBUG] sse_starlette.sse: chunk: b'id: 8\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "8", "ts": 1783252830859, "type": "page_visited", "payload": {"path": "http://timezone.prd.k8s/timezone/dashboard/144/tab/1", "depth": 2}}\r\n\r\n'
+12:00:30 [DEBUG] sse_starlette.sse: chunk: b'id: 9\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "9", "ts": 1783252830869, "type": "scan_progress", "payload": {"pages": 3, "hosts": 3, "blockers": 0}}\r\n\r\n'
+12:00:31 [INFO] crawler.mapper: Found 5 clickable elements
+12:00:31 [DEBUG] crawler.mapper: Clicking element 1/5 of depth 2 ('Timezone')
+12:00:35 [DEBUG] crawler.mapper: Clicking element 2/5 of depth 2 ('Capitals')
+12:00:35 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:00:35.540059+00:00\r\n\r\n'
+12:00:35 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:00:38 [DEBUG] crawler.mapper: Clicking element 3/5 of depth 2 ('Export to file')
+2026-07-05T12:00:38.612Z pw:browser [pid=80][err]
+[0705/120038.611412:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 281: Permission denied (13)
+12:00:39 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:00:39.577004+00:00\r\n\r\n'
+12:00:40 [DEBUG] crawler.mapper: Clicking element 4/5 of depth 2 ('Search')
+12:00:44 [DEBUG] crawler.mapper: Clicking element 5/5 of depth 2
+12:00:45 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:00:48 [DEBUG] crawler.mapper: Clicking element 3/15 of depth 1 ('Export to file')
+2026-07-05T12:00:48.971Z pw:browser [pid=80][err]
+[0705/120048.971165:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 291: Permission denied (13)
+12:00:50 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:00:50.540980+00:00\r\n\r\n'
+12:00:51 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:00:52 [DEBUG] crawler.mapper: Clicking element 4/15 of depth 1 ('file-745')
+2026-07-05T12:00:52.554Z pw:browser [pid=80][err]
+[0705/120052.554440:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 303: Permission denied (13)
+12:00:54 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:00:54.577345+00:00\r\n\r\n'
+12:00:54 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:00:55 [DEBUG] crawler.mapper: Clicking element 5/15 of depth 1 ('file-3956')
+2026-07-05T12:00:56.121Z pw:browser [pid=80][err]
+[0705/120056.121294:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 315: Permission denied (13)
+12:00:58 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:00:59 [DEBUG] crawler.mapper: Clicking element 6/15 of depth 1 ('file-649')
+2026-07-05T12:00:59.687Z pw:browser [pid=80][err]
+[0705/120059.687319:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 326: Permission denied (13)
+12:01:00 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:01:00 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:01:02 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:01:02 [DEBUG] crawler.mapper: Clicking element 7/15 of depth 1 ('file-217')
+2026-07-05T12:01:03.271Z pw:browser [pid=80][err]
+[0705/120103.271319:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 337: Permission denied (13)
+12:01:05 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:01:05.541855+00:00\r\n\r\n'
+12:01:05 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:01:06 [DEBUG] crawler.mapper: Clicking element 8/15 of depth 1 ('file-217')
+2026-07-05T12:01:06.820Z pw:browser [pid=80][err]
+[0705/120106.820661:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 348: Permission denied (13)
+12:01:09 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:01:09 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:01:09.577693+00:00\r\n\r\n'
+12:01:09 [DEBUG] crawler.mapper: Clicking element 9/15 of depth 1 ('Search')
+12:01:13 [DEBUG] crawler.mapper: Clicking element 10/15 of depth 1
+12:01:15 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:01:16 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:01:17 [DEBUG] crawler.mapper: Clicking element 11/15 of depth 1
+12:01:19 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:01:20 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:01:20.542160+00:00\r\n\r\n'
+12:01:20 [DEBUG] crawler.mapper: Clicking element 12/15 of depth 1
+12:01:23 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:01:24 [DEBUG] crawler.mapper: Clicking element 13/15 of depth 1
+12:01:24 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:01:24.578294+00:00\r\n\r\n'
+12:01:25 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:01:27 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:01:27 [DEBUG] crawler.mapper: Clicking element 14/15 of depth 1
+12:01:30 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:01:30 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:01:31 [DEBUG] crawler.mapper: Clicking element 15/15 of depth 1
+12:01:34 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:01:35 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:01:35.541725+00:00\r\n\r\n'
+12:01:37 [DEBUG] crawler.mapper: Clicking element 2/20 of depth 0 ('OMAN')
+12:01:39 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:01:39.578381+00:00\r\n\r\n'
+12:01:39 [INFO] crawler.mapper: Exploring page at depth 1: http://timezone.prd.k8s/timezone/dashboard/4/tab/0
+12:01:39 [DEBUG] sse_starlette.sse: chunk: b'id: 10\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "10", "ts": 1783252899962, "type": "page_visited", "payload": {"path": "http://timezone.prd.k8s/timezone/dashboard/4/tab/0", "depth": 1}}\r\n\r\n'
+12:01:39 [DEBUG] sse_starlette.sse: chunk: b'id: 11\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "11", "ts": 1783252899983, "type": "external_host_seen", "payload": {"host": "webserver"}}\r\n\r\n'
+12:01:40 [DEBUG] sse_starlette.sse: chunk: b'id: 12\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "12", "ts": 1783252899995, "type": "scan_progress", "payload": {"pages": 4, "hosts": 4, "blockers": 0}}\r\n\r\n'
+12:01:40 [INFO] crawler.mapper: Found 12 clickable elements
+12:01:40 [DEBUG] crawler.mapper: Clicking element 1/12 of depth 1 ('Timezone')
+12:01:43 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:01:44 [DEBUG] crawler.mapper: Clicking element 2/12 of depth 1 ('Capitals')
+12:01:47 [INFO] crawler.mapper: Exploring page at depth 2: http://timezone.prd.k8s/timezone/dashboard/4/tab/1
+12:01:47 [DEBUG] sse_starlette.sse: chunk: b'id: 13\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "13", "ts": 1783252907209, "type": "page_visited", "payload": {"path": "http://timezone.prd.k8s/timezone/dashboard/4/tab/1", "depth": 2}}\r\n\r\n'
+12:01:47 [DEBUG] sse_starlette.sse: chunk: b'id: 14\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", '
+"seq": "14", "ts": 1783252907217, "type": "scan_progress", "payload": {"pages": 5, "hosts": 4, "blockers": 0}}\r\n\r\n'
+12:01:47 [INFO] crawler.mapper: Found 5 clickable elements
+12:01:47 [DEBUG] crawler.mapper: Clicking element 1/5 of depth 2 ('Timezone')
+12:01:50 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:01:50.543558+00:00\r\n\r\n'
+12:01:50 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:01:51 [DEBUG] crawler.mapper: Clicking element 2/5 of depth 2 ('Capitals')
+12:01:54 [DEBUG] crawler.mapper: Clicking element 3/5 of depth 2 ('Export to file')
+12:01:54 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:01:54.578192+00:00\r\n\r\n'
+2026-07-05T12:01:54.902Z pw:browser [pid=80][err]
+[0705/120154.902154:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 391: Permission denied (13)
+12:01:57 [DEBUG] crawler.mapper: Clicking element 4/5 of depth 2 ('Search')
+12:02:00 [DEBUG] crawler.mapper: Clicking element 5/5 of depth 2
+12:02:02 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:02:04 [DEBUG] crawler.mapper: Clicking element 3/12 of depth 1 ('Export to file')
+2026-07-05T12:02:05.268Z pw:browser [pid=80][err]
+[0705/120205.268117:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 400: Permission denied (13)
+12:02:05 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:02:05.543936+00:00\r\n\r\n'
+12:02:07 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:02:08 [DEBUG] crawler.mapper: Clicking element 4/12 of depth 1 ('file-649')
+2026-07-05T12:02:08.906Z pw:browser [pid=80][err]
+[0705/120208.904586:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 408: Permission denied (13)
+12:02:09 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:02:09.579048+00:00\r\n\r\n'
+12:02:11 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:02:11 [DEBUG] crawler.mapper: Clicking element 5/12 of depth 1 ('file-217')
+2026-07-05T12:02:12.502Z pw:browser [pid=80][err]
+[0705/120212.502202:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 419: Permission denied (13)
+12:02:14 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:02:15 [DEBUG] crawler.mapper: Clicking element 6/12 of depth 1 ('Search')
+12:02:15 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:02:17 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:02:19 [DEBUG] crawler.mapper: Clicking element 7/12 of depth 1
+12:02:20 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:02:20.544353+00:00\r\n\r\n'
+12:02:22 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:02:22 [DEBUG] crawler.mapper: Clicking element 8/12 of depth 1
+12:02:24 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:02:24.579511+00:00\r\n\r\n'
+12:02:25 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:02:26 [DEBUG] crawler.mapper: Clicking element 9/12 of depth 1
+12:02:29 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:02:30 [DEBUG] crawler.mapper: Clicking element 10/12 of depth 1
+12:02:32 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:02:32 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:02:33 [DEBUG] crawler.mapper: Clicking element 11/12 of depth 1
+12:02:35 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:02:35.543961+00:00\r\n\r\n'
+12:02:36 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:02:37 [DEBUG] crawler.mapper: Clicking element 12/12 of depth 1
+12:02:39 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:02:39.578205+00:00\r\n\r\n'
+12:02:40 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:02:40 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:02:43 [DEBUG] crawler.mapper: Clicking element 3/20 of depth 0 ('PAKISTAN')
+12:02:45 [INFO] crawler.mapper: Exploring page at depth 1: http://timezone.prd.k8s/timezone/dashboard/30/tab/0
+12:02:45 [DEBUG] sse_starlette.sse: chunk: b'id: 15\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "15", "ts": 1783252965836, "type": "page_visited", "payload": {"path": "http://timezone.prd.k8s/timezone/dashboard/30/tab/0", "depth": 1}}\r\n\r\n'
+12:02:45 [DEBUG] sse_starlette.sse: chunk: b'id: 16\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "16", "ts": 1783252965850, "type": "scan_progress", "payload": {"pages": 6, "hosts": 4, "blockers": 0}}\r\n\r\n'
+12:02:46 [INFO] crawler.mapper: Found 12 clickable elements
+12:02:46 [DEBUG] crawler.mapper: Clicking element 1/12 of depth 1 ('Timezone')
+12:02:49 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:02:50 [DEBUG] crawler.mapper: Clicking element 2/12 of depth 1 ('Capitals')
+12:02:50 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:02:50.545883+00:00\r\n\r\n'
+12:02:53 [INFO] crawler.mapper: Exploring page at depth 2: http://timezone.prd.k8s/timezone/dashboard/30/tab/1
+12:02:53 [DEBUG] sse_starlette.sse: chunk: b'id: 17\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "17", "ts": 1783252973024, "type": "page_visited", "payload": {"path": "http://timezone.prd.k8s/timezone/dashboard/30/tab/1", "depth": 2}}\r\n\r\n'
+12:02:53 [DEBUG] sse_starlette.sse: chunk: b'id: 18\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "18", "ts": 1783252973034, "type": "scan_progress", "payload": {"pages": 7, "hosts": 4, "blockers": 0}}\r\n\r\n'
+12:02:53 [INFO] crawler.mapper: Found 4 clickable elements
+12:02:53 [DEBUG] crawler.mapper: Clicking element 1/4 of depth 2 ('Timezone')
+12:02:54 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:02:54.579938+00:00\r\n\r\n'
+12:02:57 [DEBUG] crawler.mapper: Clicking element 2/4 of depth 2 ('Capitals')
+12:03:00 [DEBUG] crawler.mapper: Clicking element 3/4 of depth 2 ('Export to file')
+2026-07-05T12:03:00.685Z pw:browser [pid=80][err]
+[0705/120300.684716:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 442: Permission denied (13)
+12:03:03 [DEBUG] crawler.mapper: Clicking element 4/4 of depth 2 ('Search')
+12:03:05 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:03:05.547020+00:00\r\n\r\n'
+12:03:05 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:03:07 [DEBUG] crawler.mapper: Clicking element 3/12 of depth 1 ('Export to file')
+12:03:08 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+2026-07-05T12:03:08.134Z pw:browser [pid=80][err]
+[0705/120308.134072:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 450: Permission denied (13)
+12:03:09 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:03:09.580082+00:00\r\n\r\n'
+12:03:10 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:03:11 [DEBUG] crawler.mapper: Clicking element 4/12 of depth 1 ('file-649')
+2026-07-05T12:03:11.732Z pw:browser [pid=80][err]
+[0705/120311.732607:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 458: Permission denied (13)
+12:03:14 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:03:14 [DEBUG] crawler.mapper: Clicking element 5/12 of depth 1 ('file-217')
+2026-07-05T12:03:15.316Z pw:browser [pid=80][err]
+[0705/120315.316320:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 469: Permission denied (13)
+12:03:17 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:03:18 [DEBUG] crawler.mapper: Clicking element 6/12 of depth 1 ('Search')
+12:03:20 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:03:20.547311+00:00\r\n\r\n'
+12:03:21 [DEBUG] crawler.mapper: Clicking element 7/12 of depth 1
+12:03:23 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:03:24 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:03:24.580098+00:00\r\n\r\n'
+12:03:24 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:03:25 [DEBUG] crawler.mapper: Clicking element 8/12 of depth 1
+12:03:28 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:03:29 [DEBUG] crawler.mapper: Clicking element 9/12 of depth 1
+12:03:30 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:03:32 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:03:32 [DEBUG] crawler.mapper: Clicking element 10/12 of depth 1
+12:03:35 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:03:35.547801+00:00\r\n\r\n'
+12:03:35 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:03:36 [DEBUG] crawler.mapper: Clicking element 11/12 of depth 1
+12:03:38 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:03:39 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:03:39 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:03:39.580095+00:00\r\n\r\n'
+12:03:40 [DEBUG] crawler.mapper: Clicking element 12/12 of depth 1
+12:03:42 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:03:45 [DEBUG] crawler.mapper: Clicking element 4/20 of depth 0 ('PANAMA')
+12:03:48 [INFO] crawler.mapper: Exploring page at depth 1: http://timezone.prd.k8s/timezone/dashboard/7/tab/0
+12:03:48 [DEBUG] sse_starlette.sse: chunk: b'id: 19\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "19", "ts": 1783252928539, "type": "page_visited", "payload": {"path": "http://timezone.prd.k8s/timezone/dashboard/7/tab/0", "depth": 1}}\r\n\r\n'
+12:03:48 [DEBUG] sse_starlette.sse: chunk: b'id: 20\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "20", "ts": 1783253028553, "type": "scan_progress", "payload": {"pages": 8, "hosts": 4, "blockers": 0}}\r\n\r\n'
+12:03:49 [INFO] crawler.mapper: Found 15 clickable elements
+12:03:49 [DEBUG] crawler.mapper: Clicking element 1/15 of depth 1 ('Timezone')
+12:03:50 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:03:50.548701+00:00\r\n\r\n'
+12:03:52 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:03:53 [DEBUG] crawler.mapper: Clicking element 2/15 of depth 1 ('Capitals')
+12:03:54 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:03:54.579210+00:00\r\n\r\n'
+12:03:55 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:03:55 [INFO] crawler.mapper: Exploring page at depth 2: http://timezone.prd.k8s/timezone/dashboard/7/tab/1
+12:03:55 [DEBUG] sse_starlette.sse: chunk: b'id: 21\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "21", "ts": 1783253035856, "type": "page_visited", "payload": {"path": "http://timezone.prd.k8s/timezone/dashboard/7/tab/1", "depth": 2}}\r\n\r\n'
+12:03:55 [DEBUG] sse_starlette.sse: chunk: b'id: 22\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "22", "ts": 1783253035865, "type": "scan_progress", "payload": {"pages": 9, "hosts": 4, "blockers": 0}}\r\n\r\n'
+12:03:56 [INFO] crawler.mapper: Found 5 clickable elements
+12:03:56 [DEBUG] crawler.mapper: Clicking element 1/5 of depth 2 ('Timezone')
+12:04:00 [DEBUG] crawler.mapper: Clicking element 2/5 of depth 2 ('Capitals')
+12:04:03 [DEBUG] crawler.mapper: Clicking element 3/5 of depth 2 ('Export to file')
+2026-07-05T12:04:03.594Z pw:browser [pid=80][err]
+[0705/120403.594352:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 496: Permission denied (13)
+12:04:05 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:04:05.550496+00:00\r\n\r\n'
+12:04:05 [DEBUG] crawler.mapper: Clicking element 4/5 of depth 2 ('Search')
+12:04:09 [DEBUG] crawler.mapper: Clicking element 5/5 of depth 2
+12:04:09 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:04:09.580585+00:00\r\n\r\n'
+12:04:10 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:04:13 [DEBUG] crawler.mapper: Clicking element 3/15 of depth 1 ('Export to file')
+2026-07-05T12:04:13.930Z pw:browser [pid=80][err]
+[0705/120413.930055:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 505: Permission denied (13)
+12:04:16 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:04:17 [DEBUG] crawler.mapper: Clicking element 4/15 of depth 1 ('file-5418')
+2026-07-05T12:04:17.546Z pw:browser [pid=80][err]
+[0705/120417.546669:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 514: Permission denied (13)
+12:04:19 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:04:20 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:04:20.550905+00:00\r\n\r\n'
+12:04:20 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:04:20 [DEBUG] crawler.mapper: Clicking element 5/15 of depth 1 ('file-8905')
+2026-07-05T12:04:21.163Z pw:browser [pid=80][err]
+[0705/120421.162988:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 525: Permission denied (13)
+12:04:23 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:04:24 [DEBUG] crawler.mapper: Clicking element 6/15 of depth 1 ('file-5284')
+12:04:24 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:04:24.580573+00:00\r\n\r\n'
+2026-07-05T12:04:24.780Z pw:browser [pid=80][err]
+[0705/120424.780009:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 536: Permission denied (13)
+12:04:25 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:04:27 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:04:27 [DEBUG] crawler.mapper: Clicking element 7/15 of depth 1 ('file-217')
+2026-07-05T12:04:28.379Z pw:browser [pid=80][err]
+[0705/120428.379142:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 547: Permission denied (13)
+12:04:30 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:04:31 [DEBUG] crawler.mapper: Clicking element 8/15 of depth 1 ('file-217')
+2026-07-05T12:04:32.031Z pw:browser [pid=80][err]
+[0705/120432.030932:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 558: Permission denied (13)
+12:04:34 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:04:35 [DEBUG] crawler.mapper: Clicking element 9/15 of depth 1 ('Search')
+12:04:35 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:04:35.551902+00:00\r\n\r\n'
+12:04:38 [DEBUG] crawler.mapper: Clicking element 10/15 of depth 1
+12:04:39 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:04:39.582395+00:00\r\n\r\n'
+12:04:40 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:04:41 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:04:42 [DEBUG] crawler.mapper: Clicking element 11/15 of depth 1
+12:04:45 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:04:45 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:04:45 [DEBUG] crawler.mapper: Clicking element 12/15 of depth 1
+12:04:48 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:04:49 [DEBUG] crawler.mapper: Clicking element 13/15 of depth 1
+12:04:50 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:04:50.552555+00:00\r\n\r\n'
+12:04:52 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:04:53 [DEBUG] crawler.mapper: Clicking element 14/15 of depth 1
+12:04:54 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:04:54.582802+00:00\r\n\r\n'
+12:04:55 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:04:56 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:04:56 [DEBUG] crawler.mapper: Clicking element 15/15 of depth 1
+12:04:59 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:05:02 [DEBUG] crawler.mapper: Clicking element 5/20 of depth 0 ('PARAGUAY')
+12:05:05 [INFO] crawler.mapper: Exploring page at depth 1: http://timezone.prd.k8s/timezone/dashboard/256/tab/0
+12:05:05 [DEBUG] sse_starlette.sse: chunk: b'id: 23\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "23", "ts": 1783253105388, "type": "page_visited", "payload": {"path": "http://timezone.prd.k8s/timezone/dashboard/256/tab/0", "depth": 1}}\r\n\r\n'
+12:05:05 [DEBUG] sse_starlette.sse: chunk: b'id: 24\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "24", "ts": 1783253105402, "type": "scan_progress", "payload": {"pages": 10, "hosts": 4, "blockers": 0}}\r\n\r\n'
+12:05:05 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:05:05.551763+00:00\r\n\r\n'
+12:05:06 [INFO] crawler.mapper: Found 15 clickable elements
+12:05:06 [DEBUG] crawler.mapper: Clicking element 1/15 of depth 1 ('Timezone')
+12:05:09 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:05:09 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:05:09.583472+00:00\r\n\r\n'
+12:05:10 [DEBUG] crawler.mapper: Clicking element 2/15 of depth 1 ('Capitals')
+12:05:10 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:05:12 [INFO] crawler.mapper: Exploring page at depth 2: http://timezone.prd.k8s/timezone/dashboard/256/tab/1
+12:05:12 [DEBUG] sse_starlette.sse: chunk: b'id: 25\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "25", "ts": 1783253112702, "type": "page_visited", "payload": {"path": "http://timezone.prd.k8s/timezone/dashboard/256/tab/1", "depth": 2}}\r\n\r\n'
+12:05:12 [DEBUG] sse_starlette.sse: chunk: b'id: 26\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "26", "ts": 1783253112800, "type": "scan_progress", "payload": {"pages": 11, "hosts": 4, "blockers": 0}}\r\n\r\n'
+12:05:13 [INFO] crawler.mapper: Found 5 clickable elements
+12:05:13 [DEBUG] crawler.mapper: Clicking element 1/5 of depth 2 ('Timezone')
+12:05:17 [DEBUG] crawler.mapper: Clicking element 2/5 of depth 2 ('Capitals')
+12:05:20 [DEBUG] crawler.mapper: Clicking element 3/5 of depth 2 ('Export to file')
+12:05:20 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:05:20.554540+00:00\r\n\r\n'
+2026-07-05T12:05:20.561Z pw:browser [pid=80][err]
+[0705/120520.560856:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 607: Permission denied (13)
+12:05:22 [DEBUG] crawler.mapper: Clicking element 4/5 of depth 2 ('Search')
+12:05:24 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:05:24.583446+00:00\r\n\r\n'
+12:05:26 [DEBUG] crawler.mapper: Clicking element 5/5 of depth 2
+12:05:27 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:05:30 [DEBUG] crawler.mapper: Clicking element 3/15 of depth 1 ('Export to file')
+2026-07-05T12:05:31.046Z pw:browser [pid=80][err]
+[0705/120531.046517:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 616: Permission denied (13)
+12:05:33 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:05:34 [DEBUG] crawler.mapper: Clicking element 4/15 of depth 1 ('file-672')
+2026-07-05T12:05:34.676Z pw:browser [pid=80][err]
+[0705/120534.676636:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 624: Permission denied (13)
+12:05:35 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:05:35.544326+00:00\r\n\r\n'
+12:05:35 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:05:36 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:05:37 [DEBUG] crawler.mapper: Clicking element 5/15 of depth 1 ('file-649')
+2026-07-05T12:05:38.312Z pw:browser [pid=80][err]
+[0705/120538.312454:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 635: Permission denied (13)
+12:05:39 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:05:39.584005+00:00\r\n\r\n'
+12:05:40 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:05:41 [DEBUG] crawler.mapper: Clicking element 6/15 of depth 1 ('file-672')
+2026-07-05T12:05:41.943Z pw:browser [pid=80][err]
+[0705/120541.943260:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 646: Permission denied (13)
+12:05:42 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:05:44 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:05:45 [DEBUG] crawler.mapper: Clicking element 7/15 of depth 1 ('file-217')
+2026-07-05T12:05:45.576Z pw:browser [pid=80][err]
+[0705/120545.576035:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 658: Permission denied (13)
+12:05:47 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:05:48 [DEBUG] crawler.mapper: Clicking element 8/15 of depth 1 ('file-217')
+2026-07-05T12:05:49.176Z pw:browser [pid=80][err]
+[0705/120549.175980:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 669: Permission denied (13)
+12:05:50 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:05:50.554829+00:00\r\n\r\n'
+12:05:51 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:05:52 [DEBUG] crawler.mapper: Clicking element 9/15 of depth 1 ('Search')
+12:05:54 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:05:54.584456+00:00\r\n\r\n'
+12:05:55 [DEBUG] crawler.mapper: Clicking element 10/15 of depth 1
+12:05:57 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:05:58 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:05:59 [DEBUG] crawler.mapper: Clicking element 11/15 of depth 1
+12:06:00 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:06:02 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:06:03 [DEBUG] crawler.mapper: Clicking element 12/15 of depth 1
+12:06:05 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:06:05.555674+00:00\r\n\r\n'
+12:06:06 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:06:06 [DEBUG] crawler.mapper: Clicking element 13/15 of depth 1
+12:06:09 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:06:09.583427+00:00\r\n\r\n'
+12:06:09 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:06:10 [DEBUG] crawler.mapper: Clicking element 14/15 of depth 1
+12:06:12 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:06:13 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:06:14 [DEBUG] crawler.mapper: Clicking element 15/15 of depth 1
+12:06:17 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:06:20 [DEBUG] crawler.mapper: Clicking element 6/20 of depth 0 ('PERU')
+12:06:20 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:06:20.554925+00:00\r\n\r\n'
+12:06:22 [INFO] crawler.mapper: Exploring page at depth 1: http://timezone.prd.k8s/timezone/dashboard/176/tab/0
+12:06:22 [DEBUG] sse_starlette.sse: chunk: b'id: 27\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "27", "ts": 1783253182720, "type": "page_visited", "payload": {"path": "http://timezone.prd.k8s/timezone/dashboard/176/tab/0", "depth": 1}}\r\n\r\n'
+12:06:22 [DEBUG] sse_starlette.sse: chunk: b'id: 28\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "28", "ts": 1783253182738, "type": "scan_progress", "payload": {"pages": 12, "hosts": 4, "blockers": 0}}\r\n\r\n'
+12:06:23 [INFO] crawler.mapper: Found 15 clickable elements
+12:06:23 [DEBUG] crawler.mapper: Clicking element 1/15 of depth 1 ('Timezone')
+12:06:24 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:06:24.584627+00:00\r\n\r\n'
+12:06:25 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:06:26 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:06:27 [DEBUG] crawler.mapper: Clicking element 2/15 of depth 1 ('Capitals')
+12:06:30 [INFO] crawler.mapper: Exploring page at depth 2: http://timezone.prd.k8s/timezone/dashboard/176/tab/1
+12:06:30 [DEBUG] sse_starlette.sse: chunk: b'id: 29\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "29", "ts": 1783253190046, "type": "page_visited", "payload": {"path": "http://timezone.prd.k8s/timezone/dashboard/176/tab/1", "depth": 2}}\r\n\r\n'
+12:06:30 [DEBUG] sse_starlette.sse: chunk: b'id: 30\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "30", "ts": 1783253190055, "type": "scan_progress", "payload": {"pages": 13, "hosts": 4, "blockers": 0}}\r\n\r\n'
+12:06:30 [INFO] crawler.mapper: Found 5 clickable elements
+12:06:30 [DEBUG] crawler.mapper: Clicking element 1/5 of depth 2 ('Timezone')
+12:06:34 [DEBUG] crawler.mapper: Clicking element 2/5 of depth 2 ('Capitals')
+12:06:35 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:06:35.556851+00:00\r\n\r\n'
+12:06:37 [DEBUG] crawler.mapper: Clicking element 3/5 of depth 2 ('Export to file')
+2026-07-05T12:06:37.841Z pw:browser [pid=80][err]
+[0705/120637.841101:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 714: Permission denied (13)
+12:06:39 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:06:39.584862+00:00\r\n\r\n'
+12:06:40 [DEBUG] crawler.mapper: Clicking element 4/5 of depth 2 ('Search')
+12:06:43 [DEBUG] crawler.mapper: Clicking element 5/5 of depth 2
+12:06:45 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:06:47 [DEBUG] crawler.mapper: Clicking element 3/15 of depth 1 ('Export to file')
+2026-07-05T12:06:48.191Z pw:browser [pid=80][err]
+[0705/120648.191348:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 722: Permission denied (13)
+12:06:50 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:06:50 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:06:50.557196+00:00\r\n\r\n'
+12:06:50 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:06:51 [DEBUG] crawler.mapper: Clicking element 4/15 of depth 1 ('file-649')
+2026-07-05T12:06:51.824Z pw:browser [pid=80][err]
+[0705/120651.823899:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 730: Permission denied (13)
+12:06:54 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:06:54 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:06:54.586450+00:00\r\n\r\n'
+12:06:54 [DEBUG] crawler.mapper: Clicking element 5/15 of depth 1 ('file-672')
+2026-07-05T12:06:55.440Z pw:browser [pid=80][err]
+[0705/120655.440312:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 741: Permission denied (13)
+12:06:57 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:06:58 [DEBUG] crawler.mapper: Clicking element 6/15 of depth 1 ('file-8452')
+2026-07-05T12:06:59.040Z pw:browser [pid=80][err]
+[0705/120659.040281:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 753: Permission denied (13)
+12:07:00 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:07:01 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:07:02 [DEBUG] crawler.mapper: Clicking element 7/15 of depth 1 ('file-217')
+2026-07-05T12:07:02.676Z pw:browser [pid=80][err]
+[0705/120702.676499:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 764: Permission denied (13)
+12:07:04 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:07:05 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:07:05.557329+00:00\r\n\r\n'
+12:07:05 [DEBUG] crawler.mapper: Clicking element 8/15 of depth 1 ('file-217')
+2026-07-05T12:07:06.293Z pw:browser [pid=80][err]
+[0705/120706.293061:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 776: Permission denied (13)
+12:07:08 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:07:09 [DEBUG] crawler.mapper: Clicking element 9/15 of depth 1 ('Search')
+12:07:09 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:07:09.586492+00:00\r\n\r\n'
+12:07:13 [DEBUG] crawler.mapper: Clicking element 10/15 of depth 1
+12:07:15 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:07:15 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:07:15 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:07:16 [DEBUG] crawler.mapper: Clicking element 11/15 of depth 1
+12:07:19 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:07:20 [DEBUG] crawler.mapper: Clicking element 12/15 of depth 1
+12:07:20 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:07:20.563934+00:00\r\n\r\n'
+12:07:23 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:07:24 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:07:24.585623+00:00\r\n\r\n'
+12:07:24 [DEBUG] crawler.mapper: Clicking element 13/15 of depth 1
+12:07:27 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:07:28 [DEBUG] crawler.mapper: Clicking element 14/15 of depth 1
+12:07:30 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:07:31 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:07:32 [DEBUG] crawler.mapper: Clicking element 15/15 of depth 1
+12:07:35 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:07:35.565156+00:00\r\n\r\n'
+12:07:35 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:07:38 [DEBUG] crawler.mapper: Clicking element 7/20 of depth 0 ('PHILIPPINES')
+12:07:39 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:07:39.601775+00:00\r\n\r\n'
+12:07:40 [DEBUG] sse_starlette.sse: chunk: b': keepalive\r\n\r\n'
+12:07:41 [INFO] crawler.mapper: Exploring page at depth 1: http://timezone.prd.k8s/timezone/dashboard/60/tab/0
+12:07:41 [DEBUG] sse_starlette.sse: chunk: b'id: 31\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "31", "ts": 1783253261778, "type": "page_visited", "payload": {"path": "http://timezone.prd.k8s/timezone/dashboard/60/tab/0", "depth": 1}}\r\n\r\n'
+12:07:41 [DEBUG] sse_starlette.sse: chunk: b'id: 32\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "32", "ts": 1783253261792, "type": "scan_progress", "payload": {"pages": 14, "hosts": 4, "blockers": 0}}\r\n\r\n'
+12:07:42 [INFO] crawler.mapper: Found 13 clickable elements
+12:07:42 [DEBUG] crawler.mapper: Clicking element 1/13 of depth 1 ('Timezone')
+12:07:45 [DEBUG] crawler.navigation.overlay_handler: Calendar overlay detected, dismissing...
+12:07:46 [DEBUG] crawler.mapper: Clicking element 2/13 of depth 1 ('Capitals')
+12:07:49 [INFO] crawler.mapper: Exploring page at depth 2: http://timezone.prd.k8s/timezone/dashboard/60/tab/1
+12:07:49 [DEBUG] sse_starlette.sse: chunk: b'id: 33\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "33", "ts": 1783253269869, "type": "page_visited", "payload": {"path": "http://timezone.prd.k8s/timezone/dashboard/60/tab/1", "depth": 2}}\r\n\r\n'
+12:07:49 [DEBUG] sse_starlette.sse: chunk: b'id: 34\r\ndata: {"scan_id": "94ef5913399241c090f76c45df77ea32", "seq": "34", "ts": 1783253269877, "type": "scan_progress", "payload": {"pages": 15, "hosts": 4, "blockers": 0}}\r\n\r\n'
+12:07:50 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:07:50.576048+00:00\r\n\r\n'
+12:07:50 [INFO] crawler.mapper: Found 5 clickable elements
+12:07:50 [DEBUG] crawler.mapper: Clicking element 1/5 of depth 2 ('Timezone')
+12:07:54 [DEBUG] crawler.mapper: Clicking element 2/5 of depth 2 ('Capitals')
+12:07:54 [DEBUG] sse_starlette.sse: ping: b': ping - 2026-07-05 12:07:54.612714+00:00\r\n\r\n'
+12:07:57 [DEBUG] crawler.mapper: Clicking element 3/5 of depth 2 ('Export to file')
+2026-07-05T12:07:57.785Z pw:browser [pid=80][err]
+[0705/120757.785209:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 814: Permission denied (13)
+2026-07-05T12:07:58.116Z pw:browser [pid=80][err]
+[0705/120758.116439:ERROR:content/browser/gpu/gpu_process_host.cc:996] GPU process exited unexpectedly: exit_code=9
+2026-07-05T12:07:58.116Z pw:browser [pid=80][err]
+[0705/120758.116460:WARNING:content/browser/gpu/gpu_process_host.cc:1438] The GPU process has crashed 1 time(s)
+2026-07-05T12:07:58.117Z pw:browser [pid=80][err]
+[0705/120758.117672:ERROR:content/browser/zygote_host/zygote_host_impl_linux.cc:279] Failed to adjust OOM score of renderer with pid 822: Permission denied (13)
+2026-07-05T12:07:58.153Z pw:browser [pid=80][err]
+[0705/120758.152739:WARNING:sandbox/policy/linux/sandbox_linux.cc:405] InitializeSandbox() called with multiple threads in process gpu-process.
+2026-07-05T12:07:58.156Z pw:browser [pid=80][err]
+[0705/120758.156190:WARNING:content/browser/gpu/gpu_process_host.cc:1018] Reinitialized the GPU process after a crash. The reported initialization time was 34 ms

@@ -18,6 +18,18 @@ logger = logging.getLogger(__name__)
 
 EventCallback = Callable[[str, Dict[str, Any]], Union[None, Awaitable[None]]]
 
+# Chromium launch flags tuned for headless container use.
+#   --disable-gpu            removes the GPU process entirely. It is useless in
+#                            headless mode and was the first process the OpenShift
+#                            OOM killer terminated (GPU process exited exit_code=9),
+#                            which cascaded into a full browser crash.
+#   --disable-dev-shm-usage  keeps Chromium off the container's tiny default /dev/shm.
+BROWSER_LAUNCH_ARGS = [
+    '--disable-blink-features=AutomationControlled',
+    '--disable-gpu',
+    '--disable-dev-shm-usage',
+]
+
 
 class Mapper:
     """Main mapping engine."""
@@ -35,6 +47,7 @@ class Mapper:
         self._used_reused_storage: bool = False
         self._on_event: Optional[EventCallback] = on_event
         self._pages_visited: int = 0
+        self._pages_since_recycle: int = 0
         self._announced_hosts: set[str] = set()
 
     async def _emit(self, event_type: str, payload: Dict[str, Any]) -> None:
@@ -49,6 +62,7 @@ class Mapper:
 
     async def _record_page_visit(self, url: str, depth: int) -> None:
         self._pages_visited += 1
+        self._pages_since_recycle += 1
         await self._emit('page_visited', {'path': url, 'depth': depth})
         await self._announce_new_hosts()
         await self._emit('scan_progress', {
@@ -80,26 +94,35 @@ class Mapper:
         self.playwright = await async_playwright().start()
         self.browser = await self.playwright.chromium.launch(
             headless=True,
-            args=['--disable-blink-features=AutomationControlled'],
+            args=BROWSER_LAUNCH_ARGS,
         )
+        self.context = await self._new_context(prefer_saved_state=False)
+        self.page = await self.context.new_page()
 
+        self._capture = RequestCapture(self.interceptor, self.config.start_url)
+        self._capture.attach(self.page, self.context)
+
+    async def _new_context(self, *, prefer_saved_state: bool) -> BrowserContext:
+        """Create a browser context, optionally seeded with a saved login session.
+
+        prefer_saved_state=True is used when recycling mid-crawl: reuse whatever
+        session this run already established (storage_state.json) regardless of the
+        cross-run `reuse_storage_state` setting, so auth survives the recycle.
+        """
         context_kwargs: Dict[str, Any] = dict(
             viewport={'width': 1920, 'height': 1080},
             user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
                        '(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         )
-        if (self.config.login
-                and self.config.login.reuse_storage_state
-                and storage_state_valid(self.config.login)):
-            context_kwargs['storage_state'] = self.config.login.storage_state_path
+        cfg = self.config.login
+        if (cfg
+                and (prefer_saved_state or cfg.reuse_storage_state)
+                and storage_state_valid(cfg)):
+            context_kwargs['storage_state'] = cfg.storage_state_path
             self._used_reused_storage = True
-            logger.info("Reusing stored session from %s", self.config.login.storage_state_path)
+            logger.info("Reusing stored session from %s", cfg.storage_state_path)
 
-        self.context = await self.browser.new_context(**context_kwargs)
-        self.page = await self.context.new_page()
-
-        self._capture = RequestCapture(self.interceptor, self.config.start_url)
-        self._capture.attach(self.page, self.context)
+        return await self.browser.new_context(**context_kwargs)
 
     async def map_website(self) -> Dict[str, Any]:
         logger.info("Starting external-hosts mapping for: %s", self.config.start_url)
@@ -166,37 +189,68 @@ class Mapper:
         clickable_elements = await self.navigator.get_clickable_elements(page)
         logger.info("Found %d clickable elements", len(clickable_elements))
 
-        for i, element in enumerate(clickable_elements):
+        # Index-based loop so the element list can be re-resolved after a mid-crawl
+        # browser recycle. With recycling disabled it behaves like the previous
+        # `for element in clickable_elements` loop.
+        i = 0
+        while i < len(clickable_elements):
             if self.navigator.clicks_on_current_page >= self.config.max_clicks_per_page:
                 break
 
-            if page.url != base_url:
-                logger.warning("Restoring state: Expected %s, got %s", base_url, page.url)
-                try:
-                    await page.goto(base_url, wait_until='networkidle')
-                except Exception as e:
-                    logger.error("Failed to restore state to %s: %s", base_url, e)
-                    continue
+            # Reclaim memory between top-level items. Only safe at depth 0, where no
+            # element handles are held higher on the crawl stack. Recycling swaps in a
+            # fresh page/context, so rebind locals and re-resolve the element list. The
+            # start page is static, so index i still maps to the same item; anything
+            # already explored is skipped via the preserved dedup state.
+            if depth == 0 and self._should_recycle():
+                await self._recycle_context()
+                page = self.page
+                base_url = page.url
+                clickable_elements = await self.navigator.get_clickable_elements(page)
+                logger.info("Re-resolved %d clickable elements after browser recycle",
+                            len(clickable_elements))
+                if i >= len(clickable_elements):
+                    break
 
-            await self._log_click_target(element, i, len(clickable_elements), depth)
-            self.interceptor.set_context(page.url, depth)
-
-            clicked = await self.navigator.click_element(page, element)
-            if not clicked:
-                continue
-
-            await page.wait_for_timeout(self.config.network_idle_timeout)
-
-            current_url = page.url
-            if current_url == base_url:
-                await self._interact_with_new_elements(page, depth)
-                current_url = page.url
-
-            if current_url != base_url:
-                await self._maybe_explore_new_url(page, current_url, depth)
-                await self._return_to(page, base_url)
+            element = clickable_elements[i]
+            try:
+                await self._process_element(page, element, i, len(clickable_elements), base_url, depth)
+            finally:
+                # Close any popup/tab the click opened. Otherwise each one leaks a live
+                # renderer process + JS heap for the rest of the run — a primary driver
+                # of the container OOM-kill.
+                await self._close_extra_pages()
+            i += 1
 
         await self._follow_links_on_page(page, depth)
+
+    async def _process_element(self, page: Page, element, i: int, total: int,
+                               base_url: str, depth: int) -> None:
+        if page.url != base_url:
+            logger.warning("Restoring state: Expected %s, got %s", base_url, page.url)
+            try:
+                await page.goto(base_url, wait_until='networkidle')
+            except Exception as e:
+                logger.error("Failed to restore state to %s: %s", base_url, e)
+                return
+
+        await self._log_click_target(element, i, total, depth)
+        self.interceptor.set_context(page.url, depth)
+
+        clicked = await self.navigator.click_element(page, element)
+        if not clicked:
+            return
+
+        await page.wait_for_timeout(self.config.network_idle_timeout)
+
+        current_url = page.url
+        if current_url == base_url:
+            await self._interact_with_new_elements(page, depth)
+            current_url = page.url
+
+        if current_url != base_url:
+            await self._maybe_explore_new_url(page, current_url, depth)
+            await self._return_to(page, base_url)
 
     async def _log_click_target(self, element, i: int, total: int, depth: int) -> None:
         element_text = ""
@@ -341,6 +395,75 @@ class Mapper:
                     continue
         except Exception as e:
             logger.error("Error following links: %s", e)
+
+    async def _close_extra_pages(self) -> None:
+        """Close every page in the context except the one the crawler drives.
+
+        The app under test opens popups/tabs (e.g. Timezone's 'Export to file'), and
+        RequestCapture attaches to them via context.on('page') but nothing closes them
+        — so each leaks a live renderer process + JS heap for the rest of the run.
+        The crawler only ever drives self.page, so any other page is disposable once
+        its initial requests have been captured.
+        """
+        if not self.context:
+            return
+        for p in list(self.context.pages):
+            if p is self.page:
+                continue
+            try:
+                await p.close()
+            except Exception as e:
+                logger.debug("Failed to close extra page: %s", e)
+
+    def _should_recycle(self) -> bool:
+        limit = self.config.recycle_after_pages
+        return limit > 0 and self._pages_since_recycle >= limit
+
+    async def _recycle_context(self) -> None:
+        """Tear down and recreate the browser context to release accumulated memory.
+
+        On a long crawl Chromium's footprint (renderer processes plus the JS heap of
+        the single long-lived SPA page) grows until the container memory limit is hit
+        and the pod is OOM-killed. Recreating the context frees all of it. Crawl
+        progress (visited_urls, DOM hashes, captured requests) lives on the Python side
+        and is preserved, so the crawl resumes instead of restarting.
+
+        Only call at the depth-0 loop boundary: this swaps self.page/self.context,
+        invalidating any element handles held higher on the crawl stack.
+        """
+        logger.info("Recycling browser context to reclaim memory (pages visited: %d)",
+                    self._pages_visited)
+        try:
+            if self.page:
+                await self.page.close()
+        except Exception as e:
+            logger.debug("Recycle: error closing page: %s", e)
+        try:
+            if self.context:
+                await self.context.close()
+        except Exception as e:
+            logger.debug("Recycle: error closing context: %s", e)
+
+        self.context = await self._new_context(prefer_saved_state=True)
+        self.page = await self.context.new_page()
+        self._capture = RequestCapture(self.interceptor, self.config.start_url)
+        self._capture.attach(self.page, self.context)
+        self._pages_since_recycle = 0
+
+        # Re-establish crawl position with a raw goto (navigator.navigate_to would
+        # refuse the already-visited start URL) and re-authenticate, since the fresh
+        # context may not carry a live session.
+        try:
+            await self.page.goto(
+                self.config.start_url,
+                wait_until='networkidle',
+                timeout=self.config.wait_timeout,
+            )
+            await self.page.wait_for_timeout(self.config.network_idle_timeout)
+            await self._ensure_authenticated(self.page)
+        except Exception as e:
+            logger.warning("Recycle: failed to restore start page %s: %s",
+                           self.config.start_url, e)
 
     async def cleanup(self) -> None:
         if self.page:

@@ -4,6 +4,7 @@
   "max_clicks_per_page": 20,
   "wait_timeout": 30000,
   "network_idle_timeout": 2000,
+  "recycle_after_pages": 15,
   "form_filling": {
     "enabled": true,
     "fill_delay": 100,

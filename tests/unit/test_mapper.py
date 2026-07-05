@@ -100,3 +100,60 @@ class TestCleanup:
         await m.cleanup()
         m.page.close.assert_called_once()
         m.browser.close.assert_called_once()
+
+
+class TestCloseExtraPages:
+    async def test_closes_popups_but_not_active_page(self, make_config):
+        m = Mapper(make_config())
+        active, popup1, popup2 = AsyncMock(), AsyncMock(), AsyncMock()
+        m.page = active
+        m.context = MagicMock()
+        m.context.pages = [active, popup1, popup2]
+        await m._close_extra_pages()
+        active.close.assert_not_called()
+        popup1.close.assert_called_once()
+        popup2.close.assert_called_once()
+
+    async def test_tolerates_no_context(self, make_config):
+        m = Mapper(make_config())
+        m.context = None
+        await m._close_extra_pages()  # should not raise
+
+    async def test_swallows_close_errors(self, make_config):
+        m = Mapper(make_config())
+        active, bad = AsyncMock(), AsyncMock()
+        bad.close = AsyncMock(side_effect=Exception("already closed"))
+        m.page = active
+        m.context = MagicMock()
+        m.context.pages = [active, bad]
+        await m._close_extra_pages()  # must not propagate
+        bad.close.assert_called_once()
+
+
+class TestShouldRecycle:
+    def test_true_when_threshold_reached(self, make_config):
+        m = Mapper(make_config(recycle_after_pages=5))
+        m._pages_since_recycle = 5
+        assert m._should_recycle() is True
+
+    def test_false_below_threshold(self, make_config):
+        m = Mapper(make_config(recycle_after_pages=5))
+        m._pages_since_recycle = 4
+        assert m._should_recycle() is False
+
+    def test_disabled_when_zero(self, make_config):
+        m = Mapper(make_config(recycle_after_pages=0))
+        m._pages_since_recycle = 999
+        assert m._should_recycle() is False
+
+
+class TestProcessElement:
+    async def test_returns_early_when_click_fails(self, make_config, mock_page, mock_element):
+        m = Mapper(make_config())
+        page = mock_page(url="http://x/base")
+        m.navigator.click_element = AsyncMock(return_value=False)
+        m._interact_with_new_elements = AsyncMock()
+        m._maybe_explore_new_url = AsyncMock()
+        await m._process_element(page, mock_element(text="Foo"), 0, 1, "http://x/base", 0)
+        m._interact_with_new_elements.assert_not_called()
+        m._maybe_explore_new_url.assert_not_called()
