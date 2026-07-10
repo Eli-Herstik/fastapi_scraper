@@ -3,6 +3,8 @@ from datetime import datetime, timezone
 from typing import AsyncIterator, Optional
 
 from sqlalchemy import (
+    JSON,
+    BigInteger,
     Boolean,
     DateTime,
     ForeignKey,
@@ -10,10 +12,8 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
-    event,
     update,
 )
-from sqlalchemy.dialects.sqlite import JSON
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -132,7 +132,7 @@ class ScanEventRow(Base):
         String, ForeignKey("scans.id", ondelete="CASCADE"), primary_key=True
     )
     seq: Mapped[int] = mapped_column(Integer, primary_key=True)
-    ts: Mapped[int] = mapped_column(Integer, nullable=False)
+    ts: Mapped[int] = mapped_column(BigInteger, nullable=False)
     type: Mapped[str] = mapped_column(String, nullable=False)
     payload: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
 
@@ -140,31 +140,32 @@ class ScanEventRow(Base):
 
 
 def _database_url() -> str:
-    explicit = os.environ.get("DATABASE_URL")
-    if explicit:
-        return explicit
-    path = os.environ.get("SCRAPER_SQLITE_PATH", "scraper.db")
-    return f"sqlite+aiosqlite:///{path}"
+    url = os.environ.get("DATABASE_URL")
+    if not url:
+        raise RuntimeError(
+            "DATABASE_URL is required "
+            "(example: postgresql+asyncpg://user:pass@host:5432/scraper)"
+        )
+    return url
 
 
 def make_engine() -> AsyncEngine:
-    engine = create_async_engine(_database_url(), future=True)
-    if engine.dialect.name == "sqlite":
-        @event.listens_for(engine.sync_engine, "connect")
-        def _enable_sqlite_foreign_keys(dbapi_connection, connection_record):
-            cursor = dbapi_connection.cursor()
-            cursor.execute("PRAGMA foreign_keys=ON")
-            cursor.close()
-    return engine
+    return create_async_engine(
+        _database_url(),
+        future=True,
+        # Validate each pooled connection before use. Idle connections get
+        # silently dropped in OpenShift (Postgres idle timeout, SDN/router, or
+        # an intervening proxy), which otherwise surfaces as asyncpg
+        # "connection is closed" on the next request.
+        pool_pre_ping=True,
+        # Proactively retire connections before they hit the server/proxy idle
+        # cutoff. 300s is comfortably below typical timeouts.
+        pool_recycle=300,
+    )
 
 
 def make_session_factory(engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:
     return async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
-
-
-async def init_db(engine: AsyncEngine) -> None:
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
 
 
 async def sweep_stale_scans(session_factory: async_sessionmaker[AsyncSession]) -> int:

@@ -1,0 +1,57 @@
+# Prerequisites — set these as masked, protected CI/CD variables in GitLab:
+#   OPENSHIFT_SERVER     e.g. https://api.cluster.example.com:6443
+#   OPENSHIFT_TOKEN      service account token with edit on the namespace
+#   OPENSHIFT_NAMESPACE  e.g. gatekeeper
+#
+# One-time manual setup before the first pipeline run (do NOT put DATABASE_URL in CI vars):
+#   oc create secret generic fastapi-scraper-env \
+#     --from-literal=DATABASE_URL='postgresql+asyncpg://USER:PASS@HOST:5432/DBNAME' \
+#     --from-literal=CORS_ALLOW_ORIGINS='https://gatekeeper.example.com'
+
+stages:
+  - build
+  - migrate
+  - deploy
+
+variables:
+  APP_NAME: fastapi-scraper
+  OC_IMAGE: quay.io/openshift/origin-cli:latest
+
+.oc:
+  image: $OC_IMAGE
+  before_script:
+    - oc login --server="$OPENSHIFT_SERVER" --token="$OPENSHIFT_TOKEN"
+    - oc project "$OPENSHIFT_NAMESPACE"
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+build:
+  extends: .oc
+  stage: build
+  script:
+    - oc apply -f openshift/imagestream.yaml
+    - oc apply -f openshift/buildconfig.yaml
+    - oc start-build $APP_NAME --from-dir=. --follow --wait
+
+migrate:
+  extends: .oc
+  stage: migrate
+  needs: [build]
+  script:
+    - oc delete job $APP_NAME-migrate --ignore-not-found
+    - oc apply -f openshift/migration-job.yaml
+    - oc wait --for=condition=complete job/$APP_NAME-migrate --timeout=10m
+  after_script:
+    - oc logs job/$APP_NAME-migrate || true
+
+deploy:
+  extends: .oc
+  stage: deploy
+  needs: [migrate]
+  script:
+    - oc apply -f openshift/service.yaml
+    - oc apply -f openshift/route.yaml
+    - oc apply -f openshift/deployment.yaml
+    - oc rollout status deployment/$APP_NAME --timeout=5m
+  environment:
+    name: production
