@@ -10,7 +10,7 @@ def normalize_auth_method(raw: str) -> AuthMethod:
 
     Scraper sources:
     - auth_analyzer.detect_authentication() — short tags: ntlm, kerberos, negotiate, basic, bearer, api_key, other, unauthenticated
-    - interceptor._apply_auth_challenge() — "Required: Basic ...", "Required: Bearer ...", "Required: NTLM ...", "Required: Negotiate ...", "Required: Other ..."
+    - interceptor._apply_auth_challenge() — "Required: Basic", "Required: Bearer", "Required: NTLM", "Required: Negotiate", "Required: Other" (raw challenge kept separately on the response)
     - interceptor._apply_idp_redirect() — "oauth: <provider>"
     """
     if not raw:
@@ -44,12 +44,11 @@ def normalize_auth_method(raw: str) -> AuthMethod:
     if lower in {"none", "anonymous", "unauthenticated", ""}:
         return AuthMethod.unauthenticated
 
-    # Checked last so the interceptor's "Required: Other (...)" marker never
-    # preempts a real scheme carried in the wrapped challenge. The interceptor
-    # now emits recognized challenge schemes explicitly (e.g. "Required: NTLM"),
-    # so "Other" wraps only genuinely unnamed schemes -- but the ordering is kept
-    # defensively: should a known scheme name ever reach here inside an "Other"
-    # wrapper, its own branch above must still win (ntlm -> blocker, not other).
+    # Checked last: "other" is the catch-all for a named-but-unrecognized scheme,
+    # so any real scheme must match its own branch above first. The interceptor
+    # emits recognized challenge schemes explicitly (e.g. "Required: NTLM") and a
+    # bare "Required: Other" otherwise, so this ordering is purely defensive now --
+    # kept so a known scheme name can never be masked by "other", whatever the source.
     if "other" in lower:
         return AuthMethod.other
 

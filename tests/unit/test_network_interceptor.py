@@ -115,10 +115,10 @@ class TestHandleResponse:
         result = await interceptor.handle_response(
             req_data, mock_response(401, {"www-authenticate": 'Digest realm="t"'})
         )
-        # A scheme we don't name specifically is tagged "Other", with the raw
-        # challenge kept for evidence.
-        assert "Required: Other" in result["authentication"]
-        assert "Digest" in result["authentication"]
+        # A scheme we don't name specifically is tagged "Other"; the raw challenge
+        # is kept for evidence on the response, not folded into the label.
+        assert result["authentication"] == "Required: Other"
+        assert result["response"]["auth_challenge"] == 'Digest realm="t"'
 
     async def test_401_without_header(self, interceptor, mock_response):
         req_data = {"url": "http://a.com", "authentication": "unauthenticated"}

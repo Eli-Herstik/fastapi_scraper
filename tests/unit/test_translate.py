@@ -36,14 +36,12 @@ class TestSeverityFor:
 class TestNormalizeAuthMethod:
     def test_other_marker_maps_to_other(self):
         # The interceptor's else-branch 401 challenge -> AuthMethod.other.
-        assert (
-            normalize_auth_method('Required: Other (Digest realm="t")')
-            == AuthMethod.other
-        )
+        assert normalize_auth_method("Required: Other") == AuthMethod.other
 
     def test_other_marker_does_not_preempt_real_scheme(self):
-        # A bare NTLM 401 also flows through the "Other" marker, but must still
-        # resolve to ntlm (a blocker) -- the "other" check runs last.
+        # Defensive: the interceptor no longer wraps a scheme inside "Other" (a real
+        # NTLM 401 now yields "Required: NTLM"), but should a string ever carry both,
+        # the concrete scheme must still win -- ntlm (a blocker), since "other" is last.
         assert normalize_auth_method("Required: Other (NTLM)") == AuthMethod.ntlm
 
     def test_unclassified_stays_unknown(self):

@@ -76,7 +76,7 @@ def detect_authentication(headers: Dict[str, str], url: str) -> str:
             return "kerberos"
         # A present Authorization header with an unrecognized scheme (e.g. Digest)
         # is a real but unnamed mechanism, not an absence of signal -- classify it
-        # as "other", mirroring the interceptor's "Required: Other (...)" handling
+        # as "other", mirroring the interceptor's "Required: Other" handling
         # of an unnamed WWW-Authenticate challenge. The raw scheme still survives in
         # the finding's headers_snippet evidence.
         return "other"
@@ -170,11 +170,11 @@ def _auth_rank(value: str) -> int:
     """Rank an authentication string by its scheme for host aggregation.
 
     Classifies the raw scraper value -- a short detect_authentication tag, a
-    "Required: <scheme> ..." 401 challenge, or an "oauth: <provider>" redirect --
+    "Required: <scheme>" 401 challenge, or an "oauth: <provider>" redirect --
     to a single scheme by substring, mirroring translate.normalize_auth_method so
     the rank agrees with the scheme the FE will ultimately show. A scheme the
     server merely demanded therefore counts the same as one actually observed.
-    Both an unresolved "Required: Other (...)" 401 and an Authorization header
+    Both a "Required: Other" 401 and an Authorization header
     carrying an unnamed scheme surface as "other", which ranks just above the
     "unknown" defensive fallback (now only reached by a truly unrecognized aggregate
     string). "other" still sits below negotiate and the blockers, so it never masks
@@ -198,8 +198,9 @@ def _auth_rank(value: str) -> int:
         return _AUTH_RANK["basic"]
     if "api_key" in lower or "apikey" in lower or "api-key" in lower:
         return _AUTH_RANK["api_key"]
-    # Last, mirroring normalize_auth_method: the "Required: Other (...)" marker
-    # must not preempt a real scheme wrapped inside it.
+    # Checked last, mirroring normalize_auth_method: "other" is the catch-all for a
+    # named-but-unrecognized scheme, so any real scheme must match its own branch
+    # above first -- defensive now that the interceptor emits a bare "Required: Other".
     if "other" in lower:
         return _AUTH_RANK["other"]
     return _AUTH_RANK["unknown"]
