@@ -67,7 +67,6 @@ class TestHandleRequest:
         assert result["authentication"] == "bearer"
         assert result["source_url"] == "http://example.com"
         assert result["navigation_depth"] == 1
-        assert "timestamp" in result
         assert result["resource_type"] == "fetch"
 
 

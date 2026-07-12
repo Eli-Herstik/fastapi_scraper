@@ -1,7 +1,6 @@
 """Network request/response interceptor for Playwright."""
 import json
 import logging
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from playwright.async_api import Request, Response
@@ -30,7 +29,6 @@ class NetworkInterceptor:
             'headers': request.headers,
             'post_data': await self._get_post_data(request),
             'resource_type': request.resource_type,
-            'timestamp': int(datetime.now().timestamp() * 1000),
             'source_url': self.source_url,
             'navigation_depth': self.navigation_depth,
             'authentication': auth_analyzer.detect_authentication(request.headers, request.url),
@@ -58,7 +56,6 @@ class NetworkInterceptor:
             response_data = {
                 'status': status,
                 'headers': headers,
-                'timestamp': int(datetime.now().timestamp() * 1000),
             }
 
             if status == 401:
@@ -82,7 +79,6 @@ class NetworkInterceptor:
             request_data['response'] = {
                 'status': status,
                 'error': str(e),
-                'timestamp': int(datetime.now().timestamp() * 1000),
             }
             if request_data not in self.requests:
                 self.requests.append(request_data)

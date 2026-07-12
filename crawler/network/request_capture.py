@@ -1,6 +1,5 @@
 """Wire Playwright page/context events to the NetworkInterceptor, deduplicating by (method, URL)."""
 import logging
-from datetime import datetime
 from urllib.parse import urlparse
 
 from playwright.async_api import BrowserContext, Page
@@ -78,7 +77,6 @@ class RequestCapture:
         request_data['response'] = {
             'status': 0,
             'error': 'Request failed',
-            'timestamp': int(datetime.now().timestamp() * 1000),
         }
         self.interceptor.requests.append(request_data)
         self.captured_keys.add(key)
@@ -102,21 +100,18 @@ class RequestCapture:
                     request_data['response'] = {
                         'status': getattr(response, 'status', 0),
                         'error': f'Body not available: {body_error}',
-                        'timestamp': int(datetime.now().timestamp() * 1000),
                     }
                     self.interceptor.requests.append(request_data)
             else:
                 request_data['response'] = {
                     'status': 0,
                     'note': 'Request finished but no response available',
-                    'timestamp': int(datetime.now().timestamp() * 1000),
                 }
                 self.interceptor.requests.append(request_data)
         except Exception as e:
             request_data['response'] = {
                 'status': 0,
                 'note': f'Request finished but response not accessible: {e}',
-                'timestamp': int(datetime.now().timestamp() * 1000),
             }
             self.interceptor.requests.append(request_data)
         finally:
