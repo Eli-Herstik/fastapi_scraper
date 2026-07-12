@@ -16,11 +16,9 @@ class NetworkInterceptor:
     def __init__(self):
         self.requests: List[Dict[str, Any]] = []
         self.source_url: str = ""
-        self.navigation_depth: int = 0
 
-    def set_context(self, source_url: str, navigation_depth: int = 0):
+    def set_context(self, source_url: str):
         self.source_url = source_url
-        self.navigation_depth = navigation_depth
 
     async def handle_request(self, request: Request) -> Dict[str, Any]:
         return {
@@ -30,7 +28,6 @@ class NetworkInterceptor:
             'post_data': await self._get_post_data(request),
             'resource_type': request.resource_type,
             'source_url': self.source_url,
-            'navigation_depth': self.navigation_depth,
             'authentication': auth_analyzer.detect_authentication(request.headers, request.url),
         }
 

@@ -60,13 +60,12 @@ class TestGetPostData:
 class TestHandleRequest:
     async def test_returns_expected_keys(self, interceptor, mock_request):
         req = mock_request("GET", headers={"authorization": "Bearer abc"})
-        interceptor.set_context("http://example.com", 1)
+        interceptor.set_context("http://example.com")
         result = await interceptor.handle_request(req)
         assert result["url"] == "http://api.example.com/v1/test"
         assert result["method"] == "GET"
         assert result["authentication"] == "bearer"
         assert result["source_url"] == "http://example.com"
-        assert result["navigation_depth"] == 1
         assert result["resource_type"] == "fetch"
 
 
@@ -197,13 +196,8 @@ class TestGetHeaderValue:
 
 class TestInterceptorState:
     def test_set_context(self, interceptor):
-        interceptor.set_context("http://x/p", 2)
+        interceptor.set_context("http://x/p")
         assert interceptor.source_url == "http://x/p"
-        assert interceptor.navigation_depth == 2
-
-    def test_set_context_default_depth(self, interceptor):
-        interceptor.set_context("http://x")
-        assert interceptor.navigation_depth == 0
 
     def test_get_requests_returns_copy(self, interceptor):
         interceptor.requests.append({"url": "http://a"})
@@ -219,4 +213,3 @@ class TestInterceptorState:
     def test_initial_state(self, interceptor):
         assert interceptor.requests == []
         assert interceptor.source_url == ""
-        assert interceptor.navigation_depth == 0
