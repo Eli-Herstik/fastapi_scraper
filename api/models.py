@@ -129,6 +129,27 @@ class AppSummary(BaseModel):
     current_scan_id: Optional[str] = None
 
 
+class SubmittedAppSummary(BaseModel):
+    # submitted_at/submitted_by are optional only defensively: current_scan_id and
+    # the SubmissionRow are written in the same commit, so both are always present
+    # in practice. The outer join keeps a hand-repaired app visible with nulls
+    # rather than dropping it from the inventory entirely.
+    id: str
+    name: str
+    owner_ad_group: str
+    submitted_scan_id: str
+    submitted_at: Optional[str] = None
+    submitted_by: Optional[str] = None
+    service_count: int
+
+
+class ServiceSummary(BaseModel):
+    model_config = ConfigDict(use_enum_values=True)
+
+    host: str
+    auth_method: AuthMethod
+
+
 class CreateAppRequest(BaseModel):
     name: str
     url: str

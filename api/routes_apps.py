@@ -15,9 +15,17 @@ from .models import (
     Finding,
     ScanDiff,
     ScanSummary,
+    ServiceSummary,
     Severity,
+    SubmittedAppSummary,
 )
-from .serialize import app_to_summary, finding_to_schema, scan_to_summary
+from .serialize import (
+    app_to_summary,
+    finding_to_schema,
+    finding_to_service,
+    scan_to_summary,
+    submitted_app_to_summary,
+)
 
 router = APIRouter()
 
@@ -44,6 +52,24 @@ def _blocker_count_subq():
                 0,
             ).label("blocker_count"),
         )
+        .group_by(FindingRow.scan_id)
+        .subquery()
+    )
+
+
+def _service_count_subq():
+    """Non-excluded finding count per scan.
+
+    Excluded findings were deliberately dismissed during review, so they aren't part
+    of the app's approved service inventory. A scan whose findings are *all* excluded
+    produces no row here — callers must coalesce to 0.
+    """
+    return (
+        select(
+            FindingRow.scan_id.label("scan_id"),
+            func.count(FindingRow.id).label("service_count"),
+        )
+        .where(FindingRow.excluded.is_(False))
         .group_by(FindingRow.scan_id)
         .subquery()
     )
@@ -108,6 +134,70 @@ async def create_app(body: CreateAppRequest, request: Request) -> AppSummary:
         await session.refresh(app)
 
     return app_to_summary(app, last_scan=None, last_scan_blocker_count=0)
+
+
+# Declared before the /apps/{app_id}/... routes: static paths above dynamic ones.
+@router.get("/apps/submitted", response_model=List[SubmittedAppSummary])
+async def list_submitted_apps(request: Request) -> List[SubmittedAppSummary]:
+    """Apps that have an approved (submitted) scan, with their service counts.
+
+    Keys off AppRow.current_scan_id, which is set only on a successful submit and is
+    sticky — so an app with a newer, unsubmitted scan still reports the *approved*
+    snapshot, not the newer one.
+    """
+    factory = _session_factory(request)
+    async with factory() as session:
+        svc = _service_count_subq()
+        stmt = (
+            select(
+                AppRow,
+                SubmissionRow.submitted_at,
+                SubmissionRow.submitted_by,
+                func.coalesce(svc.c.service_count, 0),
+            )
+            .outerjoin(SubmissionRow, SubmissionRow.scan_id == AppRow.current_scan_id)
+            .outerjoin(svc, svc.c.scan_id == AppRow.current_scan_id)
+            .where(AppRow.current_scan_id.is_not(None))
+            .order_by(SubmissionRow.submitted_at.desc())
+        )
+        result = await session.execute(stmt)
+        out: list[SubmittedAppSummary] = []
+        for app, submitted_at, submitted_by, service_count in result.all():
+            out.append(
+                submitted_app_to_summary(
+                    app,
+                    submitted_at=submitted_at,
+                    submitted_by=submitted_by,
+                    service_count=int(service_count or 0),
+                )
+            )
+        return out
+
+
+@router.get("/apps/{app_id}/services", response_model=List[ServiceSummary])
+async def list_app_services(app_id: str, request: Request) -> List[ServiceSummary]:
+    factory = _session_factory(request)
+    async with factory() as session:
+        app = await session.get(AppRow, app_id)
+        # Two distinct messages so the caller can tell a bad id from an app that
+        # simply hasn't been submitted yet.
+        if not app:
+            raise HTTPException(status_code=404, detail={"message": "app not found"})
+        if not app.current_scan_id:
+            raise HTTPException(
+                status_code=404, detail={"message": "app has no submitted scan"}
+            )
+        rows = (
+            await session.execute(
+                select(FindingRow)
+                .where(
+                    FindingRow.scan_id == app.current_scan_id,
+                    FindingRow.excluded.is_(False),
+                )
+                .order_by(FindingRow.host)
+            )
+        ).scalars().all()
+        return [finding_to_service(r) for r in rows]
 
 
 @router.get("/apps/{app_id}/scans", response_model=List[ScanSummary])

@@ -12,7 +12,9 @@ from .models import (
     ScanDetail,
     ScanStatus,
     ScanSummary,
+    ServiceSummary,
     Severity,
+    SubmittedAppSummary,
 )
 
 
@@ -42,6 +44,11 @@ def finding_to_schema(row: FindingRow) -> Finding:
 
 def findings_to_schemas(rows: Iterable[FindingRow]) -> list[Finding]:
     return [finding_to_schema(r) for r in rows]
+
+
+def finding_to_service(row: FindingRow) -> ServiceSummary:
+    """The inventory view of a finding — just the host and how it authenticates."""
+    return ServiceSummary(host=row.host, auth_method=AuthMethod(row.auth_method))
 
 
 def scan_to_summary(
@@ -115,6 +122,25 @@ def app_to_summary(
         last_scan_status=ScanStatus(last_scan.status) if last_scan else None,
         last_scanned_at=_isoformat(last_scan.started_at) if last_scan else None,
         current_scan_id=app.current_scan_id,
+    )
+
+
+def submitted_app_to_summary(
+    app: AppRow,
+    *,
+    submitted_at: datetime | None,
+    submitted_by: str | None,
+    service_count: int,
+) -> SubmittedAppSummary:
+    # Callers only reach here for apps with current_scan_id set, so the cast is safe.
+    return SubmittedAppSummary(
+        id=app.id,
+        name=app.name,
+        owner_ad_group=app.owner_ad_group or "",
+        submitted_scan_id=app.current_scan_id or "",
+        submitted_at=_isoformat(submitted_at),
+        submitted_by=submitted_by,
+        service_count=service_count,
     )
 
 
