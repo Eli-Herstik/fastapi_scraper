@@ -1,7 +1,13 @@
 -- Read-only role for the inventory service (gatekeeper-inventory repo).
 --
---   psql -U postgres -d gatekeeper -v pw="'choose-a-real-password'" \
+--   psql -U postgres -d gatekeeper -v pw=choose-a-real-password \
 --        -f scripts/inventory_reader_role.sql
+--
+-- Pass the password RAW, with no surrounding single quotes. :'pw' below already quotes
+-- and escapes the value; pre-quoting it bakes literal ' characters into the password,
+-- which succeeds silently and then fails at connect time with a password that looks
+-- correct in .env. Use shell quotes only if the value contains spaces or shell
+-- metacharacters: -v pw='s3cr3t p@ss'
 --
 -- Not an alembic migration on purpose: migration history is committed to the repo and
 -- must never carry credentials, and role/grant management is a deployment concern that
