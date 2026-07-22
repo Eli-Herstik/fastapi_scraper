@@ -4,12 +4,19 @@ import logging
 import time
 from typing import Any, Dict, Optional, Set
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from .db import ScanEventRow
 
 logger = logging.getLogger(__name__)
+
+# Backstop only. Allocation is serialized by an advisory lock (see _lock_scan), so a
+# collision should be unreachable; this bounds the damage if one happens anyway rather
+# than spinning forever. Note retry alone is NOT sufficient at scale: with N concurrent
+# emits each round produces exactly one winner, so pure retry needs up to N rounds.
+_MAX_SEQ_ATTEMPTS = 5
 
 
 class EventBus:
@@ -46,13 +53,89 @@ class EventBus:
             self._notification_subscribers.discard(queue)
 
     async def next_seq(self, scan_id: str) -> int:
+        """The seq an event for this scan would get right now.
+
+        Advisory only — the value can be stale the moment it's returned. Real
+        allocation happens inside _persist's transaction, which is what makes it safe.
+        """
         async with self._session_factory() as session:
-            stmt = select(func.coalesce(func.max(ScanEventRow.seq), -1)).where(
+            return await self._peek_seq(session, scan_id)
+
+    @staticmethod
+    async def _lock_scan(session: AsyncSession, scan_id: str) -> None:
+        """Serialize seq allocation for a single scan, for the life of the transaction.
+
+        A transaction-scoped advisory lock, released automatically on commit or
+        rollback. Two emits for the same scan queue instead of colliding, which makes
+        the read-then-insert below effectively atomic.
+
+        Different scan_ids may occasionally share a hashtext() value and serialize
+        against each other — harmless, since emits are cheap and per-scan traffic is low.
+        """
+        await session.execute(
+            text("SELECT pg_advisory_xact_lock(hashtext(:scan_id))"),
+            {"scan_id": scan_id},
+        )
+
+    @staticmethod
+    async def _peek_seq(session: AsyncSession, scan_id: str) -> int:
+        result = await session.execute(
+            select(func.coalesce(func.max(ScanEventRow.seq), -1)).where(
                 ScanEventRow.scan_id == scan_id
             )
-            result = await session.execute(stmt)
-            current = result.scalar_one()
-            return int(current) + 1
+        )
+        return int(result.scalar_one()) + 1
+
+    async def _persist(
+        self,
+        scan_id: str,
+        event_type: str,
+        payload: Dict[str, Any],
+        ts: int,
+        seq: Optional[int],
+    ) -> int:
+        """Allocate a seq and insert the event in one transaction. Returns the seq used.
+
+        Allocating in a separate transaction from the insert (as this used to) races:
+        two concurrent emits for one scan read the same MAX(seq) and both try to claim
+        it. SQLite's global write lock used to hide this; Postgres does not, and a
+        25-way concurrent emit lost 19 of 25 events to IntegrityErrors that propagated
+        out of the scrape job's on_event callback and failed the scan.
+
+        _lock_scan serializes allocation so collisions don't occur; the (scan_id, seq)
+        primary key plus the retry below is a backstop, not the mechanism.
+        """
+        explicit = seq is not None
+        last_error: IntegrityError | None = None
+
+        for _ in range(_MAX_SEQ_ATTEMPTS):
+            async with self._session_factory() as session:
+                try:
+                    if not explicit:
+                        await self._lock_scan(session, scan_id)
+                    resolved = seq if explicit else await self._peek_seq(session, scan_id)
+                    session.add(
+                        ScanEventRow(
+                            scan_id=scan_id,
+                            seq=resolved,
+                            ts=ts,
+                            type=event_type,
+                            payload=payload,
+                        )
+                    )
+                    await session.commit()
+                    return resolved
+                except IntegrityError as e:
+                    await session.rollback()
+                    # A caller-supplied seq that collides is a bug in the caller —
+                    # silently renumbering it would hide the problem.
+                    if explicit:
+                        raise
+                    last_error = e
+
+        raise RuntimeError(
+            f"could not allocate a seq for scan {scan_id} after {_MAX_SEQ_ATTEMPTS} attempts"
+        ) from last_error
 
     async def emit(
         self,
@@ -64,22 +147,9 @@ class EventBus:
         """Persist + fan out an event. Returns the event dict.
 
         Fan-out is best-effort: full subscriber queues drop and log."""
-        if seq is None:
-            seq = await self.next_seq(scan_id)
         ts = int(time.time() * 1000)
         payload = payload or {}
-
-        async with self._session_factory() as session:
-            session.add(
-                ScanEventRow(
-                    scan_id=scan_id,
-                    seq=seq,
-                    ts=ts,
-                    type=event_type,
-                    payload=payload,
-                )
-            )
-            await session.commit()
+        seq = await self._persist(scan_id, event_type, payload, ts, seq)
 
         event = {
             "scan_id": scan_id,

@@ -15,5 +15,4 @@ storage_state.json
 secrets*.json
 *.db
 .env
-tests/integration
 .claude

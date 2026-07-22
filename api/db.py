@@ -1,8 +1,13 @@
 import os
 from datetime import datetime, timezone
-from typing import AsyncIterator, Optional
+from pathlib import Path
+from typing import TYPE_CHECKING, AsyncIterator, Optional
+
+if TYPE_CHECKING:
+    from alembic.config import Config
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     DateTime,
     ForeignKey,
@@ -10,10 +15,9 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
-    event,
     update,
 )
-from sqlalchemy.dialects.sqlite import JSON
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -124,47 +128,87 @@ class SubmissionRow(Base):
 
 class ScanEventRow(Base):
     __tablename__ = "scan_events"
-    __table_args__ = (
-        UniqueConstraint("scan_id", "seq", name="uq_scan_events_scan_seq"),
-    )
-
+    # (scan_id, seq) is the composite primary key below, which already enforces
+    # uniqueness — a separate UniqueConstraint over the same columns used to be
+    # declared here and was pure redundancy. On Postgres it also made autogenerate
+    # report a permanent phantom diff, which would have silently defeated the
+    # "autogenerate must be empty" drift check.
     scan_id: Mapped[str] = mapped_column(
         String, ForeignKey("scans.id", ondelete="CASCADE"), primary_key=True
     )
     seq: Mapped[int] = mapped_column(Integer, primary_key=True)
-    ts: Mapped[int] = mapped_column(Integer, nullable=False)
+    # Epoch MILLISECONDS (int(time.time() * 1000) in EventBus.emit) — ~1.8e12, which
+    # overflows a 32-bit INTEGER. Must stay BigInteger.
+    ts: Mapped[int] = mapped_column(BigInteger, nullable=False)
     type: Mapped[str] = mapped_column(String, nullable=False)
-    payload: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+    payload: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
 
     scan: Mapped[ScanRow] = relationship("ScanRow", back_populates="events")
 
 
 def _database_url() -> str:
-    explicit = os.environ.get("DATABASE_URL")
-    if explicit:
-        return explicit
-    path = os.environ.get("SCRAPER_SQLITE_PATH", "scraper.db")
-    return f"sqlite+aiosqlite:///{path}"
+    """The Postgres URL, from DATABASE_URL.
+
+    No default. The inventory service reads this same database from a separate host,
+    which is only possible on Postgres — and a silent fallback to a local file would
+    let the server come up healthy against the wrong (empty) database.
+    """
+    url = os.environ.get("DATABASE_URL")
+    if not url:
+        raise RuntimeError(
+            "DATABASE_URL is not set. Example: "
+            "postgresql+asyncpg://postgres:postgres@localhost:5432/gatekeeper"
+        )
+    return url
 
 
 def make_engine() -> AsyncEngine:
-    engine = create_async_engine(_database_url(), future=True)
-    if engine.dialect.name == "sqlite":
-        @event.listens_for(engine.sync_engine, "connect")
-        def _enable_sqlite_foreign_keys(dbapi_connection, connection_record):
-            cursor = dbapi_connection.cursor()
-            cursor.execute("PRAGMA foreign_keys=ON")
-            cursor.close()
-    return engine
+    return create_async_engine(_database_url(), future=True)
 
 
 def make_session_factory(engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:
     return async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
 
+def _alembic_config() -> "Config":
+    from alembic.config import Config
+
+    root = Path(__file__).resolve().parents[1]
+    cfg = Config(str(root / "alembic.ini"))
+    cfg.set_main_option("script_location", str(root / "alembic"))
+    return cfg
+
+
 async def init_db(engine: AsyncEngine) -> None:
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    """Assert the database is migrated to head. Never creates or alters schema.
+
+    Migrations own the schema now, because a second service (the inventory API) reads
+    these tables from its own repo. If the app were still calling create_all() it could
+    silently materialize a schema that disagrees with the migration history, and the
+    two codebases would drift apart with nothing to catch it.
+    """
+    from alembic.migration import MigrationContext
+    from alembic.script import ScriptDirectory
+
+    head = ScriptDirectory.from_config(_alembic_config()).get_current_head()
+
+    def _current_revision(sync_conn) -> Optional[str]:
+        return MigrationContext.configure(sync_conn).get_current_revision()
+
+    async with engine.connect() as conn:
+        current = await conn.run_sync(_current_revision)
+
+    if current == head:
+        return
+    if current is None:
+        raise RuntimeError(
+            "Database has no schema (no alembic_version table). "
+            "Run 'alembic upgrade head' before starting the server."
+        )
+    raise RuntimeError(
+        f"Database is at migration {current}, but the code expects {head}. "
+        "Run 'alembic upgrade head' before starting the server."
+    )
 
 
 async def sweep_stale_scans(session_factory: async_sessionmaker[AsyncSession]) -> int:

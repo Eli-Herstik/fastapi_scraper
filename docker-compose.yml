@@ -1,0 +1,31 @@
+# Postgres for local development and CI.
+#
+#   docker compose up -d db
+#   $env:DATABASE_URL      = "postgresql+asyncpg://postgres:postgres@localhost:5432/gatekeeper"
+#   $env:TEST_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/gatekeeper_test"
+#   alembic upgrade head
+#
+# A native Postgres install works just as well — the integration suite only needs
+# TEST_DATABASE_URL to point at a database it may freely TRUNCATE between tests.
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: gatekeeper
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Creates the separate database the test suite truncates, so tests can never
+      # wipe development data by pointing at the wrong URL.
+      - ./scripts/create_test_db.sql:/docker-entrypoint-initdb.d/10-create-test-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:
