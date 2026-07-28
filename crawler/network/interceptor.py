@@ -17,9 +17,6 @@ class NetworkInterceptor:
         self.requests: List[Dict[str, Any]] = []
         self.source_url: str = ""
 
-    def set_context(self, source_url: str):
-        self.source_url = source_url
-
     async def handle_request(self, request: Request) -> Dict[str, Any]:
         return {
             'url': request.url,
