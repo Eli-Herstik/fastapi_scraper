@@ -73,7 +73,7 @@ class TestHandleResponse:
     async def test_200(self, interceptor, mock_response):
         req_data = {"url": "http://a.com", "authentication": "unauthenticated"}
         result = await interceptor.handle_response(req_data, mock_response(200))
-        assert result["response"]["status"] == 200
+        assert result["status"] == 200
         assert len(interceptor.requests) == 1
 
     async def test_401_basic(self, interceptor, mock_response):
@@ -114,9 +114,9 @@ class TestHandleResponse:
             req_data, mock_response(401, {"www-authenticate": 'Digest realm="t"'})
         )
         # A scheme we don't name specifically is tagged "Other"; the raw challenge
-        # is kept for evidence on the response, not folded into the label.
+        # is kept for evidence alongside it, not folded into the label.
         assert result["authentication"] == "Required: Other"
-        assert result["response"]["auth_challenge"] == 'Digest realm="t"'
+        assert result["auth_challenge"] == 'Digest realm="t"'
 
     async def test_401_without_header(self, interceptor, mock_response):
         req_data = {"url": "http://a.com", "authentication": "unauthenticated"}
@@ -126,13 +126,13 @@ class TestHandleResponse:
     async def test_401_overwrites_rejected_credential(self, interceptor, mock_response):
         # A 401 means the sent credential was rejected, so the server's challenge
         # -- not the failed "bearer" -- is the authoritative label. The raw
-        # challenge is still recorded on the response for evidence.
+        # challenge is still recorded for evidence.
         req_data = {"url": "http://a.com", "authentication": "bearer"}
         result = await interceptor.handle_response(
             req_data, mock_response(401, {"www-authenticate": "Basic"})
         )
         assert "Required: Basic" in result["authentication"]
-        assert result["response"]["auth_challenge"] == "Basic"
+        assert result["auth_challenge"] == "Basic"
 
     async def test_401_bearer_rejected_by_negotiate(self, interceptor, mock_response):
         # The motivating scenario: a bearer token met with a Negotiate challenge.
@@ -167,8 +167,8 @@ class TestHandleResponse:
     async def test_none_response(self, interceptor):
         req_data = {"url": "http://a.com", "authentication": "unauthenticated"}
         result = await interceptor.handle_response(req_data, None)
-        assert result["response"]["status"] == 0
-        assert "error" in result["response"]
+        assert result["status"] == 0
+        assert "error" in result
 
     async def test_none_response_not_duplicated(self, interceptor):
         req_data = {"url": "http://a.com", "authentication": "unauthenticated"}

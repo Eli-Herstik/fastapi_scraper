@@ -138,10 +138,9 @@ def _format_headers_snippet(headers: Dict[str, Any] | None, limit: int = 512) ->
 
 
 def _evidence_from(req: Dict[str, Any]) -> Dict[str, Any]:
-    response = req.get('response') or {}
     return {
-        'headers_snippet': _format_headers_snippet(req.get('headers')),
-        'status_code': int(response.get('status', 0) or 0),
+        'headers_snippet': _format_headers_snippet(req.get('request_headers')),
+        'status_code': int(req.get('status', 0) or 0),
         'first_seen_on_page': req.get('source_url', '') or '',
     }
 
