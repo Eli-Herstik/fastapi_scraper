@@ -76,7 +76,7 @@ class RequestCapture:
         request_data = await self.interceptor.handle_request(request)
         request_data.update({
             'status': 0,
-            'error': 'Request failed',
+            'response_error': 'Request failed',
         })
         self.interceptor.requests.append(request_data)
         self.captured_keys.add(key)
@@ -99,19 +99,19 @@ class RequestCapture:
                     logger.warning("Could not read body for %s %s: %s", request.method, request.url, body_error)
                     request_data.update({
                         'status': getattr(response, 'status', 0),
-                        'error': f'Body not available: {body_error}',
+                        'response_error': f'Body not available: {body_error}',
                     })
                     self.interceptor.requests.append(request_data)
             else:
                 request_data.update({
                     'status': 0,
-                    'note': 'Request finished but no response available',
+                    'response_note': 'Request finished but no response available',
                 })
                 self.interceptor.requests.append(request_data)
         except Exception as e:
             request_data.update({
                 'status': 0,
-                'note': f'Request finished but response not accessible: {e}',
+                'response_note': f'Request finished but response not accessible: {e}',
             })
             self.interceptor.requests.append(request_data)
         finally:

@@ -102,7 +102,7 @@ class TestOnRequestFailed:
         await capture._on_request_failed(req)
         assert len(interceptor.requests) == 1
         assert interceptor.requests[0]["status"] == 0
-        assert interceptor.requests[0]["error"] == "Request failed"
+        assert interceptor.requests[0]["response_error"] == "Request failed"
 
     async def test_skips_internal(self, capture, interceptor, mock_request):
         req = mock_request(url="http://localhost:8080/x")

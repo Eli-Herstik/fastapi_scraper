@@ -75,7 +75,7 @@ class NetworkInterceptor:
 
             request_data.update({
                 'status': status,
-                'error': str(e),
+                'response_error': str(e),
             })
             if request_data not in self.requests:
                 self.requests.append(request_data)
