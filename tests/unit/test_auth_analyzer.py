@@ -244,14 +244,13 @@ class TestAggregateByHost:
         assert result[0]["authentication"] == "Required: Other"
 
     def test_oauth_redirect_outranks_unauthenticated(self):
-        # The "oauth: <provider>" redirect form is classified by substring and
-        # outranks unauthenticated.
+        # The "oauth" IdP-redirect label outranks unauthenticated.
         reqs = [
             {"url": "http://a.com/1", "authentication": "unauthenticated"},
-            {"url": "http://a.com/2", "authentication": "oauth: Okta"},
+            {"url": "http://a.com/2", "authentication": "oauth"},
         ]
         result = aggregate_by_host(reqs)
-        assert result[0]["authentication"] == "oauth: Okta"
+        assert result[0]["authentication"] == "oauth"
 
     def test_skips_requests_without_host(self):
         reqs = [{"url": "not-a-url", "authentication": "unauthenticated"}]

@@ -111,7 +111,10 @@ class NetworkInterceptor:
         idp = auth_analyzer.detect_idp_redirect(location)
         if idp:
             response_data['idp_redirect'] = idp
-            request_data['authentication'] = f"oauth: {idp}"
+            # As in _apply_auth_challenge, the label carries only the resolved
+            # scheme; the concrete provider lives in the 'idp_redirect' key set
+            # above for evidence.
+            request_data['authentication'] = "oauth"
 
     @staticmethod
     def _get_header_value(headers: Dict[str, str], name: str) -> Optional[str]:

@@ -169,7 +169,7 @@ def _auth_rank(value: str) -> int:
     """Rank an authentication string by its scheme for host aggregation.
 
     Classifies the raw scraper value -- a short detect_authentication tag, a
-    "Required: <scheme>" 401 challenge, or an "oauth: <provider>" redirect --
+    "Required: <scheme>" 401 challenge, or an "oauth" IdP redirect --
     to a single scheme by substring, mirroring translate.normalize_auth_method so
     the rank agrees with the scheme the FE will ultimately show. A scheme the
     server merely demanded therefore counts the same as one actually observed.
