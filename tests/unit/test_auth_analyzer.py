@@ -72,7 +72,7 @@ class TestDetectAuthentication:
     def test_unnamed_scheme_is_other(self):
         # A present-but-unrecognized scheme (Digest) is a real, unnamed mechanism,
         # classified as "other" -- not "unknown" -- mirroring the interceptor's
-        # "Required: Other" challenge handling.
+        # "other" challenge handling.
         assert detect_authentication({"authorization": "Digest abc"}, "http://x") == "other"
 
     def test_case_insensitive_header_key(self):
@@ -175,14 +175,15 @@ class TestAggregateByHost:
         assert result[0]["authentication"] == "bearer"
 
     def test_basic_challenge_outranks_accepted_bearer(self):
-        # A demanded Basic scheme (blocker-tier) is the host's most notable auth
-        # and must not be masked by an accepted bearer token on another endpoint.
+        # A Basic scheme (blocker-tier) -- here demanded by a 401, which labels the
+        # request with the bare scheme -- is the host's most notable auth and must
+        # not be masked by an accepted bearer token on another endpoint.
         reqs = [
-            {"url": "http://a.com/1", "authentication": "Required: Basic (...)"},
+            {"url": "http://a.com/1", "authentication": "basic"},
             {"url": "http://a.com/2", "authentication": "bearer"},
         ]
         result = aggregate_by_host(reqs)
-        assert result[0]["authentication"] == "Required: Basic (...)"
+        assert result[0]["authentication"] == "basic"
 
     def test_keeps_better_auth(self):
         reqs = [
@@ -196,7 +197,7 @@ class TestAggregateByHost:
         # Ranking is purely by scheme: Basic (blocker-tier) outranks a Negotiate
         # challenge (review-tier) regardless of which was actually accepted.
         reqs = [
-            {"url": "http://a.com/admin", "authentication": "Required: Negotiate (...)"},
+            {"url": "http://a.com/admin", "authentication": "negotiate"},
             {"url": "http://a.com/login", "authentication": "basic"},
         ]
         result = aggregate_by_host(reqs)
@@ -206,21 +207,21 @@ class TestAggregateByHost:
         # A host seen only via a rejected-and-challenged request keeps the
         # challenge as its label -- the rejected credential does not resurface.
         reqs = [
-            {"url": "http://a.com/admin", "authentication": "Required: Negotiate (...)"},
+            {"url": "http://a.com/admin", "authentication": "negotiate"},
         ]
         result = aggregate_by_host(reqs)
-        assert result[0]["authentication"] == "Required: Negotiate (...)"
+        assert result[0]["authentication"] == "negotiate"
 
     def test_challenge_not_overwritten_by_later_unauthenticated(self):
         # A real 401 challenge outranks "no auth", so a later unauthenticated
         # request on the same host must not overwrite it (regression guard for
         # the removed NO_AUTH-only upgrade path).
         reqs = [
-            {"url": "http://a.com/admin", "authentication": "Required: Negotiate (...)"},
+            {"url": "http://a.com/admin", "authentication": "negotiate"},
             {"url": "http://a.com/health", "authentication": "unauthenticated"},
         ]
         result = aggregate_by_host(reqs)
-        assert result[0]["authentication"] == "Required: Negotiate (...)"
+        assert result[0]["authentication"] == "negotiate"
 
     def test_ntlm_outranks_negotiate(self):
         # NTLM (blocker-tier) is the host's most notable auth over a plain
@@ -233,15 +234,15 @@ class TestAggregateByHost:
         assert result[0]["authentication"] == "ntlm"
 
     def test_other_challenge_outranks_unknown(self):
-        # A "Required: Other" 401 (a named but unrecognized challenge scheme) outranks
+        # An "other" 401 (a named but unrecognized challenge scheme) outranks
         # an unclassifiable header, so it wins the host label. Deterministic tiebreak:
         # the unknown is seen first here, yet "other" still represents the host.
         reqs = [
             {"url": "http://a.com/1", "authentication": "unknown"},
-            {"url": "http://a.com/2", "authentication": "Required: Other"},
+            {"url": "http://a.com/2", "authentication": "other"},
         ]
         result = aggregate_by_host(reqs)
-        assert result[0]["authentication"] == "Required: Other"
+        assert result[0]["authentication"] == "other"
 
     def test_oauth_redirect_outranks_unauthenticated(self):
         # The "oauth" IdP-redirect label outranks unauthenticated.

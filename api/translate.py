@@ -10,7 +10,7 @@ def normalize_auth_method(raw: str) -> AuthMethod:
 
     Scraper sources:
     - auth_analyzer.detect_authentication() — short tags: ntlm, kerberos, negotiate, basic, bearer, api_key, other, unauthenticated
-    - interceptor._apply_auth_challenge() — "Required: Basic", "Required: Bearer", "Required: NTLM", "Required: Negotiate", "Required: Other" (raw challenge kept separately in 'auth_challenge')
+    - interceptor._apply_auth_challenge() — the same short tags for a 401's demanded scheme: basic, bearer, ntlm, negotiate, other (raw challenge kept separately in 'auth_challenge')
     - interceptor._apply_idp_redirect() — "oauth" (the provider kept separately in 'idp_redirect')
     """
     if not raw:
@@ -46,8 +46,8 @@ def normalize_auth_method(raw: str) -> AuthMethod:
 
     # Checked last: "other" is the catch-all for a named-but-unrecognized scheme,
     # so any real scheme must match its own branch above first. The interceptor
-    # emits recognized challenge schemes explicitly (e.g. "Required: NTLM") and a
-    # bare "Required: Other" otherwise, so this ordering is purely defensive now --
+    # emits recognized challenge schemes explicitly (e.g. "ntlm") and a
+    # bare "other" otherwise, so this ordering is purely defensive now --
     # kept so a known scheme name can never be masked by "other", whatever the source.
     if "other" in lower:
         return AuthMethod.other

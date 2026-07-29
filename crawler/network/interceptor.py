@@ -90,19 +90,20 @@ class NetworkInterceptor:
         # carried (if any) was rejected -- so the server's challenge, not the
         # failed sent scheme, is the authoritative label. Promote it even over a
         # concrete detected auth like "bearer": a rejected credential must not
-        # masquerade as accepted. The label carries only the resolved scheme; the
-        # raw challenge lives in the 'auth_challenge' key set above for evidence.
+        # masquerade as accepted. The label is the resolved scheme alone -- the same
+        # short tags detect_authentication emits -- while the raw challenge lives in
+        # the 'auth_challenge' key set above for evidence.
         lower = auth_challenge.lower()
         if lower.startswith('basic'):
-            request_data['authentication'] = "Required: Basic"
+            request_data['authentication'] = "basic"
         elif lower.startswith('bearer'):
-            request_data['authentication'] = "Required: Bearer"
+            request_data['authentication'] = "bearer"
         elif lower.startswith('ntlm'):
-            request_data['authentication'] = "Required: NTLM"
+            request_data['authentication'] = "ntlm"
         elif lower.startswith('negotiate'):
-            request_data['authentication'] = "Required: Negotiate"
+            request_data['authentication'] = "negotiate"
         else:
-            request_data['authentication'] = "Required: Other"
+            request_data['authentication'] = "other"
 
     def _apply_idp_redirect(self, headers, request_data, response_data) -> None:
         location = self._get_header_value(headers, 'Location')

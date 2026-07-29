@@ -81,41 +81,40 @@ class TestHandleResponse:
         result = await interceptor.handle_response(
             req_data, mock_response(401, {"www-authenticate": 'Basic realm="test"'})
         )
-        assert "Required: Basic" in result["authentication"]
+        assert result["authentication"] == "basic"
 
     async def test_401_bearer(self, interceptor, mock_response):
         req_data = {"url": "http://a.com", "authentication": "unauthenticated"}
         result = await interceptor.handle_response(
             req_data, mock_response(401, {"www-authenticate": 'Bearer realm="api"'})
         )
-        assert "Required: Bearer" in result["authentication"]
+        assert result["authentication"] == "bearer"
 
     async def test_401_negotiate(self, interceptor, mock_response):
         req_data = {"url": "http://a.com", "authentication": "unauthenticated"}
         result = await interceptor.handle_response(
             req_data, mock_response(401, {"www-authenticate": "Negotiate"})
         )
-        assert "Required: Negotiate" in result["authentication"]
+        assert result["authentication"] == "negotiate"
 
     async def test_401_ntlm(self, interceptor, mock_response):
         # A bare "WWW-Authenticate: NTLM" challenge is labeled explicitly rather
-        # than falling into the "Other" bucket, so the raw authentication field
+        # than falling into the "other" bucket, so the raw authentication field
         # names the scheme honestly.
         req_data = {"url": "http://a.com", "authentication": "unauthenticated"}
         result = await interceptor.handle_response(
             req_data, mock_response(401, {"www-authenticate": "NTLM"})
         )
-        assert "Required: NTLM" in result["authentication"]
-        assert "Other" not in result["authentication"]
+        assert result["authentication"] == "ntlm"
 
     async def test_401_other_scheme(self, interceptor, mock_response):
         req_data = {"url": "http://a.com", "authentication": "unauthenticated"}
         result = await interceptor.handle_response(
             req_data, mock_response(401, {"www-authenticate": 'Digest realm="t"'})
         )
-        # A scheme we don't name specifically is tagged "Other"; the raw challenge
+        # A scheme we don't name specifically is tagged "other"; the raw challenge
         # is kept for evidence alongside it, not folded into the label.
-        assert result["authentication"] == "Required: Other"
+        assert result["authentication"] == "other"
         assert result["auth_challenge"] == 'Digest realm="t"'
 
     async def test_401_without_header(self, interceptor, mock_response):
@@ -131,7 +130,7 @@ class TestHandleResponse:
         result = await interceptor.handle_response(
             req_data, mock_response(401, {"www-authenticate": "Basic"})
         )
-        assert "Required: Basic" in result["authentication"]
+        assert result["authentication"] == "basic"
         assert result["auth_challenge"] == "Basic"
 
     async def test_401_bearer_rejected_by_negotiate(self, interceptor, mock_response):
@@ -141,7 +140,7 @@ class TestHandleResponse:
         result = await interceptor.handle_response(
             req_data, mock_response(401, {"www-authenticate": "Negotiate"})
         )
-        assert "Required: Negotiate" in result["authentication"]
+        assert result["authentication"] == "negotiate"
 
     async def test_302_idp(self, interceptor, mock_response):
         # The label carries only the scheme; the provider stays in 'idp_redirect'.
