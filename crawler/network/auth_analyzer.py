@@ -5,12 +5,6 @@ from typing import Any, Dict, List, Optional
 from urllib.parse import parse_qs, urlparse
 
 
-# Authentication values that represent "no auth observed". Shared with the
-# interceptor's 401-challenge handling and the aggregation priority logic so the
-# definition of "no auth" stays in one place. "None"/"anonymous" are tolerated
-# for robustness against externally-supplied request dicts.
-NO_AUTH_VALUES = {"unauthenticated", "None", "anonymous"}
-
 # Mechanism signatures for classifying a "Negotiate" (SPNEGO) token by scanning
 # its decoded bytes, instead of a full ASN.1 parse. NTLM messages always begin
 # with the literal "NTLMSSP\0" magic (also present when NTLM rides inside a
@@ -181,7 +175,7 @@ def _auth_rank(value: str) -> int:
     unauthenticated.
     """
     lower = (value or "").lower()
-    if not lower or value in NO_AUTH_VALUES or lower in {"none", "anonymous", "unauthenticated"}:
+    if lower == "unauthenticated":
         return _AUTH_RANK["unauthenticated"]
     if "ntlm" in lower:
         return _AUTH_RANK["ntlm"]
@@ -197,9 +191,6 @@ def _auth_rank(value: str) -> int:
         return _AUTH_RANK["basic"]
     if "api_key" in lower or "apikey" in lower or "api-key" in lower:
         return _AUTH_RANK["api_key"]
-    # Checked last, mirroring normalize_auth_method: "other" is the catch-all for a
-    # named-but-unrecognized scheme, so any real scheme must match its own branch
-    # above first -- defensive now that the interceptor emits a bare "other".
     if "other" in lower:
         return _AUTH_RANK["other"]
     return _AUTH_RANK["unknown"]

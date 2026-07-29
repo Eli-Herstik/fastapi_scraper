@@ -41,14 +41,9 @@ def normalize_auth_method(raw: str) -> AuthMethod:
     if "basic" in lower:
         return AuthMethod.basic
 
-    if lower in {"none", "anonymous", "unauthenticated", ""}:
+    if lower == "unauthenticated":
         return AuthMethod.unauthenticated
 
-    # Checked last: "other" is the catch-all for a named-but-unrecognized scheme,
-    # so any real scheme must match its own branch above first. The interceptor
-    # emits recognized challenge schemes explicitly (e.g. "ntlm") and a
-    # bare "other" otherwise, so this ordering is purely defensive now --
-    # kept so a known scheme name can never be masked by "other", whatever the source.
     if "other" in lower:
         return AuthMethod.other
 
