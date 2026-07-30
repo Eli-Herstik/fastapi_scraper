@@ -29,7 +29,7 @@ def normalize_auth_method(raw: str) -> AuthMethod:
         # here is a bare "WWW-Authenticate: Negotiate" 401 or the "negotiate" tag.
         return AuthMethod.negotiate
 
-    if "oauth" in lower or "/oidc" in lower:
+    if "oauth" in lower:
         return AuthMethod.oauth
 
     if "bearer" in lower:

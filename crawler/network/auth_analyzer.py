@@ -225,7 +225,7 @@ def _auth_rank(value: str) -> int:
         return _AUTH_RANK["kerberos"]
     if "negotiate" in lower:
         return _AUTH_RANK["negotiate"]
-    if "oauth" in lower or "/oidc" in lower:
+    if "oauth" in lower:
         return _AUTH_RANK["oauth"]
     if "bearer" in lower:
         return _AUTH_RANK["bearer"]
