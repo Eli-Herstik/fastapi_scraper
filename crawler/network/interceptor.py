@@ -113,8 +113,8 @@ class NetworkInterceptor:
         if idp:
             response_data['idp_redirect'] = idp
             # As in _apply_auth_challenge, the label carries only the resolved
-            # scheme; the concrete provider lives in the 'idp_redirect' key set
-            # above for evidence.
+            # scheme; the IdP host that matched lives in the 'idp_redirect' key
+            # set above for evidence.
             request_data['authentication'] = "oauth"
 
     @staticmethod

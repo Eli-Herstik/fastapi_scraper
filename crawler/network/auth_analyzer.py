@@ -92,29 +92,51 @@ def detect_authentication(headers: Dict[str, str], url: str) -> str:
     return "unauthenticated"
 
 
+# Host substrings that identify a third-party Identity Provider. Matching is by
+# substring so tenant subdomains (dev-123.okta.com, mypool.amazoncognito.com) and
+# regional hosts (cognito-idp.us-east-1.amazonaws.com) are all covered.
+_IDP_DOMAINS = (
+    'auth0.com',
+    'okta.com',
+    'oktapreview.com',
+    'login.microsoftonline.com',
+    'accounts.google.com',
+    'cognito-idp',
+    'amazoncognito.com',
+    'onelogin.com',
+    'pingidentity.com',
+)
+
+
 def detect_idp_redirect(location: str) -> Optional[str]:
-    """Detect if a Location URL points to a known Identity Provider."""
+    """Detect if a Location URL points to an Identity Provider.
+
+    Returns the matched host as raw evidence:
+    the host preserves the tenant (which Okta org, which Cognito pool). Callers treat
+    any non-None result as "this redirect is an IdP handoff" -- that boolean, not
+    the string, is what drives classification.
+
+    Two shapes are returned, so the weaker match stays distinguishable:
+    - a known IdP host  -> the host alone ("myapp.auth0.com"), asserting the host
+      *is* an IdP;
+    - an OAuth/OIDC-shaped path on any other host -> "host/path"
+      ("mysite.com/oauth/authorize"), asserting only that the endpoint looks like
+      an authorization endpoint -- it is often the app's own. Carrying the path
+      also keeps the result non-empty for a relative Location ("/oauth/authorize"),
+      which has no netloc at all.
+
+    The query string is always dropped: it carries state/nonce/redirect_uri and,
+    on some providers, user identifiers that don't belong in a stored record.
+    """
     try:
         parsed = urlparse(location)
         domain = parsed.netloc.lower()
 
-        if 'auth0.com' in domain:
-            return "Auth0"
-        if 'okta.com' in domain or 'oktapreview.com' in domain:
-            return "Okta"
-        if 'login.microsoftonline.com' in domain:
-            return "Azure AD"
-        if 'accounts.google.com' in domain:
-            return "Google"
-        if 'cognito-idp' in domain or 'amazoncognito.com' in domain:
-            return "AWS Cognito"
-        if 'onelogin.com' in domain:
-            return "OneLogin"
-        if 'pingidentity.com' in domain:
-            return "Ping Identity"
+        if any(idp in domain for idp in _IDP_DOMAINS):
+            return domain
 
         if '/oauth' in parsed.path or '/oidc' in parsed.path:
-            return "Generic OAuth2/OIDC Endpoint"
+            return f"{domain}{parsed.path}"
 
         return None
     except Exception:

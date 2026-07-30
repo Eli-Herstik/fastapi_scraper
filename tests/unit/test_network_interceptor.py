@@ -143,13 +143,13 @@ class TestHandleResponse:
         assert result["authentication"] == "negotiate"
 
     async def test_302_idp(self, interceptor, mock_response):
-        # The label carries only the scheme; the provider stays in 'idp_redirect'.
+        # The label carries only the scheme; the IdP host stays in 'idp_redirect'.
         req_data = {"url": "http://a.com", "authentication": "unauthenticated"}
         result = await interceptor.handle_response(
             req_data, mock_response(302, {"location": "https://x.auth0.com/authorize"})
         )
         assert result["authentication"] == "oauth"
-        assert result["idp_redirect"] == "Auth0"
+        assert result["idp_redirect"] == "x.auth0.com"
 
     async def test_307_idp(self, interceptor, mock_response):
         req_data = {"url": "http://a.com", "authentication": "unauthenticated"}
@@ -157,7 +157,17 @@ class TestHandleResponse:
             req_data, mock_response(307, {"location": "https://login.microsoftonline.com/t/oauth2"})
         )
         assert result["authentication"] == "oauth"
-        assert result["idp_redirect"] == "Azure AD"
+        assert result["idp_redirect"] == "login.microsoftonline.com"
+
+    async def test_302_relative_oauth_location(self, interceptor, mock_response):
+        # A same-origin relative redirect to an authorization endpoint still
+        # classifies -- the path keeps the detection truthy despite the empty host.
+        req_data = {"url": "http://a.com", "authentication": "unauthenticated"}
+        result = await interceptor.handle_response(
+            req_data, mock_response(302, {"location": "/oauth/authorize"})
+        )
+        assert result["authentication"] == "oauth"
+        assert result["idp_redirect"] == "/oauth/authorize"
 
     async def test_301_non_idp(self, interceptor, mock_response):
         req_data = {"url": "http://a.com", "authentication": "unauthenticated"}

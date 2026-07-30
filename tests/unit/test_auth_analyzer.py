@@ -119,21 +119,41 @@ class TestDetectAuthentication:
 
 
 class TestDetectIdpRedirect:
+    # A known IdP host resolves to the host -- tenant included.
     @pytest.mark.parametrize("url,expected", [
-        ("https://myapp.auth0.com/authorize", "Auth0"),
-        ("https://dev-123.okta.com/oauth2/default", "Okta"),
-        ("https://dev-123.oktapreview.com/app", "Okta"),
-        ("https://login.microsoftonline.com/t/oauth2", "Azure AD"),
-        ("https://accounts.google.com/o/oauth2/auth", "Google"),
-        ("https://cognito-idp.us-east-1.amazonaws.com/p", "AWS Cognito"),
-        ("https://mypool.amazoncognito.com/login", "AWS Cognito"),
-        ("https://app.onelogin.com/trust/saml2", "OneLogin"),
-        ("https://sso.pingidentity.com/sso", "Ping Identity"),
-        ("https://mysite.com/oauth/authorize", "Generic OAuth2/OIDC Endpoint"),
-        ("https://mysite.com/oidc/auth", "Generic OAuth2/OIDC Endpoint"),
+        ("https://myapp.auth0.com/authorize", "myapp.auth0.com"),
+        ("https://dev-123.okta.com/oauth2/default", "dev-123.okta.com"),
+        ("https://dev-123.oktapreview.com/app", "dev-123.oktapreview.com"),
+        ("https://login.microsoftonline.com/t/oauth2", "login.microsoftonline.com"),
+        ("https://accounts.google.com/o/oauth2/auth", "accounts.google.com"),
+        ("https://cognito-idp.us-east-1.amazonaws.com/p", "cognito-idp.us-east-1.amazonaws.com"),
+        ("https://mypool.amazoncognito.com/login", "mypool.amazoncognito.com"),
+        ("https://app.onelogin.com/trust/saml2", "app.onelogin.com"),
+        ("https://sso.pingidentity.com/sso", "sso.pingidentity.com"),
     ])
-    def test_idp_matches(self, url, expected):
+    def test_known_idp_host(self, url, expected):
         assert detect_idp_redirect(url) == expected
+
+    # An OAuth/OIDC-shaped path on an unknown host keeps the path, so the weaker
+    # claim ("looks like an authorization endpoint") stays distinguishable from a
+    # known IdP host.
+    @pytest.mark.parametrize("url,expected", [
+        ("https://mysite.com/oauth/authorize", "mysite.com/oauth/authorize"),
+        ("https://mysite.com/oidc/auth", "mysite.com/oidc/auth"),
+    ])
+    def test_generic_oauth_path(self, url, expected):
+        assert detect_idp_redirect(url) == expected
+
+    def test_relative_location_stays_truthy(self):
+        # A relative Location has no netloc; the path alone must still be a
+        # non-empty (truthy) result or the caller would drop the detection.
+        assert detect_idp_redirect("/oauth/authorize") == "/oauth/authorize"
+
+    def test_query_string_dropped(self):
+        # state/nonce/redirect_uri must not survive into the stored evidence.
+        assert detect_idp_redirect(
+            "https://mysite.com/oauth/authorize?state=abc&redirect_uri=/cb"
+        ) == "mysite.com/oauth/authorize"
 
     def test_no_match(self):
         assert detect_idp_redirect("https://www.example.com/dashboard") is None
@@ -145,7 +165,7 @@ class TestDetectIdpRedirect:
         assert detect_idp_redirect("https://example.com/login?r=/oauth/cb") is None
 
     def test_case_insensitive_domain(self):
-        assert detect_idp_redirect("https://MyApp.Auth0.COM/authorize") == "Auth0"
+        assert detect_idp_redirect("https://MyApp.Auth0.COM/authorize") == "myapp.auth0.com"
 
 
 class TestAggregateByHost:
