@@ -28,10 +28,10 @@ def tag_to_auth_method(tag: str) -> AuthMethod:
         return AuthMethod.unknown
 
 
-def severity_for(method: AuthMethod) -> Severity:
-    if method in (AuthMethod.ntlm, AuthMethod.basic):
+def severity_for(auth_method: AuthMethod) -> Severity:
+    if auth_method in (AuthMethod.ntlm, AuthMethod.basic):
         return Severity.blocker
-    if method in (AuthMethod.negotiate, AuthMethod.unknown, AuthMethod.other):
+    if auth_method in (AuthMethod.negotiate, AuthMethod.unknown, AuthMethod.other):
         return Severity.review
     return Severity.cleared
 
@@ -48,13 +48,13 @@ def truncate_headers(headers: Dict[str, Any] | None, limit: int = 512) -> str:
 
 def host_to_finding_row(scan_id: str, host_entry: Dict[str, Any]) -> Dict[str, Any]:
     """Convert a single aggregate_by_host entry into a FindingRow-ready dict."""
-    method = tag_to_auth_method(host_entry.get("authentication", ""))
-    severity = severity_for(method)
+    auth_method = tag_to_auth_method(host_entry.get("authentication", ""))
+    severity = severity_for(auth_method)
     return {
         "id": uuid.uuid4().hex,
         "scan_id": scan_id,
         "host": host_entry.get("host", ""),
-        "auth_method": method.value,
+        "auth_method": auth_method.value,
         "severity": severity.value,
         "request_count": int(host_entry.get("request_count", 1) or 1),
         "first_seen_on_page": host_entry.get("first_seen_on_page", "") or "",

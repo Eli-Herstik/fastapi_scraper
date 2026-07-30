@@ -6,16 +6,18 @@ from api.translate import severity_for, tag_to_auth_method
 
 
 class TestSeverityFor:
-    @pytest.mark.parametrize("method", [AuthMethod.ntlm, AuthMethod.basic])
-    def test_blockers(self, method):
-        assert severity_for(method) == Severity.blocker
-
-    @pytest.mark.parametrize("method", [AuthMethod.negotiate, AuthMethod.unknown, AuthMethod.other])
-    def test_review(self, method):
-        assert severity_for(method) == Severity.review
+    @pytest.mark.parametrize("auth_method", [AuthMethod.ntlm, AuthMethod.basic])
+    def test_blockers(self, auth_method):
+        assert severity_for(auth_method) == Severity.blocker
 
     @pytest.mark.parametrize(
-        "method",
+        "auth_method", [AuthMethod.negotiate, AuthMethod.unknown, AuthMethod.other]
+    )
+    def test_review(self, auth_method):
+        assert severity_for(auth_method) == Severity.review
+
+    @pytest.mark.parametrize(
+        "auth_method",
         [
             AuthMethod.kerberos,
             AuthMethod.oauth,
@@ -24,13 +26,13 @@ class TestSeverityFor:
             AuthMethod.unauthenticated,
         ],
     )
-    def test_cleared(self, method):
-        assert severity_for(method) == Severity.cleared
+    def test_cleared(self, auth_method):
+        assert severity_for(auth_method) == Severity.cleared
 
     def test_every_auth_method_is_mapped(self):
         # Guards against a new AuthMethod slipping through without a severity.
-        for method in AuthMethod:
-            assert isinstance(severity_for(method), Severity)
+        for auth_method in AuthMethod:
+            assert isinstance(severity_for(auth_method), Severity)
 
 
 class TestTagToAuthMethod:
