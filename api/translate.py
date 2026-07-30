@@ -35,7 +35,7 @@ def normalize_auth_method(raw: str) -> AuthMethod:
     if "bearer" in lower:
         return AuthMethod.bearer
 
-    if "api_key" in lower or "apikey" in lower:
+    if "api_key" in lower:
         return AuthMethod.api_key
 
     if "basic" in lower:

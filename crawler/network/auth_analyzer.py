@@ -231,7 +231,7 @@ def _auth_rank(value: str) -> int:
         return _AUTH_RANK["bearer"]
     if "basic" in lower:
         return _AUTH_RANK["basic"]
-    if "api_key" in lower or "apikey" in lower or "api-key" in lower:
+    if "api_key" in lower:
         return _AUTH_RANK["api_key"]
     if "other" in lower:
         return _AUTH_RANK["other"]
