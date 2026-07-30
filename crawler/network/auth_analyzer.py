@@ -202,40 +202,21 @@ _AUTH_RANK = {
 
 
 def _auth_rank(value: str) -> int:
-    """Rank an authentication string by its scheme for host aggregation.
+    """Rank an authentication tag by its scheme for host aggregation.
 
-    Classifies the raw scraper value -- a short detect_authentication tag, the
-    scheme tag a 401 challenge resolved to, or an "oauth" IdP redirect --
-    to a single scheme by substring, mirroring translate.normalize_auth_method so
-    the rank agrees with the scheme the FE will ultimately show. A scheme the
-    server merely demanded therefore counts the same as one actually observed.
-    Both an unnamed 401 challenge and an Authorization header
-    carrying an unnamed scheme surface as "other", which ranks just above the
-    "unknown" defensive fallback (now only reached by a truly unrecognized aggregate
-    string). "other" still sits below negotiate and the blockers, so it never masks
-    a more-notable demanded scheme, and (like every named scheme) outranks
-    unauthenticated.
+    The scraper's tags are a closed set -- a detect_authentication tag, the scheme
+    tag a 401 challenge resolved to, or an "oauth" IdP redirect -- and they are the
+    keys of _AUTH_RANK, so the table is the whole classification and matching is
+    exact. Those keys are also the tags translate.normalize_auth_method maps to
+    AuthMethod, so a host's rank agrees with the scheme the FE will ultimately show.
+    A scheme the server demanded therefore counts the same as one actually
+    observed. Both an unnamed 401 challenge and an Authorization header carrying an
+    unnamed scheme surface as "other", which ranks just above the "unknown"
+    fallback (reached only by a tag outside the set). "other" still sits below
+    negotiate and the blockers, so it never masks a more-notable demanded scheme,
+    and (like every named scheme) outranks unauthenticated.
     """
-    lower = (value or "").lower()
-    if lower == "unauthenticated":
-        return _AUTH_RANK["unauthenticated"]
-    if "ntlm" in lower:
-        return _AUTH_RANK["ntlm"]
-    if "kerberos" in lower:
-        return _AUTH_RANK["kerberos"]
-    if "negotiate" in lower:
-        return _AUTH_RANK["negotiate"]
-    if "oauth" in lower:
-        return _AUTH_RANK["oauth"]
-    if "bearer" in lower:
-        return _AUTH_RANK["bearer"]
-    if "basic" in lower:
-        return _AUTH_RANK["basic"]
-    if "api_key" in lower:
-        return _AUTH_RANK["api_key"]
-    if "other" in lower:
-        return _AUTH_RANK["other"]
-    return _AUTH_RANK["unknown"]
+    return _AUTH_RANK.get((value or "").strip().lower(), _AUTH_RANK["unknown"])
 
 
 def aggregate_by_host(requests: List[Dict[str, Any]]) -> List[Dict[str, Any]]:

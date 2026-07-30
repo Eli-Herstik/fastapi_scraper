@@ -6,48 +6,26 @@ from .models import AuthMethod, Severity
 
 
 def normalize_auth_method(raw: str) -> AuthMethod:
-    """Map the scraper's freeform authentication string to the FE enum.
+    """Map the scraper's authentication tag to the FE enum.
 
-    Scraper sources:
-    - auth_analyzer.detect_authentication() — short tags: ntlm, kerberos, negotiate, basic, bearer, api_key, other, unauthenticated
+    Every tag the scraper emits is verbatim an AuthMethod value, so the enum
+    constructor is the whole mapping. Sources:
+    - auth_analyzer.detect_authentication() — ntlm, kerberos, negotiate, basic, bearer, api_key, other, unauthenticated
     - auth_analyzer.detect_auth_challenge() — the same short tags for a 401's demanded scheme: basic, bearer, ntlm, negotiate, other (raw challenge kept separately in 'auth_challenge')
     - interceptor._apply_idp_redirect() — "oauth" (the IdP host kept separately in 'idp_redirect')
+
+    "negotiate" means SPNEGO whose concrete mechanism was unresolvable: NTLM and
+    Kerberos are already resolved to their own tags upstream, so it is not a
+    shortfall of this mapping.
+
+    Matching is exact. A string outside that set means a producer drifted from the
+    FE vocabulary, and unknown (severity_for -> review) puts it in front of a human
+    instead of guessing a scheme from a coincidental substring.
     """
-    if not raw:
+    try:
+        return AuthMethod((raw or "").strip().lower())
+    except ValueError:
         return AuthMethod.unknown
-    s = raw.strip()
-    lower = s.lower()
-
-    if "ntlm" in lower:
-        return AuthMethod.ntlm
-    if "kerberos" in lower:
-        return AuthMethod.kerberos
-    if "negotiate" in lower:
-        # SPNEGO with no resolvable concrete mechanism. detect_authentication
-        # already resolves NTLM/Kerberos to their own tags upstream (byte scan),
-        # and a raw "NTLM"/"Kerberos" challenge is caught above, so what reaches
-        # here is a bare "WWW-Authenticate: Negotiate" 401 or the "negotiate" tag.
-        return AuthMethod.negotiate
-
-    if "oauth" in lower:
-        return AuthMethod.oauth
-
-    if "bearer" in lower:
-        return AuthMethod.bearer
-
-    if "api_key" in lower:
-        return AuthMethod.api_key
-
-    if "basic" in lower:
-        return AuthMethod.basic
-
-    if lower == "unauthenticated":
-        return AuthMethod.unauthenticated
-
-    if "other" in lower:
-        return AuthMethod.other
-
-    return AuthMethod.unknown
 
 
 def severity_for(method: AuthMethod) -> Severity:
