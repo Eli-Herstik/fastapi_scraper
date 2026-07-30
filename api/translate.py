@@ -10,7 +10,7 @@ def normalize_auth_method(raw: str) -> AuthMethod:
 
     Scraper sources:
     - auth_analyzer.detect_authentication() — short tags: ntlm, kerberos, negotiate, basic, bearer, api_key, other, unauthenticated
-    - interceptor._apply_auth_challenge() — the same short tags for a 401's demanded scheme: basic, bearer, ntlm, negotiate, other (raw challenge kept separately in 'auth_challenge')
+    - auth_analyzer.detect_auth_challenge() — the same short tags for a 401's demanded scheme: basic, bearer, ntlm, negotiate, other (raw challenge kept separately in 'auth_challenge')
     - interceptor._apply_idp_redirect() — "oauth" (the IdP host kept separately in 'idp_redirect')
     """
     if not raw:

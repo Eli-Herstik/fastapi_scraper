@@ -4,6 +4,7 @@ import base64
 import pytest
 from crawler.network.auth_analyzer import (
     detect_authentication,
+    detect_auth_challenge,
     detect_idp_redirect,
     aggregate_by_host,
 )
@@ -116,6 +117,49 @@ class TestDetectAuthentication:
 
     def test_non_matching_query_params(self):
         assert detect_authentication({}, "http://x?user=a&page=1") == "unauthenticated"
+
+
+class TestDetectAuthChallenge:
+    @pytest.mark.parametrize("challenge,expected", [
+        ("Basic", "basic"),
+        ('Basic realm="corp"', "basic"),
+        ("Bearer", "bearer"),
+        ('Bearer realm="api", error="invalid_token"', "bearer"),
+        ("NTLM", "ntlm"),
+        ("NTLM TlRMTVNTUAAC", "ntlm"),
+        ("Negotiate", "negotiate"),
+        ("Negotiate YIIC", "negotiate"),
+    ])
+    def test_named_schemes(self, challenge, expected):
+        assert detect_auth_challenge(challenge) == expected
+
+    @pytest.mark.parametrize("challenge,expected", [
+        ("basic", "basic"),
+        ("BASIC", "basic"),
+        ("NeGoTiAtE", "negotiate"),
+        ("ntlm", "ntlm"),
+    ])
+    def test_case_insensitive(self, challenge, expected):
+        assert detect_auth_challenge(challenge) == expected
+
+    def test_unnamed_scheme_is_other(self):
+        # A real but unnamed mechanism -- not an absence of signal.
+        assert detect_auth_challenge('Digest realm="t", qop="auth"') == "other"
+
+    def test_empty_is_other(self):
+        # The interceptor gates on a present header, so this is defensive only:
+        # the function stays total rather than returning None for an empty input.
+        assert detect_auth_challenge("") == "other"
+
+    def test_shares_vocabulary_with_detect_authentication(self):
+        # The two must not drift: a scheme demanded and a scheme observed have to
+        # normalize to the same tag, or _auth_rank will rank them differently.
+        assert detect_auth_challenge("Basic") == detect_authentication(
+            {"authorization": "Basic dXNlcg=="}, "http://x"
+        )
+        assert detect_auth_challenge("NTLM") == detect_authentication(
+            {"authorization": "NTLM abc"}, "http://x"
+        )
 
 
 class TestDetectIdpRedirect:

@@ -70,7 +70,7 @@ def detect_authentication(headers: Dict[str, str], url: str) -> str:
             return "kerberos"
         # A present Authorization header with an unrecognized scheme (e.g. Digest)
         # is a real but unnamed mechanism, not an absence of signal -- classify it
-        # as "other", mirroring the interceptor's "other" handling
+        # as "other", mirroring detect_auth_challenge's "other" handling
         # of an unnamed WWW-Authenticate challenge. The raw scheme still survives in
         # the finding's headers_snippet evidence.
         return "other"
@@ -90,6 +90,26 @@ def detect_authentication(headers: Dict[str, str], url: str) -> str:
             return "api_key"
 
     return "unauthenticated"
+
+
+def detect_auth_challenge(challenge: str) -> str:
+    """Resolve a WWW-Authenticate challenge to the scheme the server demanded.
+
+    Only the leading scheme token is examined; the challenge's parameters (realm,
+    charset, an in-flight SPNEGO token) are left to the caller to retain as
+    evidence. An unnamed scheme (e.g. Digest) is "other" -- a real but unnamed
+    mechanism, not an absence of signal.
+    """
+    lower = (challenge or "").lower()
+    if lower.startswith('basic'):
+        return "basic"
+    if lower.startswith('bearer'):
+        return "bearer"
+    if lower.startswith('ntlm'):
+        return "ntlm"
+    if lower.startswith('negotiate'):
+        return "negotiate"
+    return "other"
 
 
 # Host substrings that identify a third-party Identity Provider. Matching is by
