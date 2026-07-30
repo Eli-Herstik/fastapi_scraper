@@ -12,7 +12,7 @@ import base64
 import pytest
 
 from api.models import AuthMethod
-from api.translate import normalize_auth_method
+from api.translate import tag_to_auth_method
 from crawler.network import NetworkInterceptor
 from crawler.network.auth_analyzer import (
     _AUTH_RANK,
@@ -88,8 +88,8 @@ def test_producers_emit_exactly_the_known_vocabulary():
 
 
 @pytest.mark.parametrize("tag", sorted(SCRAPER_AUTH_TAGS))
-def test_tag_normalizes_to_its_own_auth_method(tag):
-    assert normalize_auth_method(tag) == AuthMethod(tag)
+def test_tag_maps_to_its_own_auth_method(tag):
+    assert tag_to_auth_method(tag) == AuthMethod(tag)
 
 
 @pytest.mark.parametrize("tag", sorted(SCRAPER_AUTH_TAGS))

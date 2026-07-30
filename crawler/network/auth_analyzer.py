@@ -207,7 +207,7 @@ def _auth_rank(value: str) -> int:
     The scraper's tags are a closed set -- a detect_authentication tag, the scheme
     tag a 401 challenge resolved to, or an "oauth" IdP redirect -- and they are the
     keys of _AUTH_RANK, so the table is the whole classification and matching is
-    exact. Those keys are also the tags translate.normalize_auth_method maps to
+    exact. Those keys are also the tags translate.tag_to_auth_method maps to
     AuthMethod, so a host's rank agrees with the scheme the FE will ultimately show.
     A scheme the server demanded therefore counts the same as one actually
     observed. Both an unnamed 401 challenge and an Authorization header carrying an

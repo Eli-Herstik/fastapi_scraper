@@ -2,7 +2,7 @@
 import pytest
 
 from api.models import AuthMethod, Severity
-from api.translate import normalize_auth_method, severity_for
+from api.translate import severity_for, tag_to_auth_method
 
 
 class TestSeverityFor:
@@ -33,10 +33,10 @@ class TestSeverityFor:
             assert isinstance(severity_for(method), Severity)
 
 
-class TestNormalizeAuthMethod:
+class TestTagToAuthMethod:
     def test_other_marker_maps_to_other(self):
         # The interceptor's else-branch 401 challenge -> AuthMethod.other.
-        assert normalize_auth_method("other") == AuthMethod.other
+        assert tag_to_auth_method("other") == AuthMethod.other
 
     def test_unclassified_stays_unknown(self):
-        assert normalize_auth_method("something weird") == AuthMethod.unknown
+        assert tag_to_auth_method("something weird") == AuthMethod.unknown

@@ -5,7 +5,7 @@ from typing import Any, Dict, List
 from .models import AuthMethod, Severity
 
 
-def normalize_auth_method(raw: str) -> AuthMethod:
+def tag_to_auth_method(tag: str) -> AuthMethod:
     """Map the scraper's authentication tag to the FE enum.
 
     Every tag the scraper emits is verbatim an AuthMethod value, so the enum
@@ -23,7 +23,7 @@ def normalize_auth_method(raw: str) -> AuthMethod:
     instead of guessing a scheme from a coincidental substring.
     """
     try:
-        return AuthMethod((raw or "").strip().lower())
+        return AuthMethod((tag or "").strip().lower())
     except ValueError:
         return AuthMethod.unknown
 
@@ -48,7 +48,7 @@ def truncate_headers(headers: Dict[str, Any] | None, limit: int = 512) -> str:
 
 def host_to_finding_row(scan_id: str, host_entry: Dict[str, Any]) -> Dict[str, Any]:
     """Convert a single aggregate_by_host entry into a FindingRow-ready dict."""
-    method = normalize_auth_method(host_entry.get("authentication", ""))
+    method = tag_to_auth_method(host_entry.get("authentication", ""))
     severity = severity_for(method)
     return {
         "id": uuid.uuid4().hex,
