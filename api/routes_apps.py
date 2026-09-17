@@ -1,5 +1,5 @@
 import uuid
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from fastapi import APIRouter, HTTPException, Request
 from sqlalchemy import case, func, select
@@ -164,11 +164,12 @@ async def list_app_scans(app_id: str, request: Request) -> List[ScanSummary]:
         return out
 
 
-async def _findings_by_host(session, scan_id: str) -> Dict[str, Finding]:
+async def _findings_by_origin(session, scan_id: str) -> Dict[Tuple[str, str, int], Finding]:
+    # Keyed on the finding's identity, the (scheme, host, port) origin.
     rows = (
         await session.execute(select(FindingRow).where(FindingRow.scan_id == scan_id))
     ).scalars().all()
-    return {r.host: finding_to_schema(r) for r in rows}
+    return {(r.scheme, r.host, r.port): finding_to_schema(r) for r in rows}
 
 
 @router.get("/apps/{app_id}/diff", response_model=ScanDiff)
@@ -194,22 +195,25 @@ async def app_diff(
                     status_code=404,
                     detail={"message": f"scan {scan_id} not found for app {app_id}"},
                 )
-        a = await _findings_by_host(session, from_id)
-        b = await _findings_by_host(session, to_id)
+        a = await _findings_by_origin(session, from_id)
+        b = await _findings_by_origin(session, to_id)
 
-    added: list[Finding] = [f for host, f in b.items() if host not in a]
-    removed: list[Finding] = [f for host, f in a.items() if host not in b]
+    added: list[Finding] = [f for origin, f in b.items() if origin not in a]
+    removed: list[Finding] = [f for origin, f in a.items() if origin not in b]
     exclusion_changes: list[ExclusionChange] = []
     auth_method_changes: list[AuthMethodChange] = []
-    for host, b_finding in b.items():
-        a_finding = a.get(host)
+    for origin, b_finding in b.items():
+        a_finding = a.get(origin)
         if not a_finding:
             continue
+        scheme, host, port = origin
         if a_finding.excluded != b_finding.excluded:
             exclusion_changes.append(
                 ExclusionChange(
                     id=b_finding.id,
+                    scheme=scheme,
                     host=host,
+                    port=port,
                     before=a_finding.excluded,
                     after=b_finding.excluded,
                 )
@@ -218,7 +222,9 @@ async def app_diff(
             auth_method_changes.append(
                 AuthMethodChange(
                     id=b_finding.id,
+                    scheme=scheme,
                     host=host,
+                    port=port,
                     before=AuthMethod(a_finding.auth_method),
                     after=AuthMethod(b_finding.auth_method),
                 )

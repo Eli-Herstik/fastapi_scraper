@@ -2,12 +2,12 @@
 import logging
 import re
 from typing import Set
-from urllib.parse import urlparse
 
 from playwright.async_api import Page, Locator
 
 from config_loader import Config
 
+from ..origin import origin_of
 from . import element_classifier
 from .dom_hasher import DOMHasher
 from .form_filler import FormFiller
@@ -58,10 +58,7 @@ class NavigationHandler:
         if not url or url.startswith('javascript:') or url.startswith('mailto:'):
             return False
         try:
-            parsed_url = urlparse(url)
-            start_parsed = urlparse(self.config.start_url)
-            if (parsed_url.scheme != start_parsed.scheme or
-                    parsed_url.netloc != start_parsed.netloc):
+            if origin_of(url) != origin_of(self.config.start_url):
                 return False
             # Honor exclude_patterns at the URL level too. Element-click filtering
             # (is_destructive_action) skips logout/delete buttons, but raw <a href>

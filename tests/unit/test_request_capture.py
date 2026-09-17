@@ -25,8 +25,17 @@ class TestIsExternalUrl:
     def test_different_port_is_external(self, capture):
         assert capture._is_external_url("http://localhost:9090/x") is True
 
+    def test_different_scheme_is_external(self, capture):
+        # Same host and port over https is another listener, not the scanned app.
+        assert capture._is_external_url("https://localhost:8080/x") is True
+
+    def test_explicit_default_port_is_internal(self, interceptor):
+        capture = RequestCapture(interceptor, "https://app.internal")
+        assert capture._is_external_url("https://app.internal:443/x") is False
+        assert capture._is_external_url("https://APP.internal/x") is False
+
     def test_invalid_url_is_external(self, capture):
-        # urlparse of a malformed string typically yields netloc=""
+        # A malformed string has no origin at all, so it can't be the start origin.
         assert capture._is_external_url("not a url") is True
 
 

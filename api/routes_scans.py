@@ -53,6 +53,8 @@ def _summary_aggregates_subq():
                 ),
                 0,
             ).label("blocker_count"),
+            # Distinct hostnames, deliberately not origins: a host reached on two
+            # schemes/ports is two findings (finding_count) but one external host.
             func.count(func.distinct(FindingRow.host)).label("host_count"),
             func.count(func.distinct(FindingRow.auth_method)).label("auth_count"),
         )
@@ -165,7 +167,9 @@ async def list_findings(scan_id: str, request: Request) -> List[Finding]:
             raise HTTPException(status_code=404, detail={"message": "scan not found"})
         rows = (
             await session.execute(
-                select(FindingRow).where(FindingRow.scan_id == scan_id).order_by(FindingRow.host)
+                select(FindingRow)
+                .where(FindingRow.scan_id == scan_id)
+                .order_by(FindingRow.host, FindingRow.port, FindingRow.scheme)
             )
         ).scalars().all()
         return [finding_to_schema(r) for r in rows]

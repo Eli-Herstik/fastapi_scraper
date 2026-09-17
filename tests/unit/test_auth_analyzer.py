@@ -6,7 +6,7 @@ from crawler.network.auth_analyzer import (
     detect_authentication,
     detect_auth_challenge,
     detect_idp_redirect,
-    aggregate_by_host,
+    aggregate_by_origin,
 )
 
 
@@ -212,30 +212,90 @@ class TestDetectIdpRedirect:
         assert detect_idp_redirect("https://MyApp.Auth0.COM/authorize") == "myapp.auth0.com"
 
 
-class TestAggregateByHost:
-    def test_single_host(self):
+def _origins(result) -> set:
+    return {(e["scheme"], e["host"], e["port"]) for e in result}
+
+
+class TestAggregateByOrigin:
+    def test_single_origin(self):
         reqs = [{"url": "http://a.com/x", "authentication": "bearer"}]
-        result = aggregate_by_host(reqs)
+        result = aggregate_by_origin(reqs)
         assert len(result) == 1
+        assert result[0]["scheme"] == "http"
         assert result[0]["host"] == "a.com"
+        assert result[0]["port"] == 80
         assert result[0]["authentication"] == "bearer"
 
-    def test_groups_by_host(self):
+    def test_groups_by_origin(self):
         reqs = [
             {"url": "http://a.com/1", "authentication": "unauthenticated"},
             {"url": "http://a.com/2", "authentication": "unauthenticated"},
             {"url": "http://b.com/1", "authentication": "bearer"},
         ]
-        result = aggregate_by_host(reqs)
-        hosts = {e["host"] for e in result}
-        assert hosts == {"a.com", "b.com"}
+        result = aggregate_by_origin(reqs)
+        assert _origins(result) == {("http", "a.com", 80), ("http", "b.com", 80)}
+        counts = {e["host"]: e["request_count"] for e in result}
+        assert counts == {"a.com": 2, "b.com": 1}
+
+    def test_scheme_separates_findings(self):
+        # http://a.com and https://a.com are different listeners to publish, so
+        # each keeps its own label and evidence: the Basic demanded over http
+        # must not become the https service's label.
+        reqs = [
+            {
+                "url": "http://a.com/login",
+                "authentication": "basic",
+                "status": 401,
+                "request_headers": {"X-Seen-On": "http"},
+            },
+            {
+                "url": "https://a.com/api",
+                "authentication": "bearer",
+                "status": 200,
+                "request_headers": {"X-Seen-On": "https"},
+            },
+        ]
+        result = {e["scheme"]: e for e in aggregate_by_origin(reqs)}
+        assert set(result) == {"http", "https"}
+        assert result["http"]["authentication"] == "basic"
+        assert result["http"]["status_code"] == 401
+        assert result["https"]["authentication"] == "bearer"
+        assert result["https"]["status_code"] == 200
+        assert "X-Seen-On: https" in result["https"]["headers_snippet"]
+
+    def test_port_separates_findings(self):
+        reqs = [
+            {"url": "https://a.com/1", "authentication": "bearer"},
+            {"url": "https://a.com:8443/1", "authentication": "ntlm"},
+        ]
+        result = aggregate_by_origin(reqs)
+        assert _origins(result) == {("https", "a.com", 443), ("https", "a.com", 8443)}
+
+    def test_explicit_default_port_is_same_origin(self):
+        reqs = [
+            {"url": "https://a.com/1", "authentication": "unauthenticated"},
+            {"url": "https://a.com:443/2", "authentication": "bearer"},
+        ]
+        result = aggregate_by_origin(reqs)
+        assert len(result) == 1
+        assert result[0]["port"] == 443
+        assert result[0]["request_count"] == 2
+        assert result[0]["authentication"] == "bearer"
+
+    def test_host_is_bare_hostname(self):
+        # `host` is a cross-service contract (inventory -> vip-wizard): no port,
+        # no credentials, lowercased.
+        reqs = [{"url": "https://user:secret@A.com:8443/x", "authentication": "basic"}]
+        result = aggregate_by_origin(reqs)
+        assert result[0]["host"] == "a.com"
+        assert result[0]["port"] == 8443
 
     def test_upgrades_from_none_to_actual(self):
         reqs = [
             {"url": "http://a.com/1", "authentication": "unauthenticated"},
             {"url": "http://a.com/2", "authentication": "bearer"},
         ]
-        result = aggregate_by_host(reqs)
+        result = aggregate_by_origin(reqs)
         assert result[0]["authentication"] == "bearer"
 
     def test_basic_challenge_outranks_accepted_bearer(self):
@@ -246,7 +306,7 @@ class TestAggregateByHost:
             {"url": "http://a.com/1", "authentication": "basic"},
             {"url": "http://a.com/2", "authentication": "bearer"},
         ]
-        result = aggregate_by_host(reqs)
+        result = aggregate_by_origin(reqs)
         assert result[0]["authentication"] == "basic"
 
     def test_keeps_better_auth(self):
@@ -254,7 +314,7 @@ class TestAggregateByHost:
             {"url": "http://a.com/1", "authentication": "bearer"},
             {"url": "http://a.com/2", "authentication": "unauthenticated"},
         ]
-        result = aggregate_by_host(reqs)
+        result = aggregate_by_origin(reqs)
         assert result[0]["authentication"] == "bearer"
 
     def test_basic_outranks_negotiate_challenge(self):
@@ -264,7 +324,7 @@ class TestAggregateByHost:
             {"url": "http://a.com/admin", "authentication": "negotiate"},
             {"url": "http://a.com/login", "authentication": "basic"},
         ]
-        result = aggregate_by_host(reqs)
+        result = aggregate_by_origin(reqs)
         assert result[0]["authentication"] == "basic"
 
     def test_challenge_stands_without_accepted_credential(self):
@@ -273,7 +333,7 @@ class TestAggregateByHost:
         reqs = [
             {"url": "http://a.com/admin", "authentication": "negotiate"},
         ]
-        result = aggregate_by_host(reqs)
+        result = aggregate_by_origin(reqs)
         assert result[0]["authentication"] == "negotiate"
 
     def test_challenge_not_overwritten_by_later_unauthenticated(self):
@@ -284,7 +344,7 @@ class TestAggregateByHost:
             {"url": "http://a.com/admin", "authentication": "negotiate"},
             {"url": "http://a.com/health", "authentication": "unauthenticated"},
         ]
-        result = aggregate_by_host(reqs)
+        result = aggregate_by_origin(reqs)
         assert result[0]["authentication"] == "negotiate"
 
     def test_ntlm_outranks_negotiate(self):
@@ -294,7 +354,7 @@ class TestAggregateByHost:
             {"url": "http://a.com/1", "authentication": "negotiate"},
             {"url": "http://a.com/2", "authentication": "ntlm"},
         ]
-        result = aggregate_by_host(reqs)
+        result = aggregate_by_origin(reqs)
         assert result[0]["authentication"] == "ntlm"
 
     def test_other_challenge_outranks_unknown(self):
@@ -305,7 +365,7 @@ class TestAggregateByHost:
             {"url": "http://a.com/1", "authentication": "unknown"},
             {"url": "http://a.com/2", "authentication": "other"},
         ]
-        result = aggregate_by_host(reqs)
+        result = aggregate_by_origin(reqs)
         assert result[0]["authentication"] == "other"
 
     def test_oauth_redirect_outranks_unauthenticated(self):
@@ -314,17 +374,18 @@ class TestAggregateByHost:
             {"url": "http://a.com/1", "authentication": "unauthenticated"},
             {"url": "http://a.com/2", "authentication": "oauth"},
         ]
-        result = aggregate_by_host(reqs)
+        result = aggregate_by_origin(reqs)
         assert result[0]["authentication"] == "oauth"
 
-    def test_skips_requests_without_host(self):
-        reqs = [{"url": "not-a-url", "authentication": "unauthenticated"}]
-        assert aggregate_by_host(reqs) == []
+    @pytest.mark.parametrize("url", ["not-a-url", "data:text/plain,hi", "http://a.com:bad/x"])
+    def test_skips_requests_without_origin(self, url):
+        reqs = [{"url": url, "authentication": "unauthenticated"}]
+        assert aggregate_by_origin(reqs) == []
 
     def test_missing_authentication_defaults_to_unauthenticated(self):
         reqs = [{"url": "http://a.com/x"}]
-        result = aggregate_by_host(reqs)
+        result = aggregate_by_origin(reqs)
         assert result[0]["authentication"] == "unauthenticated"
 
     def test_empty_input(self):
-        assert aggregate_by_host([]) == []
+        assert aggregate_by_origin([]) == []

@@ -38,11 +38,59 @@ class TestMapWebsite:
         m._explore_page = AsyncMock()
         m.interceptor.requests = [
             {"url": "http://api.example.com/x", "authentication": "bearer"},
-            {"url": "http://other.com/y", "authentication": "unauthenticated"},
+            {"url": "https://api.example.com/x", "authentication": "bearer"},
+            {"url": "http://other.com:8081/y", "authentication": "unauthenticated"},
         ]
         result = await m.map_website()
-        hosts = {e["host"] for e in result["external_hosts"]}
-        assert hosts == {"api.example.com", "other.com"}
+        origins = {(e["scheme"], e["host"], e["port"]) for e in result["external_hosts"]}
+        assert origins == {
+            ("http", "api.example.com", 80),
+            ("https", "api.example.com", 443),
+            ("http", "other.com", 8081),
+        }
+
+
+class TestOriginEvents:
+    @staticmethod
+    def _recording_mapper(make_config):
+        events = []
+        m = Mapper(make_config(), on_event=lambda t, p: events.append((t, p)))
+        m.interceptor.requests = [
+            {"url": "http://api.example.com/x", "authentication": "basic"},
+            {"url": "https://api.example.com/x", "authentication": "bearer"},
+            {"url": "https://api.example.com:443/y", "authentication": "bearer"},
+        ]
+        return m, events
+
+    async def test_page_visit_announces_each_origin_once(self, make_config):
+        m, events = self._recording_mapper(make_config)
+        await m._record_page_visit("http://localhost:8080/", 0)
+        await m._record_page_visit("http://localhost:8080/next", 1)
+
+        seen = [p for t, p in events if t == "external_host_seen"]
+        assert sorted(seen, key=lambda p: p["port"]) == [
+            {"scheme": "http", "host": "api.example.com", "port": 80},
+            {"scheme": "https", "host": "api.example.com", "port": 443},
+        ]
+        # Two origins, one hostname: the progress counter tracks hostnames, the
+        # same stat the finished scan reports as external_hosts.
+        progress = [p for t, p in events if t == "scan_progress"]
+        assert [p["hosts"] for p in progress] == [1, 1]
+
+    async def test_auth_detected_carries_the_origin(self, make_config):
+        m, events = self._recording_mapper(make_config)
+        m.page = MagicMock()
+        m.navigator.navigate_to = AsyncMock(return_value=True)
+        m._ensure_authenticated = AsyncMock()
+        m._explore_page = AsyncMock()
+        await m.map_website()
+
+        detected = {(p["scheme"], p["host"], p["port"]): p["method"]
+                    for t, p in events if t == "auth_detected"}
+        assert detected == {
+            ("http", "api.example.com", 80): "basic",
+            ("https", "api.example.com", 443): "bearer",
+        }
 
 
 class TestEnsureAuthenticated:

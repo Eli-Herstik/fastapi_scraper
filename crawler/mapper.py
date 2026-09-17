@@ -12,7 +12,8 @@ from .navigation import NavigationHandler
 from .navigation.dom_hasher import DOMHasher
 from .navigation.selectors import INTERACTIVE_SELECTORS, POPUP_CONTAINER_SELECTORS
 from .network import NetworkInterceptor, RequestCapture
-from .network.auth_analyzer import aggregate_by_host
+from .network.auth_analyzer import aggregate_by_origin
+from .origin import Origin, origin_of
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ class Mapper:
         self._used_reused_storage: bool = False
         self._on_event: Optional[EventCallback] = on_event
         self._pages_visited: int = 0
-        self._announced_hosts: set[str] = set()
+        self._announced_origins: set[Origin] = set()
 
     async def _emit(self, event_type: str, payload: Dict[str, Any]) -> None:
         if not self._on_event:
@@ -50,27 +51,28 @@ class Mapper:
     async def _record_page_visit(self, url: str, depth: int) -> None:
         self._pages_visited += 1
         await self._emit('page_visited', {'path': url, 'depth': depth})
-        await self._announce_new_hosts()
+        await self._announce_new_origins()
         await self._emit('scan_progress', {
             'pages': self._pages_visited,
-            'hosts': len(self._announced_hosts),
+            # Distinct hostnames, not origins: the same stat the finished scan
+            # reports as external_hosts.
+            'hosts': len({o.host for o in self._announced_origins}),
             'blockers': 0,
         })
 
-    async def _announce_new_hosts(self) -> None:
+    async def _announce_new_origins(self) -> None:
         try:
-            from urllib.parse import urlparse
             seen_now = set()
             for req in self.interceptor.get_requests():
-                host = urlparse(req.get('url', '')).netloc
-                if host:
-                    seen_now.add(host)
-            new_hosts = seen_now - self._announced_hosts
-            for host in new_hosts:
-                self._announced_hosts.add(host)
-                await self._emit('external_host_seen', {'host': host})
+                origin = origin_of(req.get('url', ''))
+                if origin:
+                    seen_now.add(origin)
+            new_origins = seen_now - self._announced_origins
+            for origin in new_origins:
+                self._announced_origins.add(origin)
+                await self._emit('external_host_seen', origin._asdict())
         except Exception as e:
-            logger.debug("announce_new_hosts failed: %s", e)
+            logger.debug("announce_new_origins failed: %s", e)
 
     @property
     def pages_crawled(self) -> int:
@@ -113,16 +115,16 @@ class Mapper:
         self.interceptor.source_url = self.config.start_url
         await self._explore_page(self.page, 0)
 
-        external_hosts = aggregate_by_host(self.interceptor.get_requests())
-        logger.info("Mapping complete. Found %d unique external hosts.", len(external_hosts))
+        external_hosts = aggregate_by_origin(self.interceptor.get_requests())
+        logger.info("Mapping complete. Found %d unique external origins.", len(external_hosts))
 
-        # Emit per-host classification events for the SSE stream.
+        # Emit per-origin classification events for the SSE stream.
         for entry in external_hosts:
-            host = entry.get('host', '')
-            auth_str = entry.get('authentication', '')
             await self._emit('auth_detected', {
-                'host': host,
-                'method': auth_str,
+                'scheme': entry['scheme'],
+                'host': entry['host'],
+                'port': entry['port'],
+                'method': entry.get('authentication', ''),
             })
 
         return {"external_hosts": external_hosts, "pages_crawled": self._pages_visited}

@@ -16,7 +16,7 @@ from api.translate import tag_to_auth_method
 from crawler.network import NetworkInterceptor
 from crawler.network.auth_analyzer import (
     _AUTH_RANK,
-    aggregate_by_host,
+    aggregate_by_origin,
     detect_authentication,
 )
 
@@ -75,8 +75,8 @@ def _observed_tags() -> set:
     )
     tags.add(request_data["authentication"])
 
-    # aggregate_by_host's default for a request that never got a label at all.
-    tags.add(aggregate_by_host([{"url": "http://a.com/1"}])[0]["authentication"])
+    # aggregate_by_origin's default for a request that never got a label at all.
+    tags.add(aggregate_by_origin([{"url": "http://a.com/1"}])[0]["authentication"])
 
     return tags
 

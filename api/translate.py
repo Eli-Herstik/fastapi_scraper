@@ -47,13 +47,15 @@ def truncate_headers(headers: Dict[str, Any] | None, limit: int = 512) -> str:
 
 
 def host_to_finding_row(scan_id: str, host_entry: Dict[str, Any]) -> Dict[str, Any]:
-    """Convert a single aggregate_by_host entry into a FindingRow-ready dict."""
+    """Convert a single aggregate_by_origin entry into a FindingRow-ready dict."""
     auth_method = tag_to_auth_method(host_entry.get("authentication", ""))
     severity = severity_for(auth_method)
     return {
         "id": uuid.uuid4().hex,
         "scan_id": scan_id,
-        "host": host_entry.get("host", ""),
+        "scheme": host_entry["scheme"],
+        "host": host_entry["host"],
+        "port": host_entry["port"],
         "auth_method": auth_method.value,
         "severity": severity.value,
         "request_count": int(host_entry.get("request_count", 1) or 1),

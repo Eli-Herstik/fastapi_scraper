@@ -92,7 +92,9 @@ async def run_scrape_job(
             for r in finding_rows:
                 if r["severity"] == Severity.blocker.value:
                     await event_bus.emit(scan_id, "blocker_found", {
+                        "scheme": r["scheme"],
                         "host": r["host"],
+                        "port": r["port"],
                         "auth_method": r["auth_method"],
                     })
 

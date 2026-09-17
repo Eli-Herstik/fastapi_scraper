@@ -51,6 +51,18 @@ class TestIsOnLoginPage:
         page.url = "http://x/login/step2"
         assert is_on_login_page(page, cfg) is True
 
+    def test_explicit_default_port_is_same_origin(self):
+        cfg = _make_login_cfg()
+        page = MagicMock()
+        page.url = "http://x:80/login"
+        assert is_on_login_page(page, cfg) is True
+
+    def test_no_match_on_other_scheme(self):
+        cfg = _make_login_cfg()
+        page = MagicMock()
+        page.url = "https://x/login"
+        assert is_on_login_page(page, cfg) is False
+
 
 class TestStorageStateValid:
     def test_missing_file(self, tmp_path):

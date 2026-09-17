@@ -55,6 +55,12 @@ class TestShouldFollowUrl:
         assert h._should_follow_url("http://example.com/other") is True
         assert h._should_follow_url("http://other.com/app") is False
 
+    def test_explicit_default_port_is_same_origin(self, make_config):
+        h = NavigationHandler(make_config(start_url="https://example.com/app"))
+        assert h._should_follow_url("https://example.com:443/other") is True
+        assert h._should_follow_url("https://EXAMPLE.com/other") is True
+        assert h._should_follow_url("https://example.com:8443/other") is False
+
 
 class TestDelegatesToElementClassifier:
     async def test_is_destructive_action_delegates(self, make_config, mock_element):

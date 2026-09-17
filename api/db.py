@@ -85,12 +85,20 @@ class ScanRow(Base):
 
 class FindingRow(Base):
     __tablename__ = "findings"
+    __table_args__ = (
+        # A finding is one origin -- the (scheme, host, port) listener -- per scan.
+        # The scan diff in routes_apps keys on this triple, so it must be unique.
+        UniqueConstraint("scan_id", "scheme", "host", "port", name="uq_findings_scan_origin"),
+    )
 
     id: Mapped[str] = mapped_column(String, primary_key=True)
     scan_id: Mapped[str] = mapped_column(
         String, ForeignKey("scans.id", ondelete="CASCADE"), index=True, nullable=False
     )
+    scheme: Mapped[str] = mapped_column(String, nullable=False)
     host: Mapped[str] = mapped_column(String, nullable=False)
+    # Always the effective port -- 80/443 when the URL named none -- never NULL.
+    port: Mapped[int] = mapped_column(Integer, nullable=False)
     auth_method: Mapped[str] = mapped_column(String, nullable=False)
     severity: Mapped[str] = mapped_column(String, nullable=False)
     request_count: Mapped[int] = mapped_column(Integer, default=1, nullable=False)

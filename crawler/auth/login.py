@@ -9,16 +9,13 @@ from playwright.async_api import Error as PlaywrightError, Page, TimeoutError as
 
 from config_loader import LoginConfig
 
+from ..origin import origin_of
+
 logger = logging.getLogger(__name__)
 
 
-def _origin(url: str) -> tuple:
-    parsed = urlparse(url)
-    return (parsed.scheme.lower(), parsed.netloc.lower())
-
-
 def _is_login_url(url: str, cfg: LoginConfig) -> bool:
-    if _origin(url) != _origin(cfg.login_url):
+    if origin_of(url) != origin_of(cfg.login_url):
         return False
     path = urlparse(url).path.rstrip('/')
     login_path = urlparse(cfg.login_url).path.rstrip('/')
@@ -77,12 +74,12 @@ async def perform_login(page: Page, cfg: LoginConfig, app_url: str) -> None:
     """
     logger.info("Performing login at %s", page.url)
 
-    app_origin = _origin(app_url)
+    app_origin = origin_of(app_url)
     await _fill_and_submit(page, cfg)
 
     try:
         await page.wait_for_url(
-            lambda url: _origin(url) == app_origin and not _is_login_url(url, cfg),
+            lambda url: origin_of(url) == app_origin and not _is_login_url(url, cfg),
             timeout=cfg.post_login_wait_ms + 30000,
         )
     except PlaywrightTimeoutError as e:

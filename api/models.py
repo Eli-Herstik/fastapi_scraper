@@ -49,7 +49,9 @@ class Finding(BaseModel):
     model_config = ConfigDict(use_enum_values=True)
 
     id: str
+    scheme: str
     host: str
+    port: int
     auth_method: AuthMethod
     severity: Severity
     request_count: int
@@ -92,7 +94,9 @@ class ScanEvent(BaseModel):
 
 class ExclusionChange(BaseModel):
     id: str
+    scheme: str
     host: str
+    port: int
     before: bool
     after: bool
 
@@ -101,7 +105,9 @@ class AuthMethodChange(BaseModel):
     model_config = ConfigDict(use_enum_values=True)
 
     id: str
+    scheme: str
     host: str
+    port: int
     before: AuthMethod
     after: AuthMethod
 

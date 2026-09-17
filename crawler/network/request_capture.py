@@ -1,9 +1,9 @@
 """Wire Playwright page/context events to the NetworkInterceptor, deduplicating by (method, URL)."""
 import logging
-from urllib.parse import urlparse
 
 from playwright.async_api import BrowserContext, Page
 
+from ..origin import origin_of
 from .interceptor import NetworkInterceptor
 
 logger = logging.getLogger(__name__)
@@ -14,7 +14,7 @@ class RequestCapture:
 
     def __init__(self, interceptor: NetworkInterceptor, start_url: str):
         self.interceptor = interceptor
-        self.start_host = urlparse(start_url).netloc
+        self.start_origin = origin_of(start_url)
         self.pending_requests: dict = {}
         self.captured_keys: set = set()
 
@@ -24,10 +24,9 @@ class RequestCapture:
         context.on('page', self._setup_page)
 
     def _is_external_url(self, url: str) -> bool:
-        try:
-            return urlparse(url).netloc != self.start_host
-        except Exception:
-            return True
+        # Anything off the start origin is external -- including the start host on
+        # another scheme or port, which is a separate listener to publish.
+        return origin_of(url) != self.start_origin
 
     @staticmethod
     def _key(request) -> tuple:

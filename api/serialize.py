@@ -27,7 +27,9 @@ def _isoformat(dt: datetime | None) -> str | None:
 def finding_to_schema(row: FindingRow) -> Finding:
     return Finding(
         id=row.id,
+        scheme=row.scheme,
         host=row.host,
+        port=row.port,
         auth_method=AuthMethod(row.auth_method),
         severity=Severity(row.severity),
         request_count=row.request_count,

@@ -4,6 +4,8 @@ import binascii
 from typing import Any, Dict, List, Optional
 from urllib.parse import parse_qs, urlparse
 
+from ..origin import Origin, origin_of
+
 
 # Mechanism signatures for classifying a "Negotiate" (SPNEGO) token by scanning
 # its decoded bytes, instead of a full ASN.1 parse. NTLM messages always begin
@@ -181,12 +183,12 @@ def _evidence_from(req: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-# Host-level ranking for aggregate_by_host: when a host is seen with more than
-# one authentication scheme across its requests, the highest-ranked scheme
-# becomes the host's label. Ordered so the weakest/most-notable schemes (Basic,
+# Origin-level ranking for aggregate_by_origin: when an origin is seen with more
+# than one authentication scheme across its requests, the highest-ranked scheme
+# becomes the origin's label. Ordered so the weakest/most-notable schemes (Basic,
 # NTLM) rank highest and "no auth observed" ranks lowest; a 401 challenge ranks as
 # the scheme it demanded, so a demanded Basic/NTLM is never masked by an accepted
-# credential on another endpoint of the same host.
+# credential on another endpoint of the same origin.
 _AUTH_RANK = {
     "basic": 8,
     "ntlm": 8,
@@ -202,13 +204,13 @@ _AUTH_RANK = {
 
 
 def _auth_rank(value: str) -> int:
-    """Rank an authentication tag by its scheme for host aggregation.
+    """Rank an authentication tag by its scheme for origin aggregation.
 
     The scraper's tags are a closed set -- a detect_authentication tag, the scheme
     tag a 401 challenge resolved to, or an "oauth" IdP redirect -- and they are the
     keys of _AUTH_RANK, so the table is the whole classification and matching is
     exact. Those keys are also the tags translate.tag_to_auth_method maps to
-    AuthMethod, so a host's rank agrees with the scheme the FE will ultimately show.
+    AuthMethod, so an origin's rank agrees with the scheme the FE will ultimately show.
     A scheme the server demanded therefore counts the same as one actually
     observed. Both an unnamed 401 challenge and an Authorization header carrying an
     unnamed scheme surface as "other", which ranks just above the "unknown"
@@ -219,38 +221,44 @@ def _auth_rank(value: str) -> int:
     return _AUTH_RANK.get((value or "").strip().lower(), _AUTH_RANK["unknown"])
 
 
-def aggregate_by_host(requests: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Group requests by host and pick the most specific authentication seen.
+def aggregate_by_origin(requests: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Group requests by origin and pick the most specific authentication seen.
+
+    The key is the (scheme, host, port) triple rather than the hostname: each
+    origin is a separate listener to publish, and "http://x" and "https://x" (or
+    "x:8443") can be different services with different authentication. Requests
+    whose URL has no origin are skipped.
 
     Retains a representative evidence sample (request headers, response status,
     first source page) for the request whose authentication classification "wins"
     so the FE can render its `evidence` block.
     """
-    result_map: Dict[str, Dict[str, Any]] = {}
+    result_map: Dict[Origin, Dict[str, Any]] = {}
     for req in requests:
-        parsed_url = urlparse(req['url'])
-        host = parsed_url.netloc
-        if not host:
+        origin = origin_of(req['url'])
+        if origin is None:
             continue
 
         current_auth = req.get('authentication', 'unauthenticated')
 
-        if host not in result_map:
+        if origin not in result_map:
             entry = {
-                'host': host,
+                'scheme': origin.scheme,
+                'host': origin.host,
+                'port': origin.port,
                 'authentication': current_auth,
                 'request_count': 1,
             }
             entry.update(_evidence_from(req))
-            result_map[host] = entry
+            result_map[origin] = entry
             continue
 
-        entry = result_map[host]
+        entry = result_map[origin]
         entry['request_count'] = int(entry.get('request_count', 1)) + 1
 
         existing_auth = entry['authentication']
         # Rank by scheme (_auth_rank): the most notable auth seen on any of the
-        # host's requests wins as its label. A strictly higher rank also brings
+        # origin's requests wins as its label. A strictly higher rank also brings
         # its evidence sample along; equal ranks keep the first request seen.
         if _auth_rank(current_auth) > _auth_rank(existing_auth):
             entry['authentication'] = current_auth
