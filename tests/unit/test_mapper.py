@@ -72,10 +72,10 @@ class TestOriginEvents:
             {"scheme": "http", "host": "api.example.com", "port": 80},
             {"scheme": "https", "host": "api.example.com", "port": 443},
         ]
-        # Two origins, one hostname: the progress counter tracks hostnames, the
-        # same stat the finished scan reports as external_hosts.
+        # Two origins on one hostname are two services -- the same stat the
+        # finished scan reports as external_services -- and a revisit adds none.
         progress = [p for t, p in events if t == "scan_progress"]
-        assert [p["hosts"] for p in progress] == [1, 1]
+        assert [p["services"] for p in progress] == [2, 2]
 
     async def test_auth_detected_carries_the_origin(self, make_config):
         m, events = self._recording_mapper(make_config)

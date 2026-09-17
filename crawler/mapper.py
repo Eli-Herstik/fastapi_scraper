@@ -54,9 +54,7 @@ class Mapper:
         await self._announce_new_origins()
         await self._emit('scan_progress', {
             'pages': self._pages_visited,
-            # Distinct hostnames, not origins: the same stat the finished scan
-            # reports as external_hosts.
-            'hosts': len({o.host for o in self._announced_origins}),
+            'services': len(self._announced_origins),
             'blockers': 0,
         })
 

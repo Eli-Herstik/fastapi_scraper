@@ -53,9 +53,6 @@ def _summary_aggregates_subq():
                 ),
                 0,
             ).label("blocker_count"),
-            # Distinct hostnames, deliberately not origins: a host reached on two
-            # schemes/ports is two findings (finding_count) but one external host.
-            func.count(func.distinct(FindingRow.host)).label("host_count"),
             func.count(func.distinct(FindingRow.auth_method)).label("auth_count"),
         )
         .group_by(FindingRow.scan_id)
@@ -126,7 +123,6 @@ async def get_scan(scan_id: str, request: Request) -> ScanDetail:
                 ScanRow,
                 func.coalesce(agg.c.blocker_count, 0),
                 func.coalesce(agg.c.finding_count, 0),
-                func.coalesce(agg.c.host_count, 0),
                 func.coalesce(agg.c.auth_count, 0),
                 SubmissionRow.submitted_at,
                 SubmissionRow.submitted_by,
@@ -142,7 +138,6 @@ async def get_scan(scan_id: str, request: Request) -> ScanDetail:
             scan,
             blocker_count,
             finding_count,
-            host_count,
             auth_count,
             submitted_at,
             submitted_by,
@@ -151,7 +146,11 @@ async def get_scan(scan_id: str, request: Request) -> ScanDetail:
             scan,
             blocker_count=int(blocker_count or 0),
             finding_count=int(finding_count or 0),
-            external_hosts=int(host_count or 0),
+            # An external service is one origin, and a scan holds exactly one
+            # finding per origin (uq_findings_scan_origin), so the two counts
+            # coincide. Kept as its own field: it is the stat the FE shows, not a
+            # row count, and it includes excluded findings.
+            external_services=int(finding_count or 0),
             auth_methods=int(auth_count or 0),
             submitted_at=submitted_at,
             submitted_by=submitted_by,

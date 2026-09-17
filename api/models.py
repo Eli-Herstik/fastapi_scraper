@@ -80,7 +80,7 @@ class ScanSummary(BaseModel):
 class ScanDetail(ScanSummary):
     duration_ms: Optional[int] = None
     pages_crawled: Optional[int] = None
-    external_hosts: Optional[int] = None
+    external_services: Optional[int] = None
     auth_methods_identified: Optional[int] = None
 
 
