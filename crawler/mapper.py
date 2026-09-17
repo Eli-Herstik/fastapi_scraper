@@ -68,7 +68,7 @@ class Mapper:
             new_origins = seen_now - self._announced_origins
             for origin in new_origins:
                 self._announced_origins.add(origin)
-                await self._emit('external_host_seen', origin._asdict())
+                await self._emit('external_service_seen', origin._asdict())
         except Exception as e:
             logger.debug("announce_new_origins failed: %s", e)
 
@@ -102,22 +102,22 @@ class Mapper:
         self._capture.attach(self.page, self.context)
 
     async def map_website(self) -> Dict[str, Any]:
-        logger.info("Starting external-hosts mapping for: %s", self.config.start_url)
+        logger.info("Starting external-services mapping for: %s", self.config.start_url)
 
         if not await self.navigator.navigate_to(self.page, self.config.start_url, 0):
             logger.error("Failed to navigate to start URL")
-            return {"external_hosts": [], "pages_crawled": 0}
+            return {"external_services": [], "pages_crawled": 0}
 
         await self._ensure_authenticated(self.page)
 
         self.interceptor.source_url = self.config.start_url
         await self._explore_page(self.page, 0)
 
-        external_hosts = aggregate_by_origin(self.interceptor.get_requests())
-        logger.info("Mapping complete. Found %d unique external origins.", len(external_hosts))
+        external_services = aggregate_by_origin(self.interceptor.get_requests())
+        logger.info("Mapping complete. Found %d external services.", len(external_services))
 
-        # Emit per-origin classification events for the SSE stream.
-        for entry in external_hosts:
+        # Emit per-service classification events for the SSE stream.
+        for entry in external_services:
             await self._emit('auth_detected', {
                 'scheme': entry['scheme'],
                 'host': entry['host'],
@@ -125,7 +125,7 @@ class Mapper:
                 'method': entry.get('authentication', ''),
             })
 
-        return {"external_hosts": external_hosts, "pages_crawled": self._pages_visited}
+        return {"external_services": external_services, "pages_crawled": self._pages_visited}
 
     async def _ensure_authenticated(self, page: Page) -> None:
         cfg = self.config.login

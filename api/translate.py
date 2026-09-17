@@ -46,25 +46,25 @@ def truncate_headers(headers: Dict[str, Any] | None, limit: int = 512) -> str:
     return text
 
 
-def host_to_finding_row(scan_id: str, host_entry: Dict[str, Any]) -> Dict[str, Any]:
+def service_to_finding_row(scan_id: str, service: Dict[str, Any]) -> Dict[str, Any]:
     """Convert a single aggregate_by_origin entry into a FindingRow-ready dict."""
-    auth_method = tag_to_auth_method(host_entry.get("authentication", ""))
+    auth_method = tag_to_auth_method(service.get("authentication", ""))
     severity = severity_for(auth_method)
     return {
         "id": uuid.uuid4().hex,
         "scan_id": scan_id,
-        "scheme": host_entry["scheme"],
-        "host": host_entry["host"],
-        "port": host_entry["port"],
+        "scheme": service["scheme"],
+        "host": service["host"],
+        "port": service["port"],
         "auth_method": auth_method.value,
         "severity": severity.value,
-        "request_count": int(host_entry.get("request_count", 1) or 1),
-        "first_seen_on_page": host_entry.get("first_seen_on_page", "") or "",
-        "headers_snippet": host_entry.get("headers_snippet", "") or "",
-        "status_code": int(host_entry.get("status_code", 0) or 0),
+        "request_count": int(service.get("request_count", 1) or 1),
+        "first_seen_on_page": service.get("first_seen_on_page", "") or "",
+        "headers_snippet": service.get("headers_snippet", "") or "",
+        "status_code": int(service.get("status_code", 0) or 0),
         "excluded": False,
     }
 
 
-def hosts_to_findings(scan_id: str, external_hosts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    return [host_to_finding_row(scan_id, h) for h in external_hosts]
+def services_to_findings(scan_id: str, external_services: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    return [service_to_finding_row(scan_id, s) for s in external_services]

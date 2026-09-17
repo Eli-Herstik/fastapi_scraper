@@ -14,7 +14,7 @@ from crawler import Mapper
 from .db import FindingRow, ScanRow
 from .models import Severity
 from .sse import EventBus
-from .translate import hosts_to_findings
+from .translate import services_to_findings
 
 logger = logging.getLogger(__name__)
 
@@ -82,10 +82,10 @@ async def run_scrape_job(
             finally:
                 await mapper.cleanup()
 
-            external_hosts = result.get("external_hosts", [])
+            external_services = result.get("external_services", [])
             pages_crawled = int(result.get("pages_crawled", 0) or 0)
 
-            finding_rows = hosts_to_findings(scan_id, external_hosts)
+            finding_rows = services_to_findings(scan_id, external_services)
             await _persist_findings(session_factory, scan_id, finding_rows)
 
             blockers = sum(1 for r in finding_rows if r["severity"] == Severity.blocker.value)

@@ -2,7 +2,7 @@
 import pytest
 
 from api.models import AuthMethod, Severity
-from api.translate import host_to_finding_row, severity_for, tag_to_auth_method
+from api.translate import service_to_finding_row, severity_for, tag_to_auth_method
 
 
 class TestSeverityFor:
@@ -44,9 +44,9 @@ class TestTagToAuthMethod:
         assert tag_to_auth_method("something weird") == AuthMethod.unknown
 
 
-class TestHostToFindingRow:
+class TestServiceToFindingRow:
     def test_carries_the_origin_triple(self):
-        row = host_to_finding_row("scan-1", {
+        row = service_to_finding_row("scan-1", {
             "scheme": "https",
             "host": "api.example.com",
             "port": 8443,
@@ -63,4 +63,4 @@ class TestHostToFindingRow:
         # scheme/host/port are NOT NULL identity columns: an entry without them
         # must fail loudly here rather than persist a blank origin.
         with pytest.raises(KeyError):
-            host_to_finding_row("scan-1", {"host": "api.example.com", "authentication": "basic"})
+            service_to_finding_row("scan-1", {"host": "api.example.com", "authentication": "basic"})

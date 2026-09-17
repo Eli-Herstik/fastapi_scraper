@@ -28,7 +28,7 @@ class TestMapWebsite:
         m.page = MagicMock()
         m.navigator.navigate_to = AsyncMock(return_value=False)
         result = await m.map_website()
-        assert result["external_hosts"] == []
+        assert result["external_services"] == []
 
     async def test_aggregates_interceptor_requests(self, make_config):
         m = Mapper(make_config())
@@ -42,7 +42,7 @@ class TestMapWebsite:
             {"url": "http://other.com:8081/y", "authentication": "unauthenticated"},
         ]
         result = await m.map_website()
-        origins = {(e["scheme"], e["host"], e["port"]) for e in result["external_hosts"]}
+        origins = {(e["scheme"], e["host"], e["port"]) for e in result["external_services"]}
         assert origins == {
             ("http", "api.example.com", 80),
             ("https", "api.example.com", 443),
@@ -67,7 +67,7 @@ class TestOriginEvents:
         await m._record_page_visit("http://localhost:8080/", 0)
         await m._record_page_visit("http://localhost:8080/next", 1)
 
-        seen = [p for t, p in events if t == "external_host_seen"]
+        seen = [p for t, p in events if t == "external_service_seen"]
         assert sorted(seen, key=lambda p: p["port"]) == [
             {"scheme": "http", "host": "api.example.com", "port": 80},
             {"scheme": "https", "host": "api.example.com", "port": 443},
